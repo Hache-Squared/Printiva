@@ -1,0 +1,12 @@
+﻿CREATE PROCEDURE dbo.procSayHi
+AS
+BEGIN 
+	SET NOCOUNT ON;
+	BEGIN TRY		
+		SELECT 'Hello world';
+	END TRY
+	BEGIN CATCH
+		
+		SELECT 'Hello Error';
+	END CATCH
+END;
