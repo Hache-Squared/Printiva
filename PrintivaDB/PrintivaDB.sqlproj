@@ -172,4 +172,7 @@
     <Build Include="Security\Permissions.sql" />
     <Build Include="dbo\Stored Procedures\procSayHi.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="PrintivaDB.publish.xml" />
+  </ItemGroup>
 </Project>

@@ -14,13 +14,22 @@
 <body style="margin: 0;">
     
     <div style="display: flex; justify-content: center; align-items:center; height: 100vh;">
-        <div style="margin-right: 5rem;">
-            <h1>Printiva</h1>
-            <h4>Sistema de manejo de finanzas y unidades.</h4>
+        <!-- Logo -->
+        <div style="margin-right: 8rem; display:flex; flex-direction:column; align-items:center; justify-content: center;">
+            <div>
+                <img src="/logo.png" alt="Logo de Printiva" style="width: 300px;" />
+            </div>
+
+            <h2>Printiva</h2>
+            <h6>Sistema de manejo de finanzas y unidades.</h6>
         </div>
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+        <!-- Texto + RenderBody -->
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content: center;padding:20px; border-radius: 8px;box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
     
