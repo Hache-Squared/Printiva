@@ -17,6 +17,7 @@ CREATE PROCEDURE dbo.procAlteraInventarios
 @InventarioMarcaId  INT = 0,
 @InventarioTipoId   INT = 0,
 @InventarioColorId	INT = 0,
+@InventarioNombreId	INT = 0,
 @Cantidad			DECIMAL(10,2) = 0,
 @TipoMovimiento		VARCHAR(200) = '',
 @InventarioUnidad   VARCHAR(200) = ''
@@ -70,6 +71,16 @@ BEGIN
 			RAISERROR(@message, 16, 1);
 		END
 
+		IF NOT EXISTS (
+			SELECT 1
+			FROM dbo.TblInventariosNombres ic (NOLOCK)
+			WHERE ic.InventarioNombreId = @InventarioNombreId
+		)
+		BEGIN 
+			SET @message = 'Nombre de inventario no encontrado.';
+			RAISERROR(@message, 16, 1);
+		END
+
 		DECLARE @TipoMovimientoId INT = (
 			SELECT TOP 1 mt.TipoMovimientoId
 			FROM dbo.TblInventariosMovimientoTipos mt (NOLOCK)
@@ -95,9 +106,9 @@ BEGIN
 			RAISERROR(@message, 16, 1);
 		END
 
-		IF(TRY_PARSE(@Cantidad AS DECIMAL(10,2)) <= 0)
+		IF(TRY_PARSE(@Cantidad AS DECIMAL(10,2)) < 0)
 		BEGIN 
-			SET @message = 'Cantidad debe ser mayor a cero.';
+			SET @message = 'Cantidad debe ser positivo.';
 			RAISERROR(@message, 16, 1);
 		END
 
@@ -123,12 +134,15 @@ BEGIN
 				@InventarioColorId	[InventarioColorId],
 				@TipoMovimiento		[TipoMovimiento],
 				@TipoMovimientoId   [TipoMovimientoId],
-				@InventarioUnidadId [InventarioUnidadId]
+				@InventarioUnidadId [InventarioUnidadId],
+				@InventarioNombreId [InventarioNombreId]
 		) AS src 
 			ON  (
 				tgt.InventarioMarcaId = src.InventarioMarcaId AND 
 				tgt.InventarioTipoId = src.InventarioTipoId AND 
-				tgt.InventarioColorId = src.InventarioColorId
+				tgt.InventarioColorId = src.InventarioColorId AND
+				tgt.InventarioNombreId = src.InventarioNombreId AND
+				tgt.InventarioUnidadId = src.InventarioUnidadId 
 			)
 		WHEN MATCHED THEN
 			UPDATE SET tgt.Cantidad = (
@@ -146,6 +160,7 @@ BEGIN
 				InventarioMarcaId,
 				InventarioTipoId,
 				InventarioColorId,
+				InventarioNombreId,
 				Cantidad,
 				InventarioUnidadId
 			)
@@ -153,6 +168,7 @@ BEGIN
 				src.InventarioMarcaId,
 				src.InventarioTipoId,
 				src.InventarioColorId,
+				src.InventarioNombreId,
 				src.Cantidad,
 				src.InventarioUnidadId
 			);

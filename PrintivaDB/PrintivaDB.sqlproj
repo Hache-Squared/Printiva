@@ -190,6 +190,9 @@
     <Build Include="dbo\Stored Procedures\procAlterarInventarios.sql" />
     <Build Include="dbo\Tables\TblInventariosColores.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraInventariosColores.sql" />
+    <Build Include="dbo\Stored Procedures\procActualizarRegistrosInventarios.sql" />
+    <Build Include="dbo\Tables\TblInventariosNombres.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraInventariosNombres.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
