@@ -1,0 +1,6 @@
+﻿CREATE TABLE TblClientes(
+	ClienteId INT PRIMARY KEY IDENTITY(1,1),
+	Nombre VARCHAR(200) NOT NULL,
+	Telefono VARCHAR(100),
+	Correo VARCHAR(100)
+)
