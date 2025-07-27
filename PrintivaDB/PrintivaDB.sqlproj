@@ -121,6 +121,7 @@
     <Folder Include="dbo\Tables\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="Security\" />
+    <Folder Include="dbo\Scripts" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Categorias.sql">
@@ -182,8 +183,10 @@
     <Build Include="dbo\Tables\TblRecetasInventarios.sql" />
     <Build Include="dbo\Tables\TblVentas.sql" />
     <Build Include="dbo\Tables\TblVentasProductos.sql" />
+    <PostDeploy Include="Script.PostDeployment.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
+    <None Include="dbo\Scripts\Auto_Catalogs.sql" />
   </ItemGroup>
 </Project>
