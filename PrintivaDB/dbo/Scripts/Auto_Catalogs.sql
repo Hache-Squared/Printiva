@@ -1,4 +1,6 @@
-﻿DECLARE @version VARCHAR(100) = '1.0.0';
+﻿--En este archivo servira para incluir valores por defecto a nuestra base de datos
+
+DECLARE @version VARCHAR(100) = '1.0.0';
 
 
 IF(@version = '1.0.0')
