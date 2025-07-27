@@ -170,6 +170,18 @@
     <Build Include="Security\Permissions.sql" />
     <Build Include="dbo\Stored Procedures\procSayHi.sql" />
     <Build Include="dbo\Tables\TblClientes.sql" />
+    <Build Include="dbo\Tables\TblInventariosMarcas.sql" />
+    <Build Include="dbo\Tables\TblInventariosTipos.sql" />
+    <Build Include="dbo\Tables\TblInventarios.sql" />
+    <Build Include="dbo\Tables\TblInventariosUnidades.sql" />
+    <Build Include="dbo\Tables\TblInventariosMovimientoTipos.sql" />
+    <Build Include="dbo\Tables\TblInventariosMovimientos.sql" />
+    <Build Include="dbo\Tables\TblProductosCategorias.sql" />
+    <Build Include="dbo\Tables\TblProductos.sql" />
+    <Build Include="dbo\Tables\TblRecetas.sql" />
+    <Build Include="dbo\Tables\TblRecetasInventarios.sql" />
+    <Build Include="dbo\Tables\TblVentas.sql" />
+    <Build Include="dbo\Tables\TblVentasProductos.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />

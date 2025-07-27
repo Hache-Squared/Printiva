@@ -1,0 +1,19 @@
+﻿CREATE TABLE TblInventarios(
+	InventarioId INT PRIMARY KEY IDENTITY(1,1),
+	InventarioMarcaId INT NOT NULL,
+	InventarioTipoId INT NOT NULL,
+	Color VARCHAR(100),
+	ColorAbreviatura VARCHAR(100),
+	Cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
+	InventarioUnidadId INT NOT NULL,
+	FechaCreacion DATETIME DEFAULT GETUTCDATE(),
+
+	CONSTRAINT FK_TblInventarios_TblInventariosMarcas FOREIGN KEY(InventarioMarcaId)
+		REFERENCES dbo.TblInventariosMarcas(InventarioMarcaId),
+	
+	CONSTRAINT FK_TblInventarios_TblInventariosTipos FOREIGN KEY(InventarioTipoId)
+		REFERENCES dbo.TblInventariosTipos(InventarioTipoId),
+
+	CONSTRAINT FK_TblInventarios_TblInventariosUnidades FOREIGN KEY(InventarioUnidadId)
+		REFERENCES dbo.TblInventariosUnidades(InventarioUnidadId)
+)
