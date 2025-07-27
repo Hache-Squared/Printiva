@@ -193,6 +193,7 @@
     <Build Include="dbo\Stored Procedures\procActualizarRegistrosInventarios.sql" />
     <Build Include="dbo\Tables\TblInventariosNombres.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraInventariosNombres.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerInventarios.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
