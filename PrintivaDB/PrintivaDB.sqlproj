@@ -185,6 +185,8 @@
     <Build Include="dbo\Tables\TblVentasProductos.sql" />
     <PostDeploy Include="Script.PostDeployment.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraInventariosMarcas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraInventariosTipos.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraProductosCategorias.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />

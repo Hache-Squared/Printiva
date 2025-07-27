@@ -12,7 +12,7 @@ Version     Author     Date         Description     Ticket
 -------------------------------------------------------------------------------
 1.0         AGHH     27/07/2025     First Version   N/A
 */
-CREATE PROCEDURE dbo.procAlteraInventariosMarcas
+CREATE PROCEDURE dbo.procAlteraInventariosTipos
 @ElementoAlterarId INT = 0,
 @Nombre		VARCHAR(200) = '',
 @loginId	INT = 0,
@@ -50,8 +50,8 @@ BEGIN
 
 		IF EXISTS(
 			SELECT 1 
-			FROM dbo.TblInventariosMarcas im (NOLOCK)
-			WHERE im.InventarioMarcaId = @ElementoAlterarId
+			FROM dbo.TblInventariosTipos im (NOLOCK)
+			WHERE im.InventarioTipoId = @ElementoAlterarId
 		)
 		BEGIN 
 			IF(
@@ -60,7 +60,7 @@ BEGIN
 			BEGIN
 				IF EXISTS(
 					SELECT 1
-					FROM dbo.TblInventariosMarcas im (NOLOCK)
+					FROM dbo.TblInventariosTipos im (NOLOCK)
 					WHERE im.Nombre = @Nombre
 				)
 				BEGIN
@@ -70,8 +70,8 @@ BEGIN
 
 				UPDATE tgt
 					SET tgt.Nombre = @Nombre
-				FROM dbo.TblInventariosMarcas tgt
-				WHERE tgt.InventarioMarcaId = @ElementoAlterarId
+				FROM dbo.TblInventariosTipos tgt
+				WHERE tgt.InventarioTipoId = @ElementoAlterarId
 
 				SET @message = 'Elemento Actualizado';
 			END
@@ -81,8 +81,8 @@ BEGIN
 			)
 			BEGIN 
 				DELETE tgt
-				FROM dbo.TblInventariosMarcas tgt
-				WHERE tgt.InventarioMarcaId = @ElementoAlterarId
+				FROM dbo.TblInventariosTipos tgt
+				WHERE tgt.InventarioTipoId = @ElementoAlterarId
 
 				SET @message = 'Elemento Eliminado';
 			END
@@ -92,7 +92,7 @@ BEGIN
 		BEGIN 
 			IF EXISTS(
 				SELECT 1
-				FROM dbo.TblInventariosMarcas im (NOLOCK)
+				FROM dbo.TblInventariosTipos im (NOLOCK)
 				WHERE im.Nombre = @Nombre
 			)
 			BEGIN
@@ -100,7 +100,7 @@ BEGIN
 				RAISERROR(@message, 16, 1);
 			END
 			
-			INSERT INTO dbo.TblInventariosMarcas(Nombre)
+			INSERT INTO dbo.TblInventariosTipos(Nombre)
 			VALUES (@Nombre);
 			SET @elementoId = SCOPE_IDENTITY();
 			SET @message = 'Elemento Agregado';

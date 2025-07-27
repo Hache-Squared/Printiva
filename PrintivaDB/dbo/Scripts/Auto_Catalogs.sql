@@ -22,3 +22,23 @@ BEGIN
 	
 	DROP TABLE IF EXISTS #TempCatalogoInventarioUnidades;
 END;
+
+IF(@version = '1.0.0')
+BEGIN 
+	CREATE TABLE #TempCatalogoInventarioMovimientosTipos(
+		Nombre VARCHAR(200)
+	);
+
+	INSERT INTO #TempCatalogoInventarioMovimientosTipos(Nombre)
+	VALUES ('Compra'),
+		   ('Venta');
+
+	INSERT INTO dbo.TblInventariosMovimientoTipos(Nombre)
+	SELECT temp.Nombre
+	FROM #TempCatalogoInventarioMovimientosTipos temp
+	LEFT JOIN dbo.TblInventariosMovimientoTipos it (NOLOCK)
+		ON temp.Nombre = it.Nombre
+	WHERE it.Nombre IS NULL
+	
+	DROP TABLE IF EXISTS #TempCatalogoInventarioMovimientosTipos;
+END;
