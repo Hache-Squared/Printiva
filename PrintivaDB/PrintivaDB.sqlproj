@@ -188,5 +188,6 @@
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
     <None Include="dbo\Scripts\Auto_Catalogs.sql" />
+    <None Include="dbo\Scripts\Auto_InicializaPrimerosObjetos.sql" />
   </ItemGroup>
 </Project>
