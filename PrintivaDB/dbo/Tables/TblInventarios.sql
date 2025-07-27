@@ -2,8 +2,7 @@
 	InventarioId INT PRIMARY KEY IDENTITY(1,1),
 	InventarioMarcaId INT NOT NULL,
 	InventarioTipoId INT NOT NULL,
-	Color VARCHAR(100),
-	ColorAbreviatura VARCHAR(100),
+	InventarioColorId INT NOT NULL,
 	Cantidad DECIMAL(10,2) NOT NULL DEFAULT 0,
 	InventarioUnidadId INT NOT NULL,
 	FechaCreacion DATETIME DEFAULT GETUTCDATE(),
@@ -15,5 +14,8 @@
 		REFERENCES dbo.TblInventariosTipos(InventarioTipoId),
 
 	CONSTRAINT FK_TblInventarios_TblInventariosUnidades FOREIGN KEY(InventarioUnidadId)
-		REFERENCES dbo.TblInventariosUnidades(InventarioUnidadId)
+		REFERENCES dbo.TblInventariosUnidades(InventarioUnidadId),
+
+	CONSTRAINT FK_TblInventarios_TblInventariosColores FOREIGN KEY(InventarioColorId)
+		REFERENCES dbo.TblInventariosColores(InventarioColorId)
 )
