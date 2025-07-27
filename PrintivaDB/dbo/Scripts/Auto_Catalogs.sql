@@ -13,10 +13,10 @@ BEGIN
 	VALUES ('Unidad'),
 		   ('Gramos');
 
-	INSERT INTO dbo.TblInventariosTipos(Nombre)
+	INSERT INTO dbo.TblInventariosUnidades(Nombre)
 	SELECT temp.Nombre
 	FROM #TempCatalogoInventarioUnidades temp
-	LEFT JOIN dbo.TblInventariosTipos it (NOLOCK)
+	LEFT JOIN dbo.TblInventariosUnidades it (NOLOCK)
 		ON temp.Nombre = it.Nombre
 	WHERE it.Nombre IS NULL
 	
