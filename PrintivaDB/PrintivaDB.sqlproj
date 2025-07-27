@@ -194,6 +194,8 @@
     <Build Include="dbo\Tables\TblInventariosNombres.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraInventariosNombres.sql" />
     <Build Include="dbo\Stored Procedures\procObtenerInventarios.sql" />
+    <Build Include="dbo\Stored Procedures\procInsertarMovimientoInventario.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerMovimientosInventarios.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
