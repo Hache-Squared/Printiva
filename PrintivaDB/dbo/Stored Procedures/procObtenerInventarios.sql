@@ -159,4 +159,5 @@ BEGIN
 			   @message [message],
 			   @elementoId [elementoId];
 	END CATCH
+	DROP TABLE IF EXISTS #TempData;
 END
