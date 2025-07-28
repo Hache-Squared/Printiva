@@ -3,4 +3,4 @@
 
 
 :r .\dbo\Scripts\Auto_catalogs.sql
-:r .\dbo\Scripts\Auto_InicializaPrimerosObjetos.sql
+--:r .\dbo\Scripts\Auto_InicializaPrimerosObjetos.sql

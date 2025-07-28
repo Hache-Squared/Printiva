@@ -106,7 +106,7 @@ BEGIN
 			RAISERROR(@message, 16, 1);
 		END
 
-		IF(TRY_PARSE(@Cantidad AS DECIMAL(10,2)) < 0)
+		IF(@Cantidad < 0)
 		BEGIN 
 			SET @message = 'Cantidad debe ser positivo.';
 			RAISERROR(@message, 16, 1);

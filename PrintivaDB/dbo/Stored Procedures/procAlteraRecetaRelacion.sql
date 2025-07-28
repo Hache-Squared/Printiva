@@ -76,7 +76,7 @@ BEGIN
 		IF EXISTS(
 			SELECT 1
 			FROM #Temp t
-			WHERE ISNULL(t.Cantidad) = 0
+			WHERE ISNULL(t.Cantidad,0) = 0
 		)
 		BEGIN 
 			SET @message = 'Algunas cantidades no tienen valor.';
@@ -96,7 +96,7 @@ BEGIN
 		IF EXISTS(
 			SELECT 1
 			FROM #Temp t
-			WHERE TRY_PARSE(t.Cantidad AS DECIMAL(10,2)) < 0
+			WHERE t.Cantidad < 0
 		)
 		BEGIN 
 			SET @message = 'Algunas cantidades son negativas.';
