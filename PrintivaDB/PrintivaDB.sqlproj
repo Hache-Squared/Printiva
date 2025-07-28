@@ -198,6 +198,11 @@
     <Build Include="dbo\Stored Procedures\procObtenerMovimientosInventarios.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraProductos.sql" />
     <Build Include="dbo\Stored Procedures\procObtenerProductos.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerRecetaInventario.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerProductoRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraReceta.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraRecetaRelacion.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
