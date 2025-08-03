@@ -1,0 +1,18 @@
+﻿@model InventarioColor;
+@{
+    ViewData["Title"] = "Borrar Color de Inventario";
+}
+
+<h3>¿Esta seguro de querer borrar el color de inventario @Model.Nombre?</h3>
+
+<form asp-action="BorrarColor">
+    <input type="hidden" asp-for="InventarioColorId" />
+
+    <button class="btn btn-danger" type="submit">
+        Borrar
+    </button>
+    <a asp-action="Colores" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+

@@ -50,7 +50,7 @@ BEGIN
 			RAISERROR(@message, 16, 1);
 		END
 
-		IF EXISTS(
+		IF NOT EXISTS(
 			SELECT 1 
 			FROM dbo.TblProductosCategorias im (NOLOCK)
 			WHERE im.ProductoCategoriaId = @ProductoCategoriaId

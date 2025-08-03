@@ -1,0 +1,35 @@
+﻿@model IEnumerable<InventarioMarca>
+@{
+    ViewData["Title"] = "Marcas de Inventario";
+}
+
+<partial name="_Submenu" model="SubMenuInventarios.Marcas" />
+
+<h1>Marcas de inventario</h1>
+<h5>
+    Una marca de inventario nos permite establecer a qué marca es el producto que almacenaremos.
+</h5>
+
+<a asp-action="CrearMarca" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    </thead>
+
+    <tbody>
+        @foreach (var marca in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarMarca" asp-route-id="@marca.InventarioMarcaId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarMarcaForm" asp-route-id="@marca.InventarioMarcaId">Borrar</a>
+                </td>
+                <td>
+                    @marca.Nombre
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

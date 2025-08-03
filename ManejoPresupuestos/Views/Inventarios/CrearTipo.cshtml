@@ -1,0 +1,31 @@
+﻿@model InventarioTipo;
+@{
+	ViewData["Title"] = "Crear Tipo de Inventario";
+}
+
+<h1>Crear tipo de inventario</h1>
+<h5>
+    Un tipo de inventario nos permite clasficar qué tipo de producto almacenaremos.
+</h5>
+
+<form asp-action="CrearTipo">
+    <div asp-validation-summary="ModelOnly" class="text-danger">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        Enviar
+    </button>
+    <a asp-action="Tipos" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

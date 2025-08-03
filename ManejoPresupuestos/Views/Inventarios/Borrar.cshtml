@@ -1,0 +1,17 @@
+﻿@model Inventario;
+@{
+    ViewData["Title"] = "Borrar Inventario";
+}
+
+<h3>¿Esta seguro de querer borrar el registro de inventario del día @Model.FechaCreacion.ToString("dd/MM/yyyy")?</h3>
+
+<form asp-action="BorrarInventario">
+    <input type="hidden" asp-for="InventarioId" />
+
+    <button class="btn btn-danger" type="submit">
+        Borrar
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>

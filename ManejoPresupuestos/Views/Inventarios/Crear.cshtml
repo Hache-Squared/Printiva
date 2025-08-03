@@ -1,0 +1,67 @@
+﻿@model InventarioCreacionViewModel;
+@{
+	ViewData["Title"] = "Crear Inventario";
+}
+
+<h1>Crear inventario</h1>
+<h5>
+	Un registro de inventario se refiere a indicar alguna entrada de mercancía o material.
+</h5>
+
+<form asp-action="Crear" class="">
+    <div asp-validation-summary="ModelOnly" class="text-danger">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaCreacion" class="form-label"></label>
+        <input asp-for="FechaCreacion" class="form-control" />
+        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InventarioMarcaId" class="form-label"></label>
+        <select asp-for="InventarioMarcaId" asp-items="@Model.Marcas" class="form-select"></select>
+        <span asp-validation-for="InventarioMarcaId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InventarioTipoId" class="form-label"></label>
+        <select asp-for="InventarioTipoId" asp-items="@Model.Tipos" class="form-select"></select>
+        <span asp-validation-for="InventarioTipoId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InventarioNombreId" class="form-label"></label>
+        <select asp-for="InventarioNombreId" asp-items="@Model.Nombres" class="form-select"></select>
+        <span asp-validation-for="InventarioNombreId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InventarioColorId" class="form-label"></label>
+        <select asp-for="InventarioColorId" asp-items="@Model.Colores" class="form-select"></select>
+        <span asp-validation-for="InventarioColorId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InventarioUnidadId" class="form-label"></label>
+        <select asp-for="InventarioUnidadId" asp-items="@Model.Unidades" class="form-select"></select>
+        <span asp-validation-for="InventarioUnidadId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        Enviar
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

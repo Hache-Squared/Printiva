@@ -1,0 +1,31 @@
+﻿@model InventarioMarca;
+@{
+	ViewData["Title"] = "Crear Marca de Inventario";
+}
+
+<h1>Crear marca de inventario</h1>
+<h5>
+    Una marca de inventario nos permite establecer a qué marca es el producto que almacenaremos.
+</h5>
+
+<form asp-action="CrearMarca">
+    <div asp-validation-summary="ModelOnly" class="text-danger">
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        Enviar
+    </button>
+    <a asp-action="Marcas" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

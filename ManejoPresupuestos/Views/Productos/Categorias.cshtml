@@ -1,0 +1,35 @@
+﻿@model IEnumerable<ProductoCategoria>
+@{
+    ViewData["Title"] = "Categorías de Productos";
+}
+
+<partial name="_Submenu" model="SubMenuProductos.Categorias" />
+
+<h1>Categorías de productos</h1>
+<h5>
+    Una categoría de producto sirve para dividir el tipo de producto que se vende.
+</h5>
+
+<a asp-action="CrearCategoria" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    </thead>
+
+    <tbody>
+        @foreach (var categoria in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarCategoria" asp-route-id="@categoria.ProductoCategoriaId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarCategoriaForm" asp-route-id="@categoria.ProductoCategoriaId">Borrar</a>
+                </td>
+                <td>
+                    @categoria.Nombre
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,35 @@
+﻿@model IEnumerable<InventarioTipo>
+@{
+    ViewData["Title"] = "Tipos de Inventario";
+}
+
+<partial name="_Submenu" model="SubMenuInventarios.Tipos" />
+
+<h1>Tipos de inventario</h1>
+<h5>
+    Un tipo de inventario nos permite clasficar qué tipo de producto almacenaremos.
+</h5>
+
+<a asp-action="CrearTipo" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    </thead>
+
+    <tbody>
+        @foreach (var tipo in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarTipo" asp-route-id="@tipo.InventarioTipoId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarTipoForm" asp-route-id="@tipo.InventarioTipoId">Borrar</a>
+                </td>
+                <td>
+                    @tipo.Nombre
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Producto>
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<partial name="_Submenu" model="SubMenuProductos.Productos" />
+
+<h1>Productos</h1>
+<h5>
+    Un producto es el objeto que vendemos al público.
+</h5>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    <th>Categoría</th>
+    </thead>
+
+    <tbody>
+        @foreach (var producto in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@producto.ProductoId">Editar</a>
+                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@producto.ProductoId">Borrar</a>
+                </td>
+                <td>
+                    @producto.Nombre
+                </td>
+                <td>
+                    @producto.ProductoCategoria
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
