@@ -1,0 +1,18 @@
+﻿@model InventarioNombre;
+@{
+    ViewData["Title"] = "Borrar Nombre de Inventario";
+}
+
+<h3>¿Esta seguro de querer borrar el nombre de inventario @Model.Nombre?</h3>
+
+<form asp-action="BorrarNombre">
+    <input type="hidden" asp-for="InventarioNombreId" />
+
+    <button class="btn btn-danger" type="submit">
+        Borrar
+    </button>
+    <a asp-action="Nombres" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+

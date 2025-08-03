@@ -1,0 +1,17 @@
+﻿@model Producto;
+@{
+    ViewData["Title"] = "Borrar Producto";
+}
+
+<h3>¿Esta seguro de querer borrar el producto @Model.Nombre?</h3>
+
+<form asp-action="BorrarProducto">
+    <input type="hidden" asp-for="ProductoId" />
+
+    <button class="btn btn-danger" type="submit">
+        Borrar
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<InventarioNombre>
+@{
+    ViewData["Title"] = "Nombres de Inventario";
+}
+
+<partial name="_Submenu" model="SubMenuInventarios.Nombres" />
+
+<h1>Nombres de inventario</h1>
+<h5>
+    Un nombre de inventario ayuda a identificar el producto a almacenar.
+</h5>
+
+<a asp-action="CrearNombre" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    <th>Abreviatura</th>
+    </thead>
+
+    <tbody>
+        @foreach (var nombre in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarNombre" asp-route-id="@nombre.InventarioNombreId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarNombreForm" asp-route-id="@nombre.InventarioNombreId">Borrar</a>
+                </td>
+                <td>
+                    @nombre.Nombre
+                </td>
+                <td>
+                    @nombre.Abreviatura
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

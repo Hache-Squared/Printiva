@@ -1,0 +1,18 @@
+﻿@model InventarioMarca;
+@{
+    ViewData["Title"] = "Borrar Marca de Inventario";
+}
+
+<h3>¿Esta seguro de querer borrar la marca de inventario @Model.Nombre?</h3>
+
+<form asp-action="BorrarMarca">
+    <input type="hidden" asp-for="InventarioMarcaId" />
+
+    <button class="btn btn-danger" type="submit">
+        Borrar
+    </button>
+    <a asp-action="Marcas" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+

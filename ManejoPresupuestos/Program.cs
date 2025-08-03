@@ -27,6 +27,14 @@ builder.Services.AddTransient<IRepositorioCuentas, RepositorioCuentas>();
 builder.Services.AddTransient<IRepositorioCategorias, RepositorioCategorias>();
 builder.Services.AddTransient<IRepositorioTransacciones, RepositorioTransacciones>();
 builder.Services.AddTransient<IRepositorioUsuarios, RepositorioUsuarios>();
+builder.Services.AddTransient<IRepositorioInventarioMarcas, RepositorioInventarioMarcas>();
+builder.Services.AddTransient<IRepositorioInventarioTipos, RepositorioInventarioTipos>();
+builder.Services.AddTransient<IRepositorioInventarioColores, RepositorioInventarioColores>();
+builder.Services.AddTransient<IRepositorioInventarioNombres, RepositorioInventarioNombres>();
+builder.Services.AddTransient<IRepositorioInventarios, RepositorioInventarios>();
+builder.Services.AddTransient<IRepositorioInventarioUnidades, RepositorioInventarioUnidades>();
+builder.Services.AddTransient<IRepositorioProductos, RepositorioProductos>();
+builder.Services.AddTransient<IRepositorioProductoCategorias, RepositorioProductoCategorias>();
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();

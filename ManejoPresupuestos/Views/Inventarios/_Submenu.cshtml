@@ -1,0 +1,23 @@
+﻿@model SubMenuInventarios;
+
+<ul class="nav nav-pills nav-fill mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuInventarios.Inventarios ? "active" : null) " asp-action="Index">Inventarios</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuInventarios.Marcas ? "active" : null) " asp-action="Marcas">Marcas</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuInventarios.Tipos ? "active" : null) " asp-action="Tipos">Tipos</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuInventarios.Colores ? "active" : null) " asp-action="Colores">Colores</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuInventarios.Nombres ? "active" : null) " asp-action="Nombres">Nombres</a>
+    </li>
+</ul>

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<InventarioColor>
+@{
+    ViewData["Title"] = "Colores de Inventario";
+}
+
+<partial name="_Submenu" model="SubMenuInventarios.Colores" />
+
+<h1>Colores de inventario</h1>
+<h5>
+    Un color de inventario nos permite clasficar el color del producto que almacenaremos.
+</h5>
+
+<a asp-action="CrearColor" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    <th>Abreviatura</th>
+    </thead>
+
+    <tbody>
+        @foreach (var color in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarColor" asp-route-id="@color.InventarioColorId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarColorForm" asp-route-id="@color.InventarioColorId">Borrar</a>
+                </td>
+                <td>
+                    @color.Nombre
+                </td>
+                <td>
+                    @color.Abreviatura
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

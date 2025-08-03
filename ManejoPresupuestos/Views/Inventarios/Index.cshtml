@@ -1,0 +1,48 @@
+﻿@model IEnumerable<Inventario>
+@{
+    ViewData["Title"] = "Registros de Inventario";
+}
+
+<partial name="_Submenu" model="SubMenuInventarios.Inventarios" />
+
+<h1>Registros de inventario</h1>
+<h5>
+    Un registro de inventario se refiere a indicar alguna entrada de mercancía o material.
+</h5>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Fecha</th>
+    <th>Nombre</th>
+    <th>Color</th>
+    <th>Cantidad</th>
+
+    </thead>
+
+    <tbody>
+        @foreach (var inventario in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@inventario.InventarioId">Editar</a>
+                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@inventario.InventarioId">Borrar</a>
+                </td>
+                <td>
+                    @inventario.FechaCreacion.ToString("dd/MM/yyyy")
+                </td>
+                <td>
+                    @inventario.Nombre.Nombre
+                </td>
+                <td>
+                    @inventario.Color.Nombre
+                </td>
+                <td>
+                    @inventario.Cantidad @if (inventario.Unidad.Nombre == "Unidad") { @("unid") } else { @("g") }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
