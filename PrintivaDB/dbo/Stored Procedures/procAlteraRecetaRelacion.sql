@@ -140,8 +140,9 @@ BEGIN
 				SOURCE.InventarioId,
 				SOURCE.Cantidad
 			)
-		WHEN NOT MATCHED BY SOURCE THEN
-			DELETE; 
+		WHEN NOT MATCHED BY SOURCE 
+		AND TARGET.RecetaId = @elementoId THEN  -- Esto filtra correctamente el DELETE
+			DELETE;
 
 			
 

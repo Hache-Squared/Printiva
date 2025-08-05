@@ -4,6 +4,4 @@
 	ProductoId INT NOT NULL,
 	TiempoImpresion VARCHAR(200) NOT NULL
 
-	CONSTRAINT FK_TblRecetas_TblProductos FOREIGN KEY(ProductoId)
-		REFERENCES dbo.TblProductos(ProductoId)
 )

@@ -1,12 +1,16 @@
 ﻿using Dapper;
+using Irony.Parsing;
 using ManejoPresupuestos.Models;
 using Microsoft.Data.SqlClient;
+using static ClosedXML.Excel.XLPredefinedFormat;
 namespace ManejoPresupuestos.Servicios
 {
     public interface IRepositorioRecetas
     {
         Task<IEnumerable<Inventario>> ObtenerTodos();
         Task<IEnumerable<InventarioParaReceta>> ObtenerInventariosReceta(ParametroObtenerInventariosParaReceta modelo);
+        Task<ResultProcedureGeneric> CrearReceta(ParametroCrearReceta param);
+        Task<ResultProcedureGeneric> CrearRelacionRecetaInventario(ParametroCrearRelacionRecetaInventario param);
         Task<Inventario?> ObtenerPorId(int id);
         Task Actualizar(Inventario inventario);
         Task Borrar(int id);
@@ -44,8 +48,35 @@ namespace ManejoPresupuestos.Servicios
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
-
-
+        }
+        public async Task<ResultProcedureGeneric> CrearReceta(ParametroCrearReceta param)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procAlteraReceta",
+                new
+                {
+                    Nombre = param.Nombre,
+                    TiempoImpresion = param.Tiempo,
+                    ProductoId = param.ProductoId,
+                    loginId = param.LoginId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+        public async Task<ResultProcedureGeneric> CrearRelacionRecetaInventario(ParametroCrearRelacionRecetaInventario param)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procAlteraRecetaRelacion",
+                new
+                {
+                    Json = param.Json,
+                    ElementoAlterarId = param.RecetaId,
+                    loginId = param.LoginId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
         }
 
         public async Task<Inventario?> ObtenerPorId(int id)

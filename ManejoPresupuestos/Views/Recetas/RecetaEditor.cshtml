@@ -17,9 +17,9 @@
         <span>Registrar producto a imprimir con los materiales que lo componen.</span>
     </div>
     <div class="container col-6 row">
-        <h4>Producto: Casco Industrial FIME</h4>
-        <span>Numero de materiales: 2</span>
-        <span>Total de material (gr): 120</span>
+        <h4>Producto: <input id="nombre-receta" type="text" class="form-control" placeholder="Carrito/Casco Ingeniero ..."/> </h4>
+        <span>Tiempo de impresión: <input id="tiempo-receta" type="text" class="form-control" placeholder="40 minutos..." /></span>
+        <a id="btn-guardar-receta" class="btn btn-primary mt-1">Guardar</a>
     </div>
 </div>
 
@@ -54,8 +54,10 @@
         let items = @Html.Raw(JsonConvert.SerializeObject(Model));
         console.log({items})
         $(function () {
+            ControladorRecetaEditor.inicializarListener(urlRecetaGuardar);
             ControladorRecetaEditor.inicializarListas(items, [])
             ControladorRecetaEditor.inicializarRecetaEditor()
+            
         })
     </script>
 }

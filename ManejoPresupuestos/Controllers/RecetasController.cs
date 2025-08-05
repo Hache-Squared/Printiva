@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.EMMA;
 using ManejoPresupuestos.Models;
 using ManejoPresupuestos.Servicios;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
 namespace ManejoPresupuestos.Controllers
@@ -54,11 +57,52 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RecetaEditorGuardar()
+        public async Task<IActionResult> RecetaEditorGuardar([FromBody] CrearRecetaViewModel modelo)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
 
-            return RedirectToAction("RecetaEditor");
+            var param = new ParametroCrearReceta()
+            {
+                LoginId = usuarioId,
+                Nombre = modelo.Nombre,
+                ProductoId = modelo.ProductoId,
+                Tiempo = modelo.Tiempo
+            };
+            var crearReceta = await repositorioRecetas.CrearReceta(param);
+            if(crearReceta.result != ResultProcedureType.SUCCESS)
+            {
+                return Json(new
+                {
+                    result = "fail",
+                    message = "Receta no creada: " + crearReceta.message
+                });
+            }
+            var json = JsonConvert.SerializeObject(modelo.Inventarios, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver(), // Respeta las mayúsculas
+                Formatting = Formatting.None
+            });
+            var paramRelation = new ParametroCrearRelacionRecetaInventario()
+            {
+                LoginId = usuarioId,
+                RecetaId = crearReceta.elementoId,
+                Json = json
+            };
+            var crearRecetaRelacion = await repositorioRecetas.CrearRelacionRecetaInventario(paramRelation);
+            if (crearRecetaRelacion.result != ResultProcedureType.SUCCESS)
+            {
+                return Json(new
+                {
+                    result = "fail",
+                    message = "Receta no creada: " + crearRecetaRelacion.message 
+                });
+            }
+
+
+            return Json(new {
+                result = "success",
+                message = "Receta creada con exito"
+            });
         }
 
     }
