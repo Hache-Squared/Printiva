@@ -37,7 +37,12 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> Index()
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-            var recetas = new List<Receta>();
+            var param = new ParametroObtenerRecetas()
+            {
+                ElementoObtenerId = 0,
+                LoginId = usuarioId
+            };
+            var recetas = await repositorioRecetas.ObtenerTodos(param);
             return View(recetas);
         }
 

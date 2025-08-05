@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Receta>
+﻿@model IEnumerable<RecetaMostarIndex>
 @{
     ViewData["Title"] = "Recetas";
 }
@@ -16,6 +16,7 @@
     <thead>
     <th>Acciones</th>
     <th>Nombre</th>
+    <th>Tiempo De Impresion</th>
     <th>Producto</th>
     </thead>
 
@@ -29,6 +30,9 @@
                 </td>
                 <td>
                     @receta.Nombre
+                </td>
+                <td>
+                    @receta.TiempoImpresion
                 </td>
                 <td>
                     @* @receta.ProductoCategoria *@

@@ -7,7 +7,7 @@ namespace ManejoPresupuestos.Servicios
 {
     public interface IRepositorioRecetas
     {
-        Task<IEnumerable<Inventario>> ObtenerTodos();
+        Task<IEnumerable<RecetaMostarIndex>> ObtenerTodos(ParametroObtenerRecetas param);
         Task<IEnumerable<InventarioParaReceta>> ObtenerInventariosReceta(ParametroObtenerInventariosParaReceta modelo);
         Task<ResultProcedureGeneric> CrearReceta(ParametroCrearReceta param);
         Task<ResultProcedureGeneric> CrearRelacionRecetaInventario(ParametroCrearRelacionRecetaInventario param);
@@ -25,14 +25,20 @@ namespace ManejoPresupuestos.Servicios
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public async Task<IEnumerable<Inventario>> ObtenerTodos()
+        public async Task<IEnumerable<RecetaMostarIndex>> ObtenerTodos(ParametroObtenerRecetas param)
         {
             using var connection = new SqlConnection(connectionString);
-            return await connection.QueryAsync<Inventario>(
-                @"
-                    SELECT * FROM TblInventarios ORDER BY FechaCreacion DESC, InventarioId DESC
-                "
+            return await connection.QueryAsync<RecetaMostarIndex>(
+                "dbo.procObtenerRecetas",
+                new
+                {
+                    loginId = param.LoginId,
+                    ElementoObtenerId = param.ElementoObtenerId
+
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
+
         }
 
         public async Task<IEnumerable<InventarioParaReceta>> ObtenerInventariosReceta(ParametroObtenerInventariosParaReceta modelo)
