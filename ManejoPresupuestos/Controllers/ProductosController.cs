@@ -28,22 +28,6 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> RecetaEditor()
-        {
-            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RecetaEditorGuardar()
-        {
-            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-
-            return RedirectToAction("RecetaEditor");
-        }
-
-        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();

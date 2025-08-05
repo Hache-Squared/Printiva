@@ -35,6 +35,7 @@ builder.Services.AddTransient<IRepositorioInventarios, RepositorioInventarios>()
 builder.Services.AddTransient<IRepositorioInventarioUnidades, RepositorioInventarioUnidades>();
 builder.Services.AddTransient<IRepositorioProductos, RepositorioProductos>();
 builder.Services.AddTransient<IRepositorioProductoCategorias, RepositorioProductoCategorias>();
+builder.Services.AddTransient<IRepositorioRecetas, RepositorioRecetas>();
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();

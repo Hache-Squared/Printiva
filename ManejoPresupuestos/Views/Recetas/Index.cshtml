@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Receta>
+@{
+    ViewData["Title"] = "Recetas";
+}
+
+@* <partial name="_Submenu" model="SubMenuProductos.Productos" />
+ *@
+<h1>Recetas</h1>
+<h5>
+    Una Receta es la composicion de materiales de tu inventario para un producto.
+</h5>
+
+<a asp-action="RecetaEditor" class="btn btn-primary mb-3">Crear Nuevo</a>
+
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    <th>Producto</th>
+    </thead>
+
+    <tbody>
+        @foreach (var receta in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@receta.RecetaId">Editar</a>
+                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@receta.RecetaId">Borrar</a>
+                </td>
+                <td>
+                    @receta.Nombre
+                </td>
+                <td>
+                    @* @receta.ProductoCategoria *@
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,4 +1,7 @@
-﻿<style>
+﻿@using Newtonsoft.Json
+@model IEnumerable<InventarioParaReceta>
+
+<style>
     .full-height {
         height: 100vh;
     }
@@ -48,39 +51,8 @@
     <script src="~/js/ControladorRecetaEditor.js" asp-append-version="true"></script>
     <script>
         const urlRecetaGuardar = '@Url.Action("RecetaEditorGuardar")'
-        let items = [
-            {
-                InventarioId: 1,
-                InventarioMarca: "Marca Ejemplo 1",
-                InventarioTipo: "Filamento",
-                InventarioNombre: "PLA (Material)",
-                InventarioNombreAbreviatura: "PLA",
-                InventarioColor: "Verde",
-                InventarioColorAbreviatura: "green",
-                InventarioUnidad:"gr"
-            },
-            {
-                InventarioId: 2,
-                InventarioMarca: "Marca Ejemplo 2",
-                InventarioTipo: "Filamento",
-                InventarioNombre: "ABS (Material)",
-                InventarioNombreAbreviatura: "ABS",
-                InventarioColor: "Blanco",
-                InventarioColorAbreviatura: "wh",
-                InventarioUnidad: "gr"
-            },
-            {
-                InventarioId: 3,
-                InventarioMarca: "Marca Ejemplo 3",
-                InventarioTipo: "Filamento",
-                InventarioNombre: "PETG (Material)",
-                InventarioNombreAbreviatura: "PETG",
-                InventarioColor: "Amarillo",
-                InventarioColorAbreviatura: "yell",
-                InventarioUnidad: "gr"
-            },
-        ]
-
+        let items = @Html.Raw(JsonConvert.SerializeObject(Model));
+        console.log({items})
         $(function () {
             ControladorRecetaEditor.inicializarListas(items, [])
             ControladorRecetaEditor.inicializarRecetaEditor()
