@@ -25,10 +25,12 @@ namespace ManejoPresupuestos.Models
         [Display(Name = "Fecha Creación")]
         [DataType(DataType.Date)]
         public DateTime FechaCreacion { get; set; } = DateTime.Today;
-        public InventarioMarca Marca { get; set; }
-        public InventarioTipo Tipo { get; set; }
-        public InventarioNombre Nombre { get; set; }
-        public InventarioColor Color { get; set; }
-        public InventarioUnidad Unidad { get; set; }
+        public string InventarioMarca { get; set; }
+        public string InventarioTipo { get; set; }
+        public string InventarioNombre { get; set; }
+        public string InventarioNombreAbreviatura { get; set; }
+        public string InventarioColor { get; set; }
+        public string InventarioColorAbreviatura { get; set; }
+        public string InventarioUnidad { get; set; }
     }
 }

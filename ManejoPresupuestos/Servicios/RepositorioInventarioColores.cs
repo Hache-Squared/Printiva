@@ -9,8 +9,8 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<InventarioColor>> ObtenerTodos();
         Task Crear(InventarioColor color);
         Task<InventarioColor?> ObtenerPorId(int id);
-        Task Actualizar(InventarioColor color);
-        Task Borrar(int id);
+        Task Actualizar(int usuarioId, InventarioColor color);
+        Task Borrar(int usuarioId, int id);
     }
 
     public class RepositorioInventarioColores : IRepositorioInventarioColores
@@ -59,26 +59,37 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-        public async Task Actualizar(InventarioColor color)
+        public async Task Actualizar(int usuarioId, InventarioColor color)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioColor>(
-                @"
-                    UPDATE TblInventariosColores SET Nombre = @Nombre, Abreviatura = @Abreviatura
-                    WHERE InventarioColorId = @InventarioColorId;
-                ",
-                color
+                "procAlteraInventariosColores",
+                new
+                {
+                    elementoAlterarId = color.InventarioColorId,
+                    nombre = color.Nombre,
+                    abreviatura = color.Abreviatura,
+                    loginId = usuarioId,
+                    actualizar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        public async Task Borrar(int id)
+        public async Task Borrar(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioColor>(
-                @"
-                    DELETE TblInventariosColores WHERE InventarioColorId = @id;
-                ",
-                new { id }
+                "procAlteraInventariosColores",
+                new
+                {
+                    elementoAlterarId = id,
+                    nombre = "Color eliminado",
+                    abreviatura = "Color eliminado",
+                    loginId = usuarioId,
+                    borrar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
     }

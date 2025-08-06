@@ -8,6 +8,7 @@ namespace ManejoPresupuestos.Controllers
 {
     public class InventariosController : Controller
     {
+        private readonly IServicioUsuarios servicioUsuarios;
         private readonly IRepositorioInventarioMarcas repositorioInventarioMarcas;
         private readonly IRepositorioInventarioTipos repositorioInventarioTipos;
         private readonly IRepositorioInventarioColores repositorioInventarioColores;
@@ -17,6 +18,7 @@ namespace ManejoPresupuestos.Controllers
         private readonly IMapper mapper;
 
         public InventariosController(
+            IServicioUsuarios servicioUsuarios,
             IRepositorioInventarioMarcas repositorioInventarioMarcas, 
             IRepositorioInventarioTipos repositorioInventarioTipos, 
             IRepositorioInventarioColores repositorioInventarioColores,
@@ -26,6 +28,7 @@ namespace ManejoPresupuestos.Controllers
             IMapper mapper
         )
         {
+            this.servicioUsuarios = servicioUsuarios;
             this.repositorioInventarioMarcas = repositorioInventarioMarcas;
             this.repositorioInventarioTipos = repositorioInventarioTipos;
             this.repositorioInventarioColores = repositorioInventarioColores;
@@ -38,37 +41,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpGet]
         async public Task<IActionResult> Index()
         {
-            var inventarios = await repositorioInventarios.ObtenerTodos();
-
-            var marcas = await this.repositorioInventarioMarcas.ObtenerTodos();
-            var tipos = await this.repositorioInventarioTipos.ObtenerTodos();
-            var colores = await this.repositorioInventarioColores.ObtenerTodos();
-            var nombres = await this.repositorioInventarioNombres.ObtenerTodos();
-            var unidades = await repositorioInventarioUnidades.ObtenerTodos();
-
-            var dictMarcas = marcas.ToDictionary(m => m.InventarioMarcaId);
-            var dictTipos = tipos.ToDictionary(t => t.InventarioTipoId);
-            var dictColores = colores.ToDictionary(c => c.InventarioColorId);
-            var dictNombres = nombres.ToDictionary(n => n.InventarioNombreId);
-            var dictUnidades = unidades.ToDictionary(u => u.InventarioUnidadId);
-
-            foreach (var inv in inventarios)
-            {
-                if (dictMarcas.TryGetValue(inv.InventarioMarcaId, out var marca))
-                    inv.Marca = marca;
-
-                if (dictTipos.TryGetValue(inv.InventarioTipoId, out var tipo))
-                    inv.Tipo = tipo;
-
-                if (dictColores.TryGetValue(inv.InventarioColorId, out var color))
-                    inv.Color = color;
-
-                if (dictNombres.TryGetValue(inv.InventarioNombreId, out var nombre))
-                    inv.Nombre = nombre;
-
-                if (dictUnidades.TryGetValue(inv.InventarioUnidadId, out var unidad))
-                    inv.Unidad = unidad;
-            }
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var inventarios = await repositorioInventarios.ObtenerTodos(usuarioId);
 
             return View(inventarios);
         }
@@ -149,7 +123,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpGet]
         public async Task<IActionResult> Editar(int id)
         {
-            var inventario = await repositorioInventarios.ObtenerPorId(id);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var inventario = await repositorioInventarios.ObtenerPorId(usuarioId, id);
             if (inventario is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
@@ -169,7 +144,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpPost]
         public async Task<IActionResult> Editar(InventarioCreacionViewModel inventarioEditar)
         {
-            var inventario = await repositorioInventarios.ObtenerPorId(inventarioEditar.InventarioId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var inventario = await repositorioInventarios.ObtenerPorId(usuarioId, inventarioEditar.InventarioId);
             if (inventario is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
@@ -198,14 +174,15 @@ namespace ManejoPresupuestos.Controllers
                 return View(inventarioEditar);
             }
 
-            await repositorioInventarios.Actualizar(inventarioEditar);
+            await repositorioInventarios.Actualizar(usuarioId, inventarioEditar);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
         public async Task<IActionResult> Borrar(int id)
         {
-            var inventario = await repositorioInventarios.ObtenerPorId(id);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var inventario = await repositorioInventarios.ObtenerPorId(usuarioId, id);
             if (inventario is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
@@ -216,13 +193,14 @@ namespace ManejoPresupuestos.Controllers
         [HttpPost]
         public async Task<IActionResult> BorrarInventario(int inventarioId)
         {
-            var inventario = await repositorioInventarios.ObtenerPorId(inventarioId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var inventario = await repositorioInventarios.ObtenerPorId(usuarioId, inventarioId);
             if (inventario is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarios.Borrar(inventarioId);
+            await repositorioInventarios.Borrar(usuarioId, inventarioId);
 
             return RedirectToAction("Index");
         }
@@ -274,7 +252,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioMarcas.Actualizar(marcaEditar);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioMarcas.Actualizar(usuarioId, marcaEditar);
 
             return RedirectToAction("Marcas");
         }
@@ -302,7 +281,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioMarcas.Borrar(inventarioMarcaId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioMarcas.Borrar(usuarioId, inventarioMarcaId);
             return RedirectToAction("Marcas");
         }
 
@@ -353,7 +333,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioTipos.Actualizar(tipoEditar);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioTipos.Actualizar(usuarioId, tipoEditar);
 
             return RedirectToAction("Tipos");
         }
@@ -381,7 +362,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioTipos.Borrar(inventarioTipoId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioTipos.Borrar(usuarioId, inventarioTipoId);
             return RedirectToAction("Tipos");
         }
 
@@ -432,7 +414,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioColores.Actualizar(colorEditar);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioColores.Actualizar(usuarioId, colorEditar);
 
             return RedirectToAction("Colores");
         }
@@ -460,7 +443,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioColores.Borrar(inventarioColorId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioColores.Borrar(usuarioId, inventarioColorId);
             return RedirectToAction("Colores");
         }
 
@@ -511,7 +495,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioNombres.Actualizar(nombreEditar);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioNombres.Actualizar(usuarioId, nombreEditar);
 
             return RedirectToAction("Nombres");
         }
@@ -539,7 +524,8 @@ namespace ManejoPresupuestos.Controllers
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            await repositorioInventarioNombres.Borrar(inventarioNombreId);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            await repositorioInventarioNombres.Borrar(usuarioId, inventarioNombreId);
             return RedirectToAction("Nombres");
         }
 

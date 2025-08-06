@@ -9,8 +9,8 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<InventarioTipo>> ObtenerTodos();
         Task Crear(InventarioTipo tipo);
         Task<InventarioTipo?> ObtenerPorId(int id);
-        Task Actualizar(InventarioTipo tipo);
-        Task Borrar(int id);
+        Task Actualizar(int usuarioId, InventarioTipo tipo);
+        Task Borrar(int usuarioId, int id);
     }
 
     public class RepositorioInventarioTipos : IRepositorioInventarioTipos
@@ -59,26 +59,35 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-        public async Task Actualizar(InventarioTipo tipo)
+        public async Task Actualizar(int usuarioId, InventarioTipo tipo)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioTipo>(
-                @"
-                    UPDATE TblInventariosTipos SET Nombre = @Nombre
-                    WHERE InventarioTipoId = @InventarioTipoId;
-                ",
-                tipo
+                "procAlteraInventariosTipos",
+                new
+                {
+                    elementoAlterarId = tipo.InventarioTipoId,
+                    nombre = tipo.Nombre,
+                    loginId = usuarioId,
+                    actualizar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        public async Task Borrar(int id)
+        public async Task Borrar(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioTipo>(
-                @"
-                    DELETE TblInventariosTipos WHERE InventarioTipoId = @id;
-                ",
-                new { id }
+                "procAlteraInventariosTipos",
+                new
+                {
+                    elementoAlterarId = id,
+                    nombre = "Tipo eliminado",
+                    loginId = usuarioId,
+                    borrar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
     }

@@ -6,11 +6,11 @@ namespace ManejoPresupuestos.Servicios
 {
     public interface IRepositorioInventarios
     {
-        Task<IEnumerable<Inventario>> ObtenerTodos();
+        Task<IEnumerable<Inventario>> ObtenerTodos(int usuarioId);
         Task Crear(Inventario inventario);
-        Task<Inventario?> ObtenerPorId(int id);
-        Task Actualizar(Inventario inventario);
-        Task Borrar(int id);
+        Task<Inventario?> ObtenerPorId(int usuarioId, int id);
+        Task Actualizar(int usuarioId, Inventario inventario);
+        Task Borrar(int usuarioId, int id);
     }
 
     public class RepositorioInventarios : IRepositorioInventarios
@@ -22,13 +22,16 @@ namespace ManejoPresupuestos.Servicios
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public async Task<IEnumerable<Inventario>> ObtenerTodos()
+        public async Task<IEnumerable<Inventario>> ObtenerTodos(int usuarioId)
         {
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<Inventario>(
-                @"
-                    SELECT * FROM TblInventarios ORDER BY FechaCreacion DESC, InventarioId DESC
-                "
+                "procObtenerInventarios",
+                new
+                {
+                    loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
@@ -48,37 +51,53 @@ namespace ManejoPresupuestos.Servicios
             inventario.InventarioId = id;
         }
 
-        public async Task<Inventario?> ObtenerPorId(int id)
+        public async Task<Inventario?> ObtenerPorId(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryFirstOrDefaultAsync<Inventario>(
-                @"
-                    SELECT * FROM TblInventarios WHERE InventarioId = @Id
-                ",
-                new { id }
+                "procObtenerInventarios",
+                new
+                {
+                    elementoObtenerId = id,
+                    loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        public async Task Actualizar(Inventario inventario)
+        public async Task Actualizar(int usuarioId, Inventario inventario)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<Inventario>(
-                @"
-                    UPDATE TblInventarios SET InventarioMarcaId = @InventarioMarcaId, InventarioTipoId = @InventarioTipoId, InventarioNombreId = @InventarioNombreId, InventarioColorId = @InventarioColorId, Cantidad = @Cantidad, InventarioUnidadId = @InventarioUnidadId, FechaCreacion = @FechaCreacion
-                    WHERE InventarioId = @InventarioId;
-                ",
-                inventario
+                "procActualizarRegistrosInventarios",
+                new
+                {
+                    elementoAlterarId = inventario.InventarioId,
+                    inventarioMarcaId = inventario.InventarioMarcaId,
+                    inventarioTipoId = inventario.InventarioTipoId,
+                    inventarioColorId = inventario.InventarioColorId,
+                    cantidad = inventario.Cantidad,
+                    inventarioUnidadId = inventario.InventarioUnidadId,
+                    inventarioNombreId = inventario.InventarioNombreId,
+                    loginId = usuarioId,
+                    actualizar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        public async Task Borrar(int id)
+        public async Task Borrar(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<Inventario>(
-                @"
-                    DELETE TblInventarios WHERE InventarioId = @id;
-                ",
-                new { id }
+                "procActualizarRegistrosInventarios",
+                new
+                {
+                    elementoAlterarId = id,
+                    loginId = usuarioId,
+                    borrar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
     }
