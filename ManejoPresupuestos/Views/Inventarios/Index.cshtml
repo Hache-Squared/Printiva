@@ -34,13 +34,13 @@
                     @inventario.FechaCreacion.ToString("dd/MM/yyyy")
                 </td>
                 <td>
-                    @inventario.Nombre.Nombre
+                    @inventario.InventarioNombre
                 </td>
                 <td>
-                    @inventario.Color.Nombre
+                    @inventario.InventarioColor
                 </td>
                 <td>
-                    @inventario.Cantidad @if (inventario.Unidad.Nombre == "Unidad") { @("unid") } else { @("g") }
+                    @inventario.Cantidad @if (inventario.InventarioUnidad == "Unidad") { @("unid") } else { @("g") }
                 </td>
             </tr>
         }

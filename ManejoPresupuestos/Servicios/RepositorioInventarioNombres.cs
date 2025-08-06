@@ -9,8 +9,8 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<InventarioNombre>> ObtenerTodos();
         Task Crear(InventarioNombre nombre);
         Task<InventarioNombre?> ObtenerPorId(int id);
-        Task Actualizar(InventarioNombre nombre);
-        Task Borrar(int id);
+        Task Actualizar(int usuarioId, InventarioNombre nombre);
+        Task Borrar(int usuarioId, int id);
     }
 
     public class RepositorioInventarioNombres : IRepositorioInventarioNombres
@@ -59,26 +59,37 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-        public async Task Actualizar(InventarioNombre nombre)
+        public async Task Actualizar(int usuarioId, InventarioNombre nombre)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioNombre>(
-                @"
-                    UPDATE TblInventariosNombres SET Nombre = @Nombre, Abreviatura = @Abreviatura
-                    WHERE InventarioNombreId = @InventarioNombreId;
-                ",
-                nombre
+                "procAlteraInventariosNombres",
+                new
+                {
+                    elementoAlterarId = nombre.InventarioNombreId,
+                    nombre = nombre.Nombre,
+                    abreviatura = nombre.Abreviatura,
+                    loginId = usuarioId,
+                    actualizar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        public async Task Borrar(int id)
+        public async Task Borrar(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.QueryFirstOrDefaultAsync<InventarioNombre>(
-                @"
-                    DELETE TblInventariosNombres WHERE InventarioNombreId = @id;
-                ",
-                new { id }
+                "procAlteraInventariosNombres",
+                new
+                {
+                    elementoAlterarId = id,
+                    nombre = "Nombre eliminado",
+                    abreviatura = "Nombre eliminado",
+                    loginId = usuarioId,
+                    borrar = 1
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
     }
