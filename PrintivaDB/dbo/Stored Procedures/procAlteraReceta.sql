@@ -66,15 +66,6 @@ BEGIN
 				ISNULL(@Actualizar, 0) = 1
 			)
 			BEGIN
-				IF EXISTS(
-					SELECT 1
-					FROM dbo.TblRecetas im (NOLOCK)
-					WHERE im.Nombre = @Nombre
-				)
-				BEGIN
-					SET @message = 'Nombre ya existe actualmente.';
-					RAISERROR(@message, 16, 1);
-				END
 
 				UPDATE tgt
 					SET tgt.Nombre = @Nombre,

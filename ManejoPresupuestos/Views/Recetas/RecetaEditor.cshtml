@@ -2,62 +2,83 @@
 @model IEnumerable<InventarioParaReceta>
 
 <style>
-    .full-height {
-        height: 100vh;
-    }
-
-    .half-width {
-        height: 100%;
-    }
+    .full-height { height: 100vh; }
+    .half-width { height: 100%; }
 </style>
 
 <div class="container-fluid row">
     <div class="container col-6">
         <h2>Editor de receta para producto.</h2>
-        <span>Registrar producto a imprimir con los materiales que lo componen.</span>
+        <span>Registrar o actualizar producto con sus materiales.</span>
     </div>
     <div class="container col-6 row">
-        <h4>Producto: <input id="nombre-receta" type="text" class="form-control" placeholder="Carrito/Casco Ingeniero ..."/> </h4>
-        <span>Tiempo de impresión: <input id="tiempo-receta" type="text" class="form-control" placeholder="40 minutos..." /></span>
+        <input type="hidden" id="receta-id" value="@(ViewBag.Receta?.Id ?? 0)" />  
+
+        <h4>Producto: 
+            <input id="nombre-receta" type="text" class="form-control"
+                   placeholder="Carrito/Casco Ingeniero ..."
+                   value="@(ViewBag.Receta?.Nombre ?? "")" />
+        </h4>
+
+        <span>Tiempo de impresión:
+            <input id="tiempo-receta" type="text" class="form-control"
+                   placeholder="40 minutos..."
+                   value="@(ViewBag.Receta?.Tiempo ?? "")" />
+        </span>
+
         <a id="btn-guardar-receta" class="btn btn-primary mt-1">Guardar</a>
     </div>
 </div>
 
-<hr/>
+<hr />
+
 <div class="container-fluid full-height">
     <div class="row h-100">
-        <div style="background-color: #ecf0f1;border-top-left-radius: 1rem;border-bottom-left-radius: 1rem;" class="col-6 d-flex flex-column half-width">
+        <div style="background-color: #ecf0f1;border-top-left-radius: 1rem;border-bottom-left-radius: 1rem;"
+             class="col-6 d-flex flex-column half-width">
             <div class="container d-flex align-items-center justify-content-center p-1">
                 <h4>Materiales de inventario</h4>
             </div>
-            <div style="width:100%; height:100%; background:none; overflow-y: scroll" class="container" id="left">
-                
-            </div>
+            <div style="width:100%; height:100%; overflow-y: scroll" class="container" id="left"></div>
         </div>
-        <div style="background-color: #ecf0f1;border-top-right-radius: 1rem;border-bottom-right-radius: 1rem;" class="col-6 d-flex flex-column half-width">
+
+        <div style="background-color: #ecf0f1;border-top-right-radius: 1rem;border-bottom-right-radius: 1rem;"
+             class="col-6 d-flex flex-column half-width">
             <div class="container d-flex align-items-center justify-content-center p-1">
                 <h4>Materiales que componen al producto</h4>
             </div>
-            <div style="width:100%; height:100%; background:none; overflow-y: scroll" class="container" id="right">
-               
-            </div>
+            <div style="width:100%; height:100%; overflow-y: scroll" class="container" id="right"></div>
         </div>
     </div>
 </div>
-
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/ControladorRecetaEditor.js" asp-append-version="true"></script>
     <script>
-        const urlRecetaGuardar = '@Url.Action("RecetaEditorGuardar")'
-        let items = @Html.Raw(JsonConvert.SerializeObject(Model));
-        console.log({items})
-        $(function () {
-            ControladorRecetaEditor.inicializarListener(urlRecetaGuardar);
-            ControladorRecetaEditor.inicializarListas(items, [])
-            ControladorRecetaEditor.inicializarRecetaEditor()
-            
+        const urlRecetaGuardar = '@Url.Action("RecetaEditorGuardar")';
+        let items = @Html.Raw(JsonConvert.SerializeObject(Model)); // inventarios disponibles
+        let itemsSeleccionados = @Html.Raw(JsonConvert.SerializeObject(ViewBag.MaterialesSeleccionados ?? new List<object>()));
+        itemsSeleccionados = itemsSeleccionados?.map(x => {
+            return {
+                ...x,
+                cantidadRequerida: x?.CantidadAsignada ?? 0
+            }
         })
+        console.log({
+            items,
+            itemsSeleccionados
+        })
+        $(function () {
+            const recetaId = parseInt($("#receta-id").val()) || 0;
+            if (recetaId > 0) {
+                $("#btn-guardar-receta").text("Actualizar");
+            }
+            
+            ControladorRecetaEditor.LimpiarLocalStorage();
+            ControladorRecetaEditor.inicializarListas(items, itemsSeleccionados);
+
+            ControladorRecetaEditor.inicializarListener(urlRecetaGuardar);
+        });
     </script>
 }

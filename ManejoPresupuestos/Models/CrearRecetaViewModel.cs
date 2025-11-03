@@ -2,6 +2,7 @@
 {
     public class CrearRecetaViewModel
     {
+        public int RecetaId { get; set; }
         public string Nombre { get; set; }
         public string Tiempo { get; set; }
         public int ProductoId { get; set; }

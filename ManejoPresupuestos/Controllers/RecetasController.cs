@@ -61,25 +61,84 @@ namespace ManejoPresupuestos.Controllers
             return View(inventariosReceta);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> RecetaEditorUpdate(int recetaId)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var receta = await repositorioRecetas.ObtenerRecetaPorId(recetaId, usuarioId);
+
+            if (receta is null || receta.RecetaId == 0)
+                return RedirectToAction("NoEncontrado", "Home");
+
+            // Inventarios ya asignados a la receta (lado derecho)
+            var recetaInventarios = await repositorioRecetas.ObtenerRecetaInventarioNecesario(receta.RecetaId, usuarioId);
+
+            // Inventarios totales (lado izquierdo)
+            var param = new ParametroObtenerInventariosParaReceta()
+            {
+                ElementoObtenerId = 0,
+                LoginId = usuarioId
+            };
+            var inventariosReceta = await repositorioRecetas.ObtenerInventariosReceta(param);
+
+            // Filtrar los inventarios disponibles (solo los NO seleccionados)
+            var idsSeleccionados = recetaInventarios.Select(x => x.InventarioId).ToHashSet();
+            var inventariosDisponibles = inventariosReceta.Where(x => !idsSeleccionados.Contains(x.InventarioId)).ToList();
+
+            // Guardar info en ViewBag
+            ViewBag.Receta = new
+            {
+                Id = receta.RecetaId,
+                Nombre = receta.Nombre,
+                Tiempo = receta.TiempoImpresion
+            };
+
+            // Mandar los materiales ya seleccionados
+            ViewBag.MaterialesSeleccionados = recetaInventarios;
+
+            return View("RecetaEditor", inventariosDisponibles);
+        }
+
         [HttpPost]
         public async Task<IActionResult> RecetaEditorGuardar([FromBody] CrearRecetaViewModel modelo)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
 
-            var param = new ParametroCrearReceta()
+            ParametroAlterarReceta param;
+            
+            if(modelo.RecetaId != 0)
             {
-                LoginId = usuarioId,
-                Nombre = modelo.Nombre,
-                ProductoId = modelo.ProductoId,
-                Tiempo = modelo.Tiempo
-            };
+                param = new ParametroAlterarReceta()
+                {
+                    LoginId = usuarioId,
+                    Nombre = modelo.Nombre,
+                    ProductoId = modelo.ProductoId,
+                    Tiempo = modelo.Tiempo,
+                    ElementoAlterarId = modelo.RecetaId,
+                    Actualizar = 1
+                };
+
+            }
+            else
+            {
+                param = new ParametroAlterarReceta()
+                {
+                    LoginId = usuarioId,
+                    Nombre = modelo.Nombre,
+                    ProductoId = modelo.ProductoId,
+                    Tiempo = modelo.Tiempo,
+                };
+            }
+
+
+
             var crearReceta = await repositorioRecetas.CrearReceta(param);
             if(crearReceta.result != ResultProcedureType.SUCCESS)
             {
                 return Json(new
                 {
                     result = "fail",
-                    message = "Receta no creada: " + crearReceta.message
+                    message = "Receta no modificada: " + crearReceta.message
                 });
             }
             var json = JsonConvert.SerializeObject(modelo.Inventarios, new JsonSerializerSettings
@@ -106,7 +165,7 @@ namespace ManejoPresupuestos.Controllers
 
             return Json(new {
                 result = "success",
-                message = "Receta creada con exito"
+                message = "Receta guardada con exito"
             });
         }
 

@@ -9,8 +9,11 @@ namespace ManejoPresupuestos.Servicios
     {
         Task<IEnumerable<RecetaMostarIndex>> ObtenerTodos(ParametroObtenerRecetas param);
         Task<IEnumerable<InventarioParaReceta>> ObtenerInventariosReceta(ParametroObtenerInventariosParaReceta modelo);
-        Task<ResultProcedureGeneric> CrearReceta(ParametroCrearReceta param);
+        Task<ResultProcedureGeneric> CrearReceta(ParametroAlterarReceta param);
         Task<ResultProcedureGeneric> CrearRelacionRecetaInventario(ParametroCrearRelacionRecetaInventario param);
+
+        Task<RecetaProductoViewModel> ObtenerRecetaPorId(int id, int loginId);
+        Task<IEnumerable<InventarioParaReceta>> ObtenerRecetaInventarioNecesario(int id, int loginId);
         Task<Inventario?> ObtenerPorId(int id);
         Task Actualizar(Inventario inventario);
         Task Borrar(int id);
@@ -55,7 +58,7 @@ namespace ManejoPresupuestos.Servicios
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
-        public async Task<ResultProcedureGeneric> CrearReceta(ParametroCrearReceta param)
+        public async Task<ResultProcedureGeneric> CrearReceta(ParametroAlterarReceta param)
         {
             using var connection = new SqlConnection(connectionString);
             return await connection.QuerySingleAsync<ResultProcedureGeneric>(
@@ -65,7 +68,9 @@ namespace ManejoPresupuestos.Servicios
                     Nombre = param.Nombre,
                     TiempoImpresion = param.Tiempo,
                     ProductoId = param.ProductoId,
-                    loginId = param.LoginId
+                    loginId = param.LoginId,
+                    Actualizar = param.Actualizar,
+                    ElementoAlterarId = param.ElementoAlterarId,
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
@@ -116,6 +121,35 @@ namespace ManejoPresupuestos.Servicios
                     DELETE TblInventarios WHERE InventarioId = @id;
                 ",
                 new { id }
+            );
+        }
+
+        public async Task<RecetaProductoViewModel> ObtenerRecetaPorId(int id, int loginId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<RecetaProductoViewModel>(
+                "dbo.procObtenerRecetas",
+                new
+                {
+                    ElementoObtenerId = id,
+                    loginId = loginId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<IEnumerable<InventarioParaReceta>> ObtenerRecetaInventarioNecesario(int id, int loginId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<InventarioParaReceta>(
+                "dbo.procObtenerRecetaInventario",
+                new
+                {
+                    loginId = loginId,
+                    ElementoObtenerId = id
+
+                },
+                commandType: System.Data.CommandType.StoredProcedure
             );
         }
     }
