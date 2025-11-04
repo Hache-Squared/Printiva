@@ -3,41 +3,197 @@
     ViewData["Title"] = "Recetas";
 }
 
-@* <partial name="_Submenu" model="SubMenuProductos.Productos" />
- *@
 <h1>Recetas</h1>
-<h5>
-    Una Receta es la composicion de materiales de tu inventario para un producto.
-</h5>
+<h5>Una Receta es la composición de materiales de tu inventario para un producto.</h5>
 
 <a asp-action="RecetaEditor" class="btn btn-primary mb-3">Crear Nuevo</a>
 
-<table class="table">
+<table class="table table-striped">
     <thead>
-    <th>Acciones</th>
-    <th>Nombre</th>
-    <th>Tiempo De Impresion</th>
-    <th>Producto</th>
+        <tr>
+            <th class="text-center">Acciones</th>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Tiempo de Impresión</th>
+            <th class="text-center">Producto</th>
+        </tr>
     </thead>
-
     <tbody>
         @foreach (var receta in Model)
         {
             <tr>
-                <td>
+                <td class="text-center">
                     <a class="btn btn-primary" asp-action="RecetaEditorUpdate" asp-route-recetaId="@receta.RecetaId">Editar</a>
-                    
                 </td>
+                <td class="text-center">@receta.Nombre</td>
+                <td class="text-center">@receta.TiempoImpresion</td>
+
                 <td>
-                    @receta.Nombre
+                    <div class="row align-items-center text-center">
+                        <div class="col-6 fw-semibold producto-nombre">
+                            @(string.IsNullOrEmpty(receta.ProductoNombre) ? "Sin asignar" : receta.ProductoNombre)
+                        </div>
+
+                        <div class="col-3">
+                            <button class="btn btn-outline-primary btn-sm w-100"
+                                    onclick="abrirModalSeleccionProducto(@receta.RecetaId, '@receta.Nombre', '@receta.TiempoImpresion')">
+                                @(string.IsNullOrEmpty(receta.ProductoNombre) ? "Asignar" : "Actualizar")
+                            </button>
+                        </div>
+
+                        <div class="col-3">
+                            @if (!string.IsNullOrEmpty(receta.ProductoNombre) && receta.ProductoId != 0)
+                            {
+                                <button class="btn btn-outline-danger btn-sm w-100"
+                                        onclick="quitarRelacionProducto(@receta.RecetaId, '@receta.Nombre', '@receta.TiempoImpresion')">
+                                    Quitar
+                                </button>
+                            }
+                        </div>
+                    </div>
                 </td>
-                <td>
-                    @receta.TiempoImpresion
-                </td>
-                <td>
-                    @* @receta.ProductoCategoria *@
-                </td>
+
+
             </tr>
         }
     </tbody>
 </table>
+
+<!--  Modal de selección de producto -->
+<div class="modal fade" id="modalSeleccionProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input id="buscarProducto" type="text" class="form-control mb-3" placeholder="Buscar por nombre o SKU...">
+
+                <table class="table table-hover" id="tablaProductos">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>SKU</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productosList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        let productosCache = [];
+
+        //  Abre el modal para seleccionar producto
+        async function abrirModalSeleccionProducto(recetaId, nombre, tiempo) {
+            $('#modalSeleccionProducto').modal('show');
+            await cargarProductos(recetaId, nombre, tiempo);
+        }
+
+        //  Carga los productos disponibles
+        async function cargarProductos(recetaId, nombre, tiempo) {
+            if (productosCache.length === 0) {
+                const resp = await fetch('@Url.Action("ObtenerProductos")');
+                productosCache = await resp.json();
+            }
+            renderProductos(productosCache, recetaId, nombre, tiempo);
+        }
+
+        //  Renderiza la lista de productos
+        function renderProductos(lista, recetaId, nombre, tiempo) {
+            const html = lista.map(p => `
+                <tr>
+                    <td>${p.nombre}</td>
+                    <td>${p.productoCategoria ?? '-'}</td>
+                    <td>${p.sku ?? '-'}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm"
+                            onclick="asignarProducto(${p.productoId}, ${recetaId}, '${escapeHtml(nombre)}', '${escapeHtml(tiempo)}')">
+                            Seleccionar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            $('#productosList').html(html);
+        }
+
+        // Búsqueda
+        $('#buscarProducto').on('input', function () {
+            const texto = $(this).val().toLowerCase();
+            const filtrados = productosCache.filter(p =>
+                p.nombre.toLowerCase().includes(texto) ||
+                (p.sku ?? '').toLowerCase().includes(texto)
+            );
+            // Recuperar la última receta usada del dataset del modal
+            const recetaId = $('#modalSeleccionProducto').data('receta-id');
+            const nombre = $('#modalSeleccionProducto').data('receta-nombre');
+            const tiempo = $('#modalSeleccionProducto').data('receta-tiempo');
+            renderProductos(filtrados, recetaId, nombre, tiempo);
+        });
+
+        // Asignar o actualizar producto
+        async function asignarProducto(productoId, recetaId, nombre, tiempo) {
+            const body = {
+                RecetaId: recetaId,
+                ProductoId: productoId,
+                Nombre: nombre,
+                Tiempo: tiempo
+            };
+
+            const resp = await fetch('@Url.Action("AsignarProductoAReceta")', {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const json = await resp.json();
+            
+            console.log(json)
+            if (json.result === 'success') {
+                const productoNombre = productosCache.find(p => p.productoId === productoId)?.nombre ?? "";
+                const celda = $(`button[onclick*="${recetaId}"]`).closest('td');
+                celda.find('.producto-nombre').text(productoNombre || 'Sin asignar');
+                $('#modalSeleccionProducto').modal('hide');
+            }
+            location.reload();
+        }
+
+        //  Quitar relación (ProductoId = 0)
+        async function quitarRelacionProducto(recetaId, nombre, tiempo) {
+            if (!confirm("¿Seguro que deseas quitar el producto asociado a esta receta?")) return;
+
+            const body = {
+                RecetaId: recetaId,
+                ProductoId: 0,
+                Nombre: nombre,
+                Tiempo: tiempo
+            };
+
+            const resp = await fetch('@Url.Action("AsignarProductoAReceta")', {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const json = await resp.json();
+            console.log(json)
+
+            if (json.result === 'success') {
+                const celda = $(`button[onclick*="${recetaId}"]`).closest('td');
+                celda.find('.producto-nombre').text('Sin asignar');
+            }
+            location.reload();
+        }
+
+        // 🔸 Utilidad: escapar texto para evitar errores en atributos
+        function escapeHtml(text) {
+            return text?.replace(/'/g, "\\'") ?? '';
+        }
+    </script>
+}

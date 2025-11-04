@@ -99,6 +99,38 @@ namespace ManejoPresupuestos.Controllers
             return View("RecetaEditor", inventariosDisponibles);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerProductos()
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var productos = await repositorioProductos.ObtenerTodos(usuarioId);
+            return Json(productos);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AsignarProductoAReceta([FromBody] AsignarProductoViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var param = new ParametroAlterarReceta()
+            {
+                LoginId = usuarioId,
+                ElementoAlterarId = modelo.RecetaId,
+                ProductoId = modelo.ProductoId,
+                Actualizar = 1,
+                Nombre = modelo.Nombre,
+                Tiempo = modelo.Tiempo
+            };
+
+            var result = await repositorioRecetas.CrearReceta(param);
+
+            if (result.result != ResultProcedureType.SUCCESS)
+            {
+                return Json(new { result = "fail", message = "No se pudo asignar el producto: " + result.message });
+            }
+
+            return Json(new { result = "success", message = "Producto asignado correctamente" });
+        }
+
         [HttpPost]
         public async Task<IActionResult> RecetaEditorGuardar([FromBody] CrearRecetaViewModel modelo)
         {
