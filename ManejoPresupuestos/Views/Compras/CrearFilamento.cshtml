@@ -1,0 +1,28 @@
+﻿@model FilamentoTipo
+@{
+    ViewData["Title"] = "Crear Tipo de Filamento";
+}
+<h1>Crear tipo de filamento</h1>
+<h5>
+    Un tipo de filamento ayuda a identificar los materiales utilizados en compras.
+</h5>
+
+<form asp-action="CrearFilamento">
+    <div asp-validation-summary="ModelOnly" class="text-danger">
+    </div>
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+    <button class="btn btn-primary" type="submit">
+        Enviar
+    </button>
+    <a asp-action="Filamentos" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

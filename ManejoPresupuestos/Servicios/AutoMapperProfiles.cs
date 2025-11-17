@@ -11,6 +11,7 @@ namespace ManejoPresupuestos.Servicios
             CreateMap<TransaccionActualizacionViewModel, Transaccion>().ReverseMap(); //configura la conversion en ambas posiciones 
             CreateMap<Inventario, InventarioCreacionViewModel>();
             CreateMap<Producto, ProductoCreacionViewModel>();
+            CreateMap<Compra, CompraCreacionViewModel>();
         }
     }
 }
