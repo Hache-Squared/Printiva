@@ -11,6 +11,7 @@ namespace ManejoPresupuestos.Servicios
         Task<Compra?> ObtenerPorId(int usuarioId, int id);
         Task Actualizar(int usuarioId, Compra compra);
         Task Borrar(int usuarioId, int id);
+        Task CompraLogTransaccion(int usuarioId, Compra compra);
     }
 
     public class RepositorioCompras : IRepositorioCompras
@@ -58,6 +59,22 @@ namespace ManejoPresupuestos.Servicios
                 {
                     elementoObtenerId = id,
                     loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task CompraLogTransaccion(int usuarioId, Compra compra)
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.QuerySingleAsync<int>(
+                "procUpdateTransaccionesCompra",
+                new
+                {
+                    Monto = compra.CostoTotal,
+                    FechaTransaccion = compra.FechaCreacion,
+                    UsuarioId = usuarioId,
+                    
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );

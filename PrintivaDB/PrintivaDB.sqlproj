@@ -213,6 +213,8 @@
     <Build Include="dbo\Stored Procedures\procAlteraComprasTipos.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraFilamentosTipos.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraCompras.sql" />
+    <Build Include="dbo\Stored Procedures\procUpdateTransaccionesCompra.sql" />
+    <Build Include="dbo\Stored Procedures\procUpdateTransaccionesVentas.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />

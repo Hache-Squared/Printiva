@@ -72,6 +72,7 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> Crear(CompraCreacionViewModel compra)
         {
             // Validaciones
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
             var tipo = await repositorioCompraTipos.ObtenerPorId(compra.CompraTipoId);
             var categoria = await repositorioCompraCategorias.ObtenerPorId(compra.CompraCategoriaId);
             var filamento = await repositorioFilamentoTipos.ObtenerPorId(compra.FilamentoTipoId ?? -1);
@@ -92,6 +93,7 @@ namespace ManejoPresupuestos.Controllers
                 return View(compra);
             }
             await repositorioCompras.Crear(compra);
+            await repositorioCompras.CompraLogTransaccion(usuarioId, compra);
             return RedirectToAction("Index");
         }
 

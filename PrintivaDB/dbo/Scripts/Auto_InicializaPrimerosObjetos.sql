@@ -254,7 +254,7 @@ BEGIN
 	SELECT SCOPE_IDENTITY();
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Transacciones_Actualizar]    Script Date: 22-Dec-21 12:12:47 PM ******/
+/****** Object:  StoredProcedure [dbo].[Transacciones_Actualizar]    ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

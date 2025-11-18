@@ -14,7 +14,7 @@
 
 <table class="table">
     <thead>
-    <th>Acciones</th>
+    @* <th>Acciones</th> *@
     <th>Fecha</th>
     <th>Categoria</th>
     <th>Tipo</th>
@@ -26,10 +26,10 @@
         @foreach (var compra in Model)
         {
             <tr>
-                <td>
+                @* <td>
                     <a class="btn btn-primary" asp-action="Editar" asp-route-id="@compra.CompraId">Editar</a>
                     <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@compra.CompraId">Borrar</a>
-                </td>
+                </td> *@
                 <td>
                     @compra.FechaCreacion.ToString("dd/MM/yyyy")
                 </td>
