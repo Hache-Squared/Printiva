@@ -1,6 +1,6 @@
 ﻿CREATE TABLE TblVentas(
 	VentaId INT PRIMARY KEY IDENTITY(1,1),
-	ClienteId INT NOT NULL,
+	ClienteId INT NULL,
 	Descripcion VARCHAR(MAX),
 	CostoTotal DECIMAL(10,2) DEFAULT 0,
 	FechaCreacion DATETIME DEFAULT GETUTCDATE(),

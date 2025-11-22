@@ -1,0 +1,42 @@
+﻿@model VentaCreacionViewModel
+@{
+    ViewData["Title"] = "Crear Venta";
+}
+
+<h1>Crear venta</h1>
+<h5>
+    Hace referencia a un registro de una venta realizada a un cliente, con sus respectivas partidas de recetas.
+</h5>
+
+<form asp-action="Crear">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label"></label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Ej: Venta de 10 piezas impresas en 3D para proyecto XYZ"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaCreacion" class="form-label"></label>
+        <input asp-for="FechaCreacion" class="form-control" type="date" />
+        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        <strong>Nota:</strong> Para asignar el cliente y las partidas de venta (recetas), primero debe crear la venta.
+        Después será redirigido automáticamente al editor donde podrá completar toda la información.
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        Enviar
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

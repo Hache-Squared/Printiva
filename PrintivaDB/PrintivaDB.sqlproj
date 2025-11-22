@@ -213,6 +213,13 @@
     <Build Include="dbo\Stored Procedures\procAlteraComprasTipos.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraFilamentosTipos.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraCompras.sql" />
+    <Build Include="dbo\Tables\TblVentasRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerClientes.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraClientes.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerVentas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraVentas.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerVentasRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraVentasRecetas.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
