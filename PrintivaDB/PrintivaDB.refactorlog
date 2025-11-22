@@ -49,4 +49,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="[FK_TblCompras_TblFilamentosTipos]" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="8a3610f7-7eeb-4066-bc47-a4939793e469" ChangeDateTime="11/17/2025 06:29:51">
+    <Property Name="ElementName" Value="[dbo].[TblVentasRecetas].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblVentasRecetas]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="VentaRecetaId" />
+  </Operation>
 </Operations>

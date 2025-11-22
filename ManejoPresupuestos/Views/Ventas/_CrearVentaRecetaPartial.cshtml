@@ -1,0 +1,30 @@
+﻿@model VentaRecetaCreacionViewModel
+
+<form id="formCrearVentaReceta">
+    <input type="hidden" asp-for="VentaId" />
+
+    <div class="mb-3">
+        <label class="form-label">Receta</label>
+        <select asp-for="RecetaId" asp-items="@Model.Recetas" class="form-select" required>
+            <option value="">-- Seleccionar receta --</option>
+        </select>
+        <span asp-validation-for="RecetaId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label">Cantidad</label>
+        <input asp-for="Cantidad" class="form-control" type="number" min="1" step="1" value="1" required />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CostoUnitario" class="form-label">Costo Unitario</label>
+        <input asp-for="CostoUnitario" class="form-control" type="number" min="0.01" step="0.01" required />
+        <span asp-validation-for="CostoUnitario" class="text-danger"></span>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-success">Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    </div>
+</form>

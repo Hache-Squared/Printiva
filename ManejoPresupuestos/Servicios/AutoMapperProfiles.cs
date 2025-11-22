@@ -12,6 +12,7 @@ namespace ManejoPresupuestos.Servicios
             CreateMap<Inventario, InventarioCreacionViewModel>();
             CreateMap<Producto, ProductoCreacionViewModel>();
             CreateMap<Compra, CompraCreacionViewModel>();
+            CreateMap<Venta, VentaCreacionViewModel>();
         }
     }
 }

@@ -1,0 +1,46 @@
+﻿@model IEnumerable<Venta>
+@{
+    ViewData["Title"] = "Ventas";
+}
+
+<h1>Ventas</h1>
+<h5>
+    Hace referencia a un registro de una venta realizada a un cliente, con sus respectivas partidas de recetas.
+</h5>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Acciones</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Descripción</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var venta in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@venta.VentaId">Editar</a>
+                    @* <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@venta.VentaId">Borrar</a> *@
+                </td>
+                <td>
+                    @venta.FechaCreacion.ToString("dd/MM/yyyy")
+                </td>
+                <td>
+                    @venta.ClienteNombre
+                </td>
+                <td>
+                    @venta.Descripcion
+                </td>
+                <td>
+                    @venta.CostoTotal.ToString("C")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
