@@ -9,6 +9,7 @@
         public int InventarioColorId { get; set; }
         public int InventarioUnidadId { get; set; }
         public decimal Cantidad { get; set; }
+        public decimal CantidadAsignada { get; set; }
         public DateTime FechaCreacion { get; set; }
 
         public string InventarioMarca { get; set; }

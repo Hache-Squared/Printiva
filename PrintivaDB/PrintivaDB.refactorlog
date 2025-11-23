@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="44f7955a-8be7-471a-8442-83e5ffdbc461" ChangeDateTime="09/23/2025 04:20:58">
+    <Property Name="ElementName" Value="[dbo].[TblCompras].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblCompras]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CompraId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="6b809ccd-65ac-4a7c-91de-3c463a01aa90" ChangeDateTime="09/23/2025 04:24:52">
+    <Property Name="ElementName" Value="[dbo].[TblCompras].[TipoCompraId]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblCompras]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CompraTipoId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="6d6a8e8c-81ac-4673-8754-69937b3430c9" ChangeDateTime="09/23/2025 04:26:14">
+    <Property Name="ElementName" Value="[dbo].[TblComprasTipos].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblComprasTipos]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CompraTipoId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="708a0194-a671-4789-9517-443404bf236b" ChangeDateTime="09/23/2025 04:39:29">
+    <Property Name="ElementName" Value="[dbo].[TblFilamentosTipos].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblFilamentosTipos]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="FilamentoTipoId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="7477105b-36bb-4b95-a109-997e0da3c462" ChangeDateTime="09/23/2025 04:40:47">
+    <Property Name="ElementName" Value="[dbo].[TblComprasRecurrentes].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblComprasRecurrentes]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CompraRecurrenteId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="aef59c14-3a48-4615-b2b0-ef9a4f293946" ChangeDateTime="09/23/2025 04:42:35">
+    <Property Name="ElementName" Value="[dbo].[TblComprasCategorias].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblComprasCategorias]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CompraCategoriaId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="76705f26-8856-4ee6-a943-f66804604758" ChangeDateTime="09/23/2025 04:45:36">
+    <Property Name="ElementName" Value="[dbo].[FK_TblCompras_Tbl]" />
+    <Property Name="ElementType" Value="SqlForeignKeyConstraint" />
+    <Property Name="ParentElementName" Value="[dbo].[TblCompras]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="[FK_TblCompras_TblFilamentosTipos]" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="8a3610f7-7eeb-4066-bc47-a4939793e469" ChangeDateTime="11/17/2025 06:29:51">
+    <Property Name="ElementName" Value="[dbo].[TblVentasRecetas].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TblVentasRecetas]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="VentaRecetaId" />
+  </Operation>
+</Operations>

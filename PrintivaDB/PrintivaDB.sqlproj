@@ -203,10 +203,32 @@
     <Build Include="dbo\Stored Procedures\procObtenerProductoRecetas.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraReceta.sql" />
     <Build Include="dbo\Stored Procedures\procAlteraRecetaRelacion.sql" />
+    <Build Include="dbo\Tables\TblCompras.sql" />
+    <Build Include="dbo\Tables\TblComprasTipos.sql" />
+    <Build Include="dbo\Tables\TblFilamentosTipos.sql" />
+    <Build Include="dbo\Tables\TblComprasRecurrentes.sql" />
+    <Build Include="dbo\Tables\TblComprasCategorias.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerCompras.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraComprasCategorias.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraComprasTipos.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraFilamentosTipos.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraCompras.sql" />
+    <Build Include="dbo\Stored Procedures\procUpdateTransaccionesCompra.sql" />
+    <Build Include="dbo\Stored Procedures\procUpdateTransaccionesVentas.sql" />
+    <Build Include="dbo\Tables\TblVentasRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerClientes.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraClientes.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerVentas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraVentas.sql" />
+    <Build Include="dbo\Stored Procedures\procObtenerVentasRecetas.sql" />
+    <Build Include="dbo\Stored Procedures\procAlteraVentasRecetas.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PrintivaDB.publish.xml" />
     <None Include="dbo\Scripts\Auto_Catalogs.sql" />
     <None Include="dbo\Scripts\Auto_InicializaPrimerosObjetos.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="PrintivaDB.refactorlog" />
   </ItemGroup>
 </Project>

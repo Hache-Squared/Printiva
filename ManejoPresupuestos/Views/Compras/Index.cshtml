@@ -1,0 +1,48 @@
+﻿@model IEnumerable<Compra>
+@{
+    ViewData["Title"] = "Compras";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Compras" />
+
+<h1>Compras</h1>
+<h5>
+    Una compra hace referencia a un registro de inventario que indica una entrada de mercancía o material.
+</h5>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+    @* <th>Acciones</th> *@
+    <th>Fecha</th>
+    <th>Categoria</th>
+    <th>Tipo</th>
+    <th>Filamento</th>
+
+    </thead>
+
+    <tbody>
+        @foreach (var compra in Model)
+        {
+            <tr>
+                @* <td>
+                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@compra.CompraId">Editar</a>
+                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@compra.CompraId">Borrar</a>
+                </td> *@
+                <td>
+                    @compra.FechaCreacion.ToString("dd/MM/yyyy")
+                </td>
+                <td>
+                    @compra.CompraCategoria
+                </td>
+                <td>
+                    @compra.CompraTipo
+                </td>
+                <td>
+                    @compra.FilamentoTipo
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

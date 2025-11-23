@@ -1,0 +1,31 @@
+﻿@model IEnumerable<FilamentoTipo>
+@{
+    ViewData["Title"] = "Tipos de Filamento";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Filamentos" />
+<h1>Tipos de filamento</h1>
+<h5>
+    Un tipo de filamento ayuda a identificar los materiales utilizados en compras.
+</h5>
+<a asp-action="CrearFilamento" class="btn btn-primary mb-3">Crear Nuevo</a>
+<table class="table">
+    <thead>
+    <th>Acciones</th>
+    <th>Nombre</th>
+    </thead>
+    <tbody>
+        @foreach (var filamento in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary" asp-action="EditarFilamento" asp-route-id="@filamento.FilamentoTipoId">Editar</a>
+                    <a class="btn btn-danger" asp-action="BorrarFilamentoForm" asp-route-id="@filamento.FilamentoTipoId">Borrar</a>
+                </td>
+                <td>
+                    @filamento.Nombre
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

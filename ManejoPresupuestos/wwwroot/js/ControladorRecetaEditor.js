@@ -1,38 +1,42 @@
-﻿
-var ControladorRecetaEditor = {
+﻿var ControladorRecetaEditor = {
     listItemsInventariosDisponibles: [],
     listItemsInventariosParaReceta: [],
-    inicializarListener: function(url){
+
+    inicializarListener: function (url) {
         $("#btn-guardar-receta").click(async function () {
             let resultadoReceta = ControladorRecetaEditor.GetInventarioParaReceta();
-            if(!resultadoReceta?.esValido){
+            if (!resultadoReceta?.esValido) {
                 alert(resultadoReceta?.mensaje);
                 return;
             }
             let nombre = $("#nombre-receta").val();
             let tiempo = $("#tiempo-receta").val();
-            if(nombre?.trim() === ""){
+            if (nombre?.trim() === "") {
                 alert("Nombre para receta es requerido");
                 return;
             }
-            if(tiempo?.trim() === ""){
+            if (tiempo?.trim() === "") {
                 alert("Tiempo para receta es requerido");
                 return;
             }
+
             let inventarios = resultadoReceta?.resultados ?? [];
             let inventariosAEnviar = inventarios?.map(x => {
                 return {
                     InventarioId: x?.InventarioId,
-                    Cantidad:  x?.cantidadRequerida
+                    Cantidad: x?.cantidadRequerida
                 }
             })
-            console.log({inventariosAEnviar, nombre, tiempo})
+
+            let recetaId = parseInt($("#receta-id").val()) || 0;
             const form = {
+                RecetaId: recetaId,
                 Nombre: nombre,
                 Tiempo: tiempo,
                 ProductoId: 0,
                 Inventarios: inventariosAEnviar
             }
+
             const respuesta = await fetch(url, {
                 method: "POST",
                 body: JSON.stringify(form),
@@ -42,148 +46,123 @@ var ControladorRecetaEditor = {
             })
 
             const json = await respuesta.json();
-            console.log(json)
-            if(json?.result !== "success"){                
-                alert(json?.message)
+            if (json?.result !== "success") {
+                alert(json?.message);
                 return;
             }
-           
-            alert(json?.message)
+
+            alert(json?.message);
+            ControladorRecetaEditor.LimpiarLocalStorage(); // Limpia persistencia
             window.location.href = '/Recetas';
-
-        })
+        });
     },
+
     inicializarListas: function (listaInventariosDisponibles = [], listInventariosParaReceta = []) {
-        this.listItemsInventariosDisponibles = listaInventariosDisponibles;
-        let elementosARenderizarInventariosDisponibles = ControladorRecetaEditor.listItemsInventariosDisponibles?.map(x => {
-            return ControladorRecetaEditor.RenderItemInventarioDisponible(x)
-        })
+        // Si hay datos en localStorage, los usamos
+        if (!this.CargarDesdeLocalStorage()) {
+            this.listItemsInventariosDisponibles = listaInventariosDisponibles;
+            this.listItemsInventariosParaReceta = listInventariosParaReceta;
+        }
 
-        $("#left").html(elementosARenderizarInventariosDisponibles);
-
-        this.listItemsInventariosParaReceta = listInventariosParaReceta;
-        let elementosARenderizarParaReceta = ControladorRecetaEditor.listItemsInventariosParaReceta?.map(x => {
-            return ControladorRecetaEditor.RenderItemInventarioParaReceta(x)
-        })
-
-        $("#right").html(elementosARenderizarParaReceta);
+        this.refrescarListas();
     },
+
     refrescarListas: function () {
-        let elementosARenderizarInventariosDisponibles = ControladorRecetaEditor.listItemsInventariosDisponibles?.map(x => {
-            return ControladorRecetaEditor.RenderItemInventarioDisponible(x)
-        })
+        const elementosDisponibles = this.listItemsInventariosDisponibles.map(x => this.RenderItemInventarioDisponible(x));
+        $("#left").html(elementosDisponibles);
 
-        $("#left").html(elementosARenderizarInventariosDisponibles);
+        const elementosParaReceta = this.listItemsInventariosParaReceta.map(x => this.RenderItemInventarioParaReceta(x));
+        $("#right").html(elementosParaReceta);
 
-        let elementosARenderizarParaReceta = ControladorRecetaEditor.listItemsInventariosParaReceta?.map(x => {
-            return ControladorRecetaEditor.RenderItemInventarioParaReceta(x)
-        })
+        this.inicializarRecetaEditor();
+        this.GuardarEnLocalStorage();
 
-        $("#right").html(elementosARenderizarParaReceta);
-
-        ControladorRecetaEditor.inicializarRecetaEditor();
+        // Asigna evento de cambio en inputs de cantidad
+        $(".control-value-quantity").off("input").on("input", function () {
+            const payload = JSON.parse($(this).closest(".item-for-inventory").attr("data-payload"));
+            const item = ControladorRecetaEditor.listItemsInventariosParaReceta.find(x => x.InventarioId === payload.InventarioId);
+            if (item) {
+                item.cantidadRequerida = parseFloat($(this).val()) || 0;
+                ControladorRecetaEditor.GuardarEnLocalStorage();
+            }
+        });
     },
+
     inicializarRecetaEditor: function () {
-        let valoresEjemplo = [];
-        let items = document.getElementsByClassName("item-list-drag")
-        let rightBox = document.getElementById("right")
-        let leftBox = document.getElementById("left")
+        let items = document.getElementsByClassName("item-list-drag");
+        let rightBox = document.getElementById("right");
+        let leftBox = document.getElementById("left");
 
-
-        for (item of items) {
+        for (let item of items) {
             item.addEventListener("dragstart", function (e) {
                 let selected = e.target;
-                let data = $(this).data("payload")
-                
+                let data = $(this).data("payload");
+
                 rightBox.addEventListener("dragover", function (e) {
                     e.preventDefault();
-                })
+                });
                 rightBox.addEventListener("drop", function (e) {
                     if (selected !== null) {
-
-                        let index = ControladorRecetaEditor.listItemsInventariosDisponibles.findIndex(x => x.InventarioId === data.InventarioId)
+                        let index = ControladorRecetaEditor.listItemsInventariosDisponibles.findIndex(x => x.InventarioId === data.InventarioId);
                         if (index !== -1) {
-                            ControladorRecetaEditor.listItemsInventariosParaReceta.push(data)
+                            ControladorRecetaEditor.listItemsInventariosParaReceta.push(data);
                             ControladorRecetaEditor.listItemsInventariosDisponibles.splice(index, 1);
                         }
                     }
                     selected = null;
                     ControladorRecetaEditor.refrescarListas();
-                })
+                });
 
                 leftBox.addEventListener("dragover", function (e) {
                     e.preventDefault();
-                })
+                });
                 leftBox.addEventListener("drop", function (e) {
-                    
                     if (selected !== null) {
-                        
-                        let index = ControladorRecetaEditor.listItemsInventariosParaReceta.findIndex(x => x.InventarioId === data.InventarioId)
+                        let index = ControladorRecetaEditor.listItemsInventariosParaReceta.findIndex(x => x.InventarioId === data.InventarioId);
                         if (index !== -1) {
-                            ControladorRecetaEditor.listItemsInventariosDisponibles.push(data)
+                            ControladorRecetaEditor.listItemsInventariosDisponibles.push(data);
                             ControladorRecetaEditor.listItemsInventariosParaReceta.splice(index, 1);
                         }
                     }
                     selected = null;
                     ControladorRecetaEditor.refrescarListas();
-                })
-
-
-            })
+                });
+            });
         }
     },
-    RenderItemInventarioDisponible: function (item) {
 
+    RenderItemInventarioDisponible: function (item) {
         return `
             <div data-payload='${JSON.stringify(item)}' draggable="true" class="item-list-drag container my-4 d-flex justify-content-center">
                 <div class="w-90 p-4 rounded-3 shadow border bg-light text-black" style="width: 90%;">
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Marca:</div>
-                        <div class="col-sm-6">${item?.InventarioMarca}</div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Nombre Material:</div>
-                        <div class="col-sm-6">${item?.InventarioNombre}</div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Color:</div>
-                        <div class="col-sm-6">${item?.InventarioColor}</div>
-                    </div>
-                    
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Unidad:</div>
-                        <div class="col-sm-6">${item?.InventarioUnidad}</div>
-                    </div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Marca:</div><div class="col-sm-6">${item?.InventarioMarca}</div></div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Nombre Material:</div><div class="col-sm-6">${item?.InventarioNombre}</div></div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Color:</div><div class="col-sm-6">${item?.InventarioColor}</div></div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Unidad:</div><div class="col-sm-6">${item?.InventarioUnidad}</div></div>
                 </div>
             </div>
         `;
     },
+
     RenderItemInventarioParaReceta: function (item) {
+        const cantidad = item?.cantidadRequerida ?? "";
         return `
             <div data-payload='${JSON.stringify(item)}' draggable="true" class="item-list-drag container my-4 d-flex justify-content-center item-for-inventory">
                 <div class="w-90 p-4 rounded-3 shadow border bg-light text-black" style="width: 90%;">
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Marca:</div><div class="col-sm-6">${item?.InventarioMarca}</div></div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Nombre Material:</div><div class="col-sm-6">${item?.InventarioNombre}</div></div>
+                    <div class="row mb-1"><div class="col-sm-6 fw-bold">Color:</div><div class="col-sm-6">${item?.InventarioColor}</div></div>
                     <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Marca:</div>
-                        <div class="col-sm-6">${item?.InventarioMarca}</div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Nombre Material:</div>
-                        <div class="col-sm-6">${item?.InventarioNombre}</div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">Color:</div>
-                        <div class="col-sm-6">${item?.InventarioColor}</div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-sm-6 fw-bold">¿Cantidad de material a usar (${item?.InventarioUnidad}) ?: </div>
+                        <div class="col-sm-6 fw-bold">¿Cantidad de material a usar (${item?.InventarioUnidad})?: </div>
                         <div class="col-sm-6">
-                            <input class="form-control control-value-quantity" type="number" min="0"/>
+                            <input class="form-control control-value-quantity" type="number" min="0" value="${cantidad}" />
                         </div>
                     </div>
                 </div>
             </div>
         `;
     },
+
     GetInventarioParaReceta: function () {
         const elementos = document.querySelectorAll('.item-for-inventory');
         const resultado = [];
@@ -191,42 +170,61 @@ var ControladorRecetaEditor = {
             resultados: [],
             esValido: true,
             mensaje: ""
-        }
+        };
         let error = false;
         let msg = "";
+
         elementos.forEach(elemento => {
             const rawData = elemento.getAttribute('data-payload');
             const item = JSON.parse(rawData);
-
             const inputCantidad = elemento.querySelector('.control-value-quantity');
             let cantidad = 0;
-            if (ControladorRecetaEditor.esNumeroMayorACero(inputCantidad.value)) {
+
+            if (this.esNumeroMayorACero(inputCantidad.value)) {
                 cantidad = parseFloat(inputCantidad.value);
             } else {
                 error = true;
-                msg = "La cantidad debe ser un numero y mayor a cero"
+                msg = "La cantidad debe ser un número mayor a cero.";
             }
             item.cantidadRequerida = isNaN(cantidad) ? 0 : cantidad;
-
             resultado.push(item);
         });
 
-        if(resultado.length === 0){
-             error = true;
-             msg = "Relacione al menos un inventario a la receta"
+        if (resultado.length === 0) {
+            error = true;
+            msg = "Relacione al menos un inventario a la receta.";
         }
 
         objeto.resultados = resultado;
         objeto.esValido = !error;
         objeto.mensaje = msg;
-
         return objeto;
-        
     },
-    esNumeroMayorACero: function(valor) {
+
+    esNumeroMayorACero: function (valor) {
         const numero = parseFloat(valor);
         return !isNaN(numero) && numero > 0;
+    },
+
+    // 🔹 Persistencia Local
+    GuardarEnLocalStorage: function () {
+        localStorage.setItem('inventariosDisponibles', JSON.stringify(this.listItemsInventariosDisponibles));
+        localStorage.setItem('inventariosParaReceta', JSON.stringify(this.listItemsInventariosParaReceta));
+    },
+
+    CargarDesdeLocalStorage: function () {
+        const disponibles = localStorage.getItem('inventariosDisponibles');
+        const paraReceta = localStorage.getItem('inventariosParaReceta');
+        if (disponibles && paraReceta) {
+            this.listItemsInventariosDisponibles = JSON.parse(disponibles);
+            this.listItemsInventariosParaReceta = JSON.parse(paraReceta);
+            return true;
+        }
+        return false;
+    },
+
+    LimpiarLocalStorage: function () {
+        localStorage.removeItem('inventariosDisponibles');
+        localStorage.removeItem('inventariosParaReceta');
     }
-
-}
-
+};
