@@ -117,6 +117,8 @@ namespace ManejoPresupuestos.Controllers
             ventaEditar.UsuarioId = usuarioId;
             await repositorioVentas.Actualizar(usuarioId, ventaEditar);
 
+            await repositorioVentas.VentaLogTransaccion(usuarioId, ventaEditar);
+
             return RedirectToAction("Index");
         }
 

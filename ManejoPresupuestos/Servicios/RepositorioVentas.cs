@@ -11,6 +11,7 @@ namespace ManejoPresupuestos.Servicios
         Task<Venta?> ObtenerPorId(int usuarioId, int id);
         Task Actualizar(int usuarioId, Venta venta);
         Task Borrar(int usuarioId, int id);
+        Task VentaLogTransaccion(int usuarioId, Venta venta);
     }
 
     public class RepositorioVentas : IRepositorioVentas
@@ -20,6 +21,21 @@ namespace ManejoPresupuestos.Servicios
         public RepositorioVentas(IConfiguration configuration)
         {
             connectionString = configuration.GetConnectionString("DefaultConnection");
+        }
+
+        public async Task VentaLogTransaccion(int usuarioId, Venta venta)
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.QuerySingleAsync<int>(
+                "procUpdateTransaccionesVentas",
+                new
+                {
+                    Monto = venta.CostoTotal,
+                    FechaTransaccion = venta.FechaCreacion,
+                    UsuarioId = usuarioId,
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
         }
 
         public async Task<IEnumerable<Venta>> ObtenerTodos(int usuarioId)
