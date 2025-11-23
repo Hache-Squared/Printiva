@@ -135,6 +135,7 @@ BEGIN
 					tgt.InventarioTipoId = @InventarioTipoId,
 					tgt.InventarioUnidadId = @InventarioUnidadId,
 					tgt.InventarioColorId = @InventarioColorId,
+					tgt.InventarioNombreId = @InventarioNombreId,
 					tgt.Cantidad = @Cantidad
 			FROM dbo.TblInventarios tgt
 			WHERE tgt.InventarioId = @ElementoAlterarId

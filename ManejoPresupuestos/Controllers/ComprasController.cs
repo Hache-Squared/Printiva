@@ -13,6 +13,14 @@ namespace ManejoPresupuestos.Controllers
         private readonly IRepositorioFilamentoTipos repositorioFilamentoTipos;
         private readonly IRepositorioCompraCategorias repositorioCompraCategorias;
         private readonly IRepositorioCompras repositorioCompras;
+
+        private readonly IRepositorioInventarios repositorioInventarios;
+        private readonly IRepositorioInventarioMarcas repositorioInventarioMarcas;
+        private readonly IRepositorioInventarioTipos repositorioInventarioTipos;
+        private readonly IRepositorioInventarioColores repositorioInventarioColores;
+        private readonly IRepositorioInventarioNombres repositorioInventarioNombres;
+        private readonly IRepositorioInventarioUnidades repositorioInventarioUnidades;
+
         private readonly IMapper mapper;
 
         public ComprasController(
@@ -21,6 +29,12 @@ namespace ManejoPresupuestos.Controllers
             IRepositorioFilamentoTipos repositorioFilamentoTipos,
             IRepositorioCompraCategorias repositorioCompraCategorias,
             IRepositorioCompras repositorioCompras,
+            IRepositorioInventarios repositorioInventarios,
+            IRepositorioInventarioMarcas repositorioInventarioMarcas,
+            IRepositorioInventarioTipos repositorioInventarioTipos,
+            IRepositorioInventarioColores repositorioInventarioColores,
+            IRepositorioInventarioNombres repositorioInventarioNombres,
+            IRepositorioInventarioUnidades repositorioInventarioUnidades,
             IMapper mapper
         )
         {
@@ -29,6 +43,12 @@ namespace ManejoPresupuestos.Controllers
             this.repositorioFilamentoTipos = repositorioFilamentoTipos;
             this.repositorioCompraCategorias = repositorioCompraCategorias;
             this.repositorioCompras = repositorioCompras;
+            this.repositorioInventarios = repositorioInventarios;
+            this.repositorioInventarioMarcas = repositorioInventarioMarcas;
+            this.repositorioInventarioTipos = repositorioInventarioTipos;
+            this.repositorioInventarioColores = repositorioInventarioColores;
+            this.repositorioInventarioNombres = repositorioInventarioNombres;
+            this.repositorioInventarioUnidades = repositorioInventarioUnidades;
             this.mapper = mapper;
         }
 
@@ -94,6 +114,42 @@ namespace ManejoPresupuestos.Controllers
             }
             await repositorioCompras.Crear(compra);
             await repositorioCompras.CompraLogTransaccion(usuarioId, compra);
+
+            if (tipo.Nombre == "Filamento" || tipo.Nombre == "Herramienta")
+            {
+                var marcas = await repositorioInventarioMarcas.ObtenerTodos();
+                var tipos = await repositorioInventarioTipos.ObtenerTodos();
+                var colores = await repositorioInventarioColores.ObtenerTodos();
+                var nombres = await repositorioInventarioNombres.ObtenerTodos();
+                var unidades = await repositorioInventarioUnidades.ObtenerTodos();
+
+                if (!marcas.Any() || !tipos.Any() || !colores.Any() || !nombres.Any() || !unidades.Any())
+                {
+                    return RedirectToAction("Crear", "Inventarios");
+                }
+
+                var marcaId = marcas.Any() ? marcas.First().InventarioMarcaId : -1;
+                var tipoId = tipos.Any() ? tipos.First().InventarioTipoId : -1;
+                var colorId = colores.Any() ? colores.First().InventarioColorId : -1;
+                var nombreId = nombres.Any() ? nombres.First().InventarioNombreId : -1;
+                var unidadId = unidades.Any() ? unidades.First().InventarioUnidadId : -1;
+
+                var nuevoInventario = new Inventario
+                {
+                    Cantidad = 0,
+                    InventarioMarcaId = marcaId,
+                    InventarioTipoId = tipoId,
+                    InventarioColorId = colorId,
+                    InventarioNombreId = nombreId,
+                    InventarioUnidadId = unidadId,
+                    FechaCreacion = DateTime.Now
+                };
+
+                await repositorioInventarios.Crear(nuevoInventario);
+
+                return RedirectToAction("Editar", "Inventarios", new { id = nuevoInventario.InventarioId });
+            }
+
             return RedirectToAction("Index");
         }
 

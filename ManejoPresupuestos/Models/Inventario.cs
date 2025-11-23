@@ -22,7 +22,7 @@ namespace ManejoPresupuestos.Models
         public int InventarioUnidadId { get; set; }
         public decimal Cantidad { get; set; }
 
-        [Display(Name = "Fecha Creación")]
+        [Display(Name = "Fecha")]
         [DataType(DataType.Date)]
         public DateTime FechaCreacion { get; set; } = DateTime.Today;
         public string InventarioMarca { get; set; }

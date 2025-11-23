@@ -5,7 +5,7 @@
 
 <h1>Ventas</h1>
 <h5>
-    Hace referencia a un registro de una venta realizada a un cliente, con sus respectivas partidas de recetas.
+    Hace referencia a un registro de una venta realizada a un cliente, con sus respectivas partidas de venta.
 </h5>
 
 <a asp-action="Crear" class="btn btn-primary mb-3">Crear Nueva</a>
@@ -13,7 +13,7 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Acciones</th>
+            @* <th>Acciones</th> *@
             <th>Fecha</th>
             <th>Cliente</th>
             <th>Descripción</th>
@@ -24,10 +24,10 @@
         @foreach (var venta in Model)
         {
             <tr>
-                <td>
+                @* <td>
                     <a class="btn btn-primary" asp-action="Editar" asp-route-id="@venta.VentaId">Editar</a>
-                    @* <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@venta.VentaId">Borrar</a> *@
-                </td>
+                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@venta.VentaId">Borrar</a>
+                </td> *@
                 <td>
                     @venta.FechaCreacion.ToString("dd/MM/yyyy")
                 </td>

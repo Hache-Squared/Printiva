@@ -12,12 +12,6 @@
     <input type="hidden" asp-for="InventarioId" />
 
     <div class="mb-3">
-        <label asp-for="FechaCreacion" class="form-label"></label>
-        <input asp-for="FechaCreacion" class="form-control" />
-        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
         <label asp-for="InventarioMarcaId" class="form-label"></label>
         <select asp-for="InventarioMarcaId" asp-items="@Model.Marcas" class="form-select"></select>
         <span asp-validation-for="InventarioMarcaId" class="text-danger"></span>
@@ -51,6 +45,12 @@
         <label asp-for="Cantidad" class="form-label"></label>
         <input asp-for="Cantidad" class="form-control" />
         <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaCreacion" class="form-label"></label>
+        <input asp-for="FechaCreacion" class="form-control" />
+        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
     </div>
 
     <button class="btn btn-primary" type="submit">

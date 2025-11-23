@@ -14,7 +14,7 @@ namespace ManejoPresupuestos.Models
         [Display(Name = "Costo total")]
         public decimal CostoTotal { get; set; }
 
-        [Display(Name = "Fecha Creación")]
+        [Display(Name = "Fecha")]
         [DataType(DataType.Date)]
         public DateTime FechaCreacion { get; set; } = DateTime.Today;
 
