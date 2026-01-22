@@ -80,7 +80,9 @@ BEGIN
 				ISNULL(@Borrar, 0) = 1
 			)
 			BEGIN 
-				DELETE tgt
+				
+				UPDATE tgt
+					SET tgt.EstaActivo = 0
 				FROM dbo.TblInventariosMarcas tgt
 				WHERE tgt.InventarioMarcaId = @ElementoAlterarId
 

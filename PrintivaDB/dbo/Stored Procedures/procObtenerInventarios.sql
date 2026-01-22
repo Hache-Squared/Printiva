@@ -102,7 +102,7 @@ BEGIN
 			ON i.InventarioTipoId = it.InventarioTipoId
 		INNER JOIN dbo.TblInventariosUnidades iu (NOLOCK)
 			ON i.InventarioUnidadId = iu.InventarioUnidadId
-
+		WHERE i.EstaActivo = 1
 
 		IF(ISNULL(@elementoId,0) = 0)
 		BEGIN 

@@ -27,7 +27,9 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<InventarioMarca>(
                 @"
-                    SELECT * FROM TblInventariosMarcas
+                    SELECT * 
+                    FROM TblInventariosMarcas i
+                    WHERE i.EstaActivo = 1
                 "
             );
         }
