@@ -126,7 +126,7 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     ElementoAlterarId = cotizacionId,
-                    PedidoId = 1,
+                    PedidoId = 0,
                     CotizacionEstatusId = 1,
                     FechaVigencia = (DateTime?)null,
                     Notas = "",
