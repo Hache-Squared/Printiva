@@ -12,7 +12,7 @@ Version     Author     Date         Description     Ticket
 -------------------------------------------------------------------------------
 1.0         AGHH     27/07/2025     First Version   N/A
 */
-CREATE PROCEDURE dbo.procAlteraProductosCategorias
+CREATE OR ALTER PROCEDURE dbo.procAlteraProductosCategorias
 @ElementoAlterarId INT = 0,
 @Nombre		VARCHAR(200) = '',
 @loginId	INT = 0,
@@ -80,7 +80,8 @@ BEGIN
 				ISNULL(@Borrar, 0) = 1
 			)
 			BEGIN 
-				DELETE tgt
+				UPDATE tgt
+					SET EstaActivo = 0
 				FROM dbo.TblProductosCategorias tgt
 				WHERE tgt.ProductoCategoriaId = @ElementoAlterarId
 

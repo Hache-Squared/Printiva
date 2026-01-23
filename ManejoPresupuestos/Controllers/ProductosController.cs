@@ -31,7 +31,7 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> Index()
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-            var productos = await repositorioProductos.ObtenerTodos(usuarioId);
+            var productos = await repositorioProductos.ObtenerTodos(usuarioId, true);
 
             return View(productos);
         }
@@ -57,9 +57,7 @@ namespace ManejoPresupuestos.Controllers
         [HttpPost]
         public async Task<IActionResult> Crear(ProductoCreacionViewModel producto)
         {
-            // Validaciones
             var categoria = await repositorioProductoCategorias.ObtenerPorId(producto.ProductoCategoriaId);
-
             if (categoria is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
@@ -68,13 +66,16 @@ namespace ManejoPresupuestos.Controllers
             if (!ModelState.IsValid)
             {
                 producto.Categorias = await ObtenerCategorias();
-
                 return View(producto);
             }
 
-            await repositorioProductos.Crear(producto);
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var productoDb = mapper.Map<Producto>(producto);
+
+            await repositorioProductos.Crear(usuarioId, productoDb);
             return RedirectToAction("Index");
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Editar(int id)
@@ -97,15 +98,14 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> Editar(ProductoCreacionViewModel productoEditar)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
             var producto = await repositorioProductos.ObtenerPorId(usuarioId, productoEditar.ProductoId);
             if (producto is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
             }
 
-            // Validaciones
             var categoria = await repositorioProductoCategorias.ObtenerPorId(productoEditar.ProductoCategoriaId);
-
             if (categoria is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
@@ -113,12 +113,16 @@ namespace ManejoPresupuestos.Controllers
 
             if (!ModelState.IsValid)
             {
+                productoEditar.Categorias = await ObtenerCategorias();
                 return View(productoEditar);
             }
 
-            await repositorioProductos.Actualizar(usuarioId, productoEditar);
+            var productoDb = mapper.Map<Producto>(productoEditar);
+
+            await repositorioProductos.Actualizar(usuarioId, productoDb);
             return RedirectToAction("Index");
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Borrar(int id)

@@ -1,6 +1,4 @@
 ﻿using Dapper;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Irony.Parsing;
 using ManejoPresupuestos.Models;
 using Microsoft.Data.SqlClient;
 
@@ -8,9 +6,9 @@ namespace ManejoPresupuestos.Servicios
 {
     public interface IRepositorioProductos
     {
-        Task<IEnumerable<Producto>> ObtenerTodos(int usuarioId);
-        Task Crear(Producto producto);
+        Task<IEnumerable<Producto>> ObtenerTodos(int usuarioId, bool soloActivos = true);
         Task<Producto?> ObtenerPorId(int usuarioId, int id);
+        Task Crear(int usuarioId, Producto producto);
         Task Actualizar(int usuarioId, Producto producto);
         Task Borrar(int usuarioId, int id);
     }
@@ -24,7 +22,7 @@ namespace ManejoPresupuestos.Servicios
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public async Task<IEnumerable<Producto>> ObtenerTodos(int usuarioId)
+        public async Task<IEnumerable<Producto>> ObtenerTodos(int usuarioId, bool soloActivos = true)
         {
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<Producto>(
@@ -32,26 +30,11 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     elementoObtenerId = 0,
-                    loginId = usuarioId
+                    loginId = usuarioId,
+                    soloActivos = soloActivos ? 1 : 0
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
-        }
-
-        public async Task Crear(Producto producto)
-        {
-            using var connection = new SqlConnection(connectionString);
-            var id = await connection.QuerySingleAsync<int>(
-                @"
-                    INSERT INTO TblProductos (Nombre, ProductoCategoriaId, SKU)
-                    VALUES (@Nombre, @ProductoCategoriaId, @SKU);
-
-                    SELECT SCOPE_IDENTITY();
-                ",
-                producto
-            );
-
-            producto.ProductoId = id;
         }
 
         public async Task<Producto?> ObtenerPorId(int usuarioId, int id)
@@ -62,16 +45,38 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     elementoObtenerId = id,
-                    loginId = usuarioId
+                    loginId = usuarioId,
+                    soloActivos = 0
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
+        public async Task Crear(int usuarioId, Producto producto)
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.QueryFirstOrDefaultAsync(
+                "procAlteraProductos",
+                new
+                {
+                    elementoAlterarId = 0,
+                    nombre = producto.Nombre,
+                    productoCategoriaId = producto.ProductoCategoriaId,
+                    sku = producto.SKU,
+                    precioSugerido = producto.PrecioSugerido,
+                    loginId = usuarioId,
+                    actualizar = 0,
+                    borrar = 0
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+
         public async Task Actualizar(int usuarioId, Producto producto)
         {
             using var connection = new SqlConnection(connectionString);
-            await connection.QueryFirstOrDefaultAsync<Producto>(
+            await connection.QueryFirstOrDefaultAsync(
                 "procAlteraProductos",
                 new
                 {
@@ -79,8 +84,10 @@ namespace ManejoPresupuestos.Servicios
                     nombre = producto.Nombre,
                     productoCategoriaId = producto.ProductoCategoriaId,
                     sku = producto.SKU,
+                    precioSugerido = producto.PrecioSugerido,
                     loginId = usuarioId,
-                    actualizar = 1
+                    actualizar = 1,
+                    borrar = 0
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
@@ -89,13 +96,17 @@ namespace ManejoPresupuestos.Servicios
         public async Task Borrar(int usuarioId, int id)
         {
             using var connection = new SqlConnection(connectionString);
-            await connection.QueryFirstOrDefaultAsync<Producto>(
+            await connection.QueryFirstOrDefaultAsync(
                 "procAlteraProductos",
                 new
                 {
                     elementoAlterarId = id,
                     nombre = "Producto eliminado",
+                    productoCategoriaId = 1,
+                    sku = "",
+                    precioSugerido = (decimal?)null,
                     loginId = usuarioId,
+                    actualizar = 0,
                     borrar = 1
                 },
                 commandType: System.Data.CommandType.StoredProcedure

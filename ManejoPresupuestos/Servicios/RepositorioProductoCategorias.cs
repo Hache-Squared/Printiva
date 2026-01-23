@@ -29,7 +29,9 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<ProductoCategoria>(
                 @"
-                    SELECT * FROM TblProductosCategorias
+                    SELECT * 
+                    FROM TblProductosCategorias c
+                    WHERE c.EstaActivo = 1;
                 "
             );
         }

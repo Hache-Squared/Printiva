@@ -51,3 +51,24 @@ BEGIN
 
 END
 GO
+
+-- 5) TblInventarios
+IF COL_LENGTH('dbo.TblProductosCategorias', 'EstaActivo') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblProductosCategorias
+    ADD EstaActivo BIT NOT NULL
+        CONSTRAINT DF_TblProductosCategorias_EstaActivo DEFAULT (1);
+
+END
+GO
+
+ALTER TABLE dbo.TblProductos
+ADD
+    PrecioSugerido DECIMAL(18,2) NULL,
+    EstaActivo BIT NOT NULL CONSTRAINT DF_TblProductos_EstaActivo DEFAULT(1);
+
+
+
+UPDATE dbo.TblProductos
+SET EstaActivo = 1
+WHERE EstaActivo IS NULL;

@@ -17,6 +17,7 @@
     <th>Acciones</th>
     <th>Nombre</th>
     <th>Categoría</th>
+    <th>Precio sugerido</th>
     </thead>
 
     <tbody>
@@ -33,6 +34,8 @@
                 <td>
                     @producto.ProductoCategoria
                 </td>
+                <td>@((producto.PrecioSugerido ?? 0).ToString("0.00"))</td>
+
             </tr>
         }
     </tbody>

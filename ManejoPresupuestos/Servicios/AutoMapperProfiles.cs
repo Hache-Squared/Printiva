@@ -19,6 +19,7 @@ namespace ManejoPresupuestos.Servicios
                 .ForMember(d => d.Estatus, opt => opt.Ignore());
 
             CreateMap<PedidoItem, PedidoItemCreacionViewModel>();
+            CreateMap<Producto, ProductoCreacionViewModel>().ReverseMap();
         }
     }
 }

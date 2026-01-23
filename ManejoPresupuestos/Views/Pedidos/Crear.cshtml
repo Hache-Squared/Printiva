@@ -67,8 +67,8 @@
                             <table class="table align-middle" id="itemsTable">
                                 <thead>
                                     <tr>
-                                        <th>ProductoId</th>
-                                        <th>Nombre</th>
+                                        <th style="width: 240px;">Producto</th>
+                                        <th>Seleccionado</th>
                                         <th style="width: 120px;">Cantidad</th>
                                         <th style="width: 170px;">Precio unit.</th>
                                         <th>Notas</th>
@@ -80,11 +80,14 @@
                                     {
                                         <tr>
                                             <td>
-                                                <input asp-for="Items[@i].ProductoId" class="form-control" />
+                                                <div class="d-flex gap-2">
+                                                    <input asp-for="Items[@i].ProductoId" class="form-control" readonly />
+                                                    <button type="button" class="btn btn-outline-primary btnPickProduct" data-row="@i">Buscar</button>
+                                                </div>
                                                 <span asp-validation-for="Items[@i].ProductoId" class="text-danger"></span>
                                             </td>
                                             <td>
-                                                <input asp-for="Items[@i].ProductoNombre" class="form-control" placeholder="Opcional, solo visual" />
+                                                <input asp-for="Items[@i].ProductoNombre" class="form-control" readonly />
                                             </td>
                                             <td>
                                                 <input asp-for="Items[@i].Cantidad" class="form-control" />
@@ -100,6 +103,7 @@
                                             <td class="text-end">
                                                 <button type="button" class="btn btn-outline-danger btnRemoveRow">Quitar</button>
                                             </td>
+
                                         </tr>
                                     }
                                 </tbody>
@@ -116,10 +120,145 @@
     </form>
 </div>
 
+<div class="modal fade" id="modalProductos" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input class="form-control mb-3" id="txtBuscarProducto" placeholder="Buscar por nombre o categoría..." />
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th class="text-end">Precio sugerido</th>
+                                <th style="width: 120px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyProductos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" />    
     <script>
         (function () {
+            let productosCache = [];
+            let modal;
+            let currentRowIndex = null;
+
+            function ensureModal() {
+                const el = document.getElementById('modalProductos');
+                modal = bootstrap.Modal.getOrCreateInstance(el);
+            }
+
+            async function cargarProductos() {
+                if (productosCache.length > 0) return;
+                const res = await fetch('@Url.Action("ProductosActivos", "Pedidos")');
+                productosCache = await res.json();
+            }
+
+            function renderProductos(filter) {
+                const tbody = document.getElementById('tbodyProductos');
+                tbody.innerHTML = '';
+
+                const f = (filter || '').trim().toLowerCase();
+
+                const list = productosCache.filter(p => {
+                    if (!f) return true;
+                    return (p.nombre || '').toLowerCase().includes(f) || (p.categoria || '').toLowerCase().includes(f);
+                });
+
+                for (const p of list) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="fw-semibold">${escapeHtml(p.nombre)}</td>
+                        <td>${escapeHtml(p.categoria || '')}</td>
+                        <td class="text-end">${Number(p.precioSugerido || 0).toFixed(2)}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-success btnSelectProduct"
+                                data-id="${p.productoId}"
+                                data-nombre="${escapeAttr(p.nombre)}"
+                                data-precio="${p.precioSugerido}">
+                                Seleccionar
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+                if (list.length === 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="4" class="text-center text-muted py-4">Sin resultados</td>`;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            function setProductoToRow(rowIndex, productoId, nombre, precioSugerido) {
+                const idInput = document.querySelector(`[name="Items[${rowIndex}].ProductoId"]`);
+                const nombreInput = document.querySelector(`[name="Items[${rowIndex}].ProductoNombre"]`);
+                const precioInput = document.querySelector(`[name="Items[${rowIndex}].PrecioUnitarioEstimado"]`);
+
+                if (idInput) idInput.value = productoId;
+                if (nombreInput) nombreInput.value = nombre;
+
+                const currentPrecio = precioInput ? (precioInput.value || '').trim() : '';
+                if (precioInput && currentPrecio === '') {
+                    precioInput.value = Number(precioSugerido || 0).toFixed(2);
+                }
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? '').replace(/[&<>"']/g, function (m) {
+                    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+                });
+            }
+
+            function escapeAttr(s) {
+                return String(s ?? '').replace(/"/g, '&quot;');
+            }
+
+            document.addEventListener('click', async function (e) {
+                const btn = e.target.closest('.btnPickProduct');
+                if (!btn) return;
+
+                currentRowIndex = Number(btn.getAttribute('data-row'));
+                ensureModal();
+                await cargarProductos();
+                renderProductos(document.getElementById('txtBuscarProducto').value);
+                modal.show();
+                setTimeout(() => document.getElementById('txtBuscarProducto').focus(), 50);
+            });
+
+            document.getElementById('txtBuscarProducto')?.addEventListener('input', function (e) {
+                renderProductos(e.target.value);
+            });
+
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btnSelectProduct');
+                if (!btn) return;
+
+                const id = Number(btn.getAttribute('data-id'));
+                const nombre = btn.getAttribute('data-nombre');
+                const precio = Number(btn.getAttribute('data-precio') || 0);
+
+                if (currentRowIndex !== null) {
+                    setProductoToRow(currentRowIndex, id, nombre, precio);
+                }
+
+                ensureModal();
+                modal.hide();
+            });
+
             const tableBody = document.querySelector('#itemsTable tbody');
             const addBtn = document.getElementById('btnAddRow');
 
@@ -139,6 +278,9 @@
                         const f = sp.getAttribute('data-valmsg-for');
                         if (f) sp.setAttribute('data-valmsg-for', f.replace(/Items\[\d+\]/g, `Items[${idx}]`));
                     });
+
+                    const pickBtn = row.querySelector('.btnPickProduct');
+                    if (pickBtn) pickBtn.setAttribute('data-row', idx);
                 });
             }
 
@@ -147,11 +289,14 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>
-                        <input class="form-control" name="Items[${idx}].ProductoId" />
+                        <div class="d-flex gap-2">
+                            <input class="form-control" name="Items[${idx}].ProductoId" readonly />
+                            <button type="button" class="btn btn-outline-primary btnPickProduct" data-row="${idx}">Buscar</button>
+                        </div>
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].ProductoId" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <input class="form-control" name="Items[${idx}].ProductoNombre" placeholder="Opcional, solo visual" />
+                        <input class="form-control" name="Items[${idx}].ProductoNombre" readonly />
                     </td>
                     <td>
                         <input class="form-control" name="Items[${idx}].Cantidad" value="1" />
@@ -171,9 +316,9 @@
                 tableBody.appendChild(tr);
             }
 
-            addBtn.addEventListener('click', addRow);
+            addBtn?.addEventListener('click', addRow);
 
-            tableBody.addEventListener('click', function (e) {
+            tableBody?.addEventListener('click', function (e) {
                 const btn = e.target.closest('.btnRemoveRow');
                 if (!btn) return;
                 const row = btn.closest('tr');
@@ -182,5 +327,6 @@
                 reindexRows();
             });
         })();
-    </script>
+        </script>
+
 }

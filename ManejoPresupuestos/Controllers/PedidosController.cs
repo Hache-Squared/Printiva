@@ -191,6 +191,24 @@ namespace ManejoPresupuestos.Controllers
             return View(pedido);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ProductosActivos()
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var productos = await repositorioProductos.ObtenerTodos(usuarioId, true);
+
+            var data = productos.Select(p => new
+            {
+                productoId = p.ProductoId,
+                nombre = p.Nombre,
+                categoria = p.ProductoCategoria,
+                precioSugerido = p.PrecioSugerido ?? 0
+            });
+
+            return Json(data);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> BorrarPedido(int pedidoId)
         {
