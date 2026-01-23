@@ -1,0 +1,58 @@
+@model IEnumerable<ManejoPresupuestos.Models.Pedido>
+@{
+    ViewData["Title"] = "Pedidos";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-1">Pedidos</h1>
+            <div class="text-muted">Seguimiento de pedidos por cliente y estatus.</div>
+        </div>
+        <a class="btn btn-primary" asp-action="Crear">Crear Nuevo</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 220px;">Acciones</th>
+                            <th>Cliente</th>
+                            <th>Estatus</th>
+                            <th>Creación</th>
+                            <th>Entrega estimada</th>
+                            <th class="text-end">Total estimado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Detalles" asp-route-id="@p.PedidoId">Ver</a>
+                                    <a class="btn btn-sm btn-primary" asp-action="Editar" asp-route-id="@p.PedidoId">Editar</a>
+                                    <a class="btn btn-sm btn-outline-danger" asp-action="Borrar" asp-route-id="@p.PedidoId">Borrar</a>
+                                </td>
+                                <td class="fw-semibold">@p.ClienteNombre</td>
+                                <td>
+                                    <span class="badge bg-secondary">@p.EstatusNombre</span>
+                                </td>
+                                <td>@p.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                                <td>@(p.FechaEntregaEstimada.HasValue ? p.FechaEntregaEstimada.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                <td class="text-end">@((p.TotalEstimado ?? 0).ToString("0.00"))</td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No hay pedidos registrados.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

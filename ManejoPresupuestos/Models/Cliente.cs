@@ -5,15 +5,27 @@ namespace ManejoPresupuestos.Models
     public class Cliente
     {
         public int ClienteId { get; set; }
+        public int UsuarioId { get; set; }
 
-        [Required(ErrorMessage = "El campo {0} es obligatorio")]
-        [StringLength(maximumLength: 200, ErrorMessage = "No puede ser mayor a {1} caracteres")]
+        [Required]
+        [StringLength(150)]
         public string Nombre { get; set; }
 
-        [StringLength(maximumLength: 200, ErrorMessage = "No puede ser mayor a {1} caracteres")]
-        public string? Telefono { get; set; } = null;
+        [StringLength(30)]
+        public string Telefono { get; set; }
 
-        [StringLength(maximumLength: 200, ErrorMessage = "No puede ser mayor a {1} caracteres")]
-        public string? Correo { get; set; } = null;
+        [StringLength(80)]
+        public string Instagram { get; set; }
+
+        [StringLength(30)]
+        public string WhatsApp { get; set; }
+
+        [StringLength(120)]
+        public string Email { get; set; }
+
+        [StringLength(250)]
+        public string Direccion { get; set; }
+
+        public DateTime FechaCreacion { get; set; }
     }
 }

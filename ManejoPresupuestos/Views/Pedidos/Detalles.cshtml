@@ -1,0 +1,102 @@
+@model ManejoPresupuestos.Models.PedidoDetallesViewModel
+@{
+    ViewData["Title"] = "Detalles de pedido";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-1">Pedido #@Model.Pedido.PedidoId</h1>
+            <div class="text-muted">@Model.Pedido.ClienteNombre · @Model.Pedido.EstatusNombre</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
+            <a class="btn btn-primary" asp-action="Editar" asp-route-id="@Model.Pedido.PedidoId">Editar</a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="text-muted small">Estatus</div>
+                        <div class="fw-semibold"><span class="badge bg-secondary">@Model.Pedido.EstatusNombre</span></div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="text-muted small">Fecha creación</div>
+                        <div class="fw-semibold">@Model.Pedido.FechaCreacion.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="text-muted small">Entrega estimada</div>
+                        <div class="fw-semibold">@(
+                            Model.Pedido.FechaEntregaEstimada.HasValue
+                                ? Model.Pedido.FechaEntregaEstimada.Value.ToString("dd/MM/yyyy")
+                                : "-"
+                        )</div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="text-muted small">Total estimado</div>
+                        <div class="fw-semibold">@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Notas</div>
+                        <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Pedido.Notas) ? Model.Pedido.Notas : "-")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="mb-3">Items</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="width: 110px;">Cantidad</th>
+                                    <th style="width: 160px;" class="text-end">Precio unit.</th>
+                                    <th style="width: 160px;" class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var i in Model.Items)
+                                {
+                                    var pu = i.PrecioUnitarioEstimado ?? 0;
+                                    var sub = pu * i.Cantidad;
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@i.ProductoNombre</div>
+                                            @if (!string.IsNullOrWhiteSpace(i.Notas))
+                                            {
+                                                <div class="text-muted small">@i.Notas</div>
+                                            }
+                                        </td>
+                                        <td>@i.Cantidad</td>
+                                        <td class="text-end">@pu.ToString("0.00")</td>
+                                        <td class="text-end">@sub.ToString("0.00")</td>
+                                    </tr>
+                                }
+                                @if (!Model.Items.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Sin items.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <div class="text-end">
+                            <div class="text-muted small">Total estimado</div>
+                            <div class="fs-4 fw-semibold">@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

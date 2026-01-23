@@ -1,0 +1,32 @@
+@model ManejoPresupuestos.Models.Pedido
+@{
+    ViewData["Title"] = "Borrar Pedido";
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h1 class="mb-2">Borrar pedido</h1>
+            <div class="text-muted mb-4">Esta acción elimina el pedido y sus items.</div>
+
+            <div class="mb-3">
+                <div class="text-muted small">Cliente</div>
+                <div class="fw-semibold">@Model.ClienteNombre</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-muted small">Estatus</div>
+                <div class="fw-semibold">@Model.EstatusNombre</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-muted small">Fecha creación</div>
+                <div class="fw-semibold">@Model.FechaCreacion.ToString("dd/MM/yyyy")</div>
+            </div>
+
+            <form asp-action="BorrarPedido" method="post" class="d-flex gap-2">
+                <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                <button class="btn btn-danger" type="submit">Borrar</button>
+                <a class="btn btn-outline-secondary" asp-action="Detalles" asp-route-id="@Model.PedidoId">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>

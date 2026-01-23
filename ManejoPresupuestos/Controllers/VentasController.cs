@@ -161,7 +161,7 @@ namespace ManejoPresupuestos.Controllers
                 return Json(new { success = false, message = "Datos inválidos" });
             }
 
-            await repositorioClientes.Crear(cliente);
+            await repositorioClientes.Crear(usuarioId, cliente);
 
             var nuevoCliente = new
             {

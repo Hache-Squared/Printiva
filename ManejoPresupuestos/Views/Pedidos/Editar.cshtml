@@ -1,0 +1,190 @@
+@model ManejoPresupuestos.Models.PedidoCreacionViewModel
+@{
+    ViewData["Title"] = "Editar Pedido";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-1">Editar pedido</h1>
+            <div class="text-muted">Actualiza datos generales e items del pedido.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" asp-action="Detalles" asp-route-id="@Model.PedidoId">Volver</a>
+            <a class="btn btn-outline-secondary" asp-action="Index">Lista</a>
+        </div>
+    </div>
+
+    <form asp-action="Editar" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="PedidoId" />
+
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="ClienteId" class="form-label"></label>
+                            <select asp-for="ClienteId" asp-items="@Model.Clientes" class="form-select"></select>
+                            <span asp-validation-for="ClienteId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PedidoEstatusId" class="form-label"></label>
+                            <select asp-for="PedidoEstatusId" asp-items="@Model.Estatus" class="form-select"></select>
+                            <span asp-validation-for="PedidoEstatusId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="FechaEntregaEstimada" class="form-label"></label>
+                            <input asp-for="FechaEntregaEstimada" class="form-control" />
+                            <span asp-validation-for="FechaEntregaEstimada" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TotalEstimado" class="form-label"></label>
+                            <input asp-for="TotalEstimado" class="form-control" />
+                            <span asp-validation-for="TotalEstimado" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notas" class="form-label"></label>
+                            <textarea asp-for="Notas" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Notas" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+                        <a asp-action="Detalles" asp-route-id="@Model.PedidoId" class="btn btn-outline-secondary w-100 mt-2">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="mb-0">Items del pedido</h5>
+                            <button type="button" class="btn btn-outline-primary" id="btnAddRow">Agregar item</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle" id="itemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ProductoId</th>
+                                        <th>Nombre</th>
+                                        <th style="width: 120px;">Cantidad</th>
+                                        <th style="width: 170px;">Precio unit.</th>
+                                        <th>Notas</th>
+                                        <th style="width: 80px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Items.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input asp-for="Items[@i].ProductoId" class="form-control" />
+                                                <span asp-validation-for="Items[@i].ProductoId" class="text-danger"></span>
+                                            </td>
+                                            <td>
+                                                <input asp-for="Items[@i].ProductoNombre" class="form-control" placeholder="Opcional, solo visual" />
+                                            </td>
+                                            <td>
+                                                <input asp-for="Items[@i].Cantidad" class="form-control" />
+                                                <span asp-validation-for="Items[@i].Cantidad" class="text-danger"></span>
+                                            </td>
+                                            <td>
+                                                <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control" />
+                                                <span asp-validation-for="Items[@i].PrecioUnitarioEstimado" class="text-danger"></span>
+                                            </td>
+                                            <td>
+                                                <input asp-for="Items[@i].Notas" class="form-control" />
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button" class="btn btn-outline-danger btnRemoveRow">Quitar</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-muted small">
+                            Si vas a cargar el nombre a mano aquí, es solo visual; lo válido es el ProductoId.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const tableBody = document.querySelector('#itemsTable tbody');
+            const addBtn = document.getElementById('btnAddRow');
+
+            function reindexRows() {
+                const rows = tableBody.querySelectorAll('tr');
+                rows.forEach((row, idx) => {
+                    const inputs = row.querySelectorAll('input');
+                    inputs.forEach(inp => {
+                        const name = inp.getAttribute('name');
+                        const id = inp.getAttribute('id');
+                        if (name) inp.setAttribute('name', name.replace(/Items\[\d+\]/g, `Items[${idx}]`));
+                        if (id) inp.setAttribute('id', id.replace(/Items_\d+__/g, `Items_${idx}__`));
+                    });
+
+                    const spans = row.querySelectorAll('span[data-valmsg-for]');
+                    spans.forEach(sp => {
+                        const f = sp.getAttribute('data-valmsg-for');
+                        if (f) sp.setAttribute('data-valmsg-for', f.replace(/Items\[\d+\]/g, `Items[${idx}]`));
+                    });
+                });
+            }
+
+            function addRow() {
+                const idx = tableBody.querySelectorAll('tr').length;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <input class="form-control" name="Items[${idx}].ProductoId" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].ProductoId" data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <input class="form-control" name="Items[${idx}].ProductoNombre" placeholder="Opcional, solo visual" />
+                    </td>
+                    <td>
+                        <input class="form-control" name="Items[${idx}].Cantidad" value="1" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].Cantidad" data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <input class="form-control" name="Items[${idx}].PrecioUnitarioEstimado" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].PrecioUnitarioEstimado" data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <input class="form-control" name="Items[${idx}].Notas" />
+                    </td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-outline-danger btnRemoveRow">Quitar</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            }
+
+            addBtn.addEventListener('click', addRow);
+
+            tableBody.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btnRemoveRow');
+                if (!btn) return;
+                const row = btn.closest('tr');
+                row.remove();
+                if (tableBody.querySelectorAll('tr').length === 0) addRow();
+                reindexRows();
+            });
+        })();
+    </script>
+}

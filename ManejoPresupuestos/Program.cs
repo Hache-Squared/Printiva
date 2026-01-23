@@ -44,6 +44,11 @@ builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
 builder.Services.AddTransient<IRepositorioVentaRecetas, RepositorioVentaRecetas>();
 builder.Services.AddTransient<IRepositorioVentas, RepositorioVentas>();
 
+builder.Services.AddTransient<IRepositorioPedidos, RepositorioPedidos>();
+builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
+builder.Services.AddTransient<IRepositorioPedidoEstatus, RepositorioPedidoEstatus>();
+
+
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();
 
