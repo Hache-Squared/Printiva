@@ -116,4 +116,16 @@ BEGIN
 		INSERT INTO Categorias(Nombre, TipoOperacionId, UsuarioId)
 		VALUES('Venta', 1, 1)
 	END
+
+	INSERT INTO dbo.TblPedidoEstatus (Nombre)
+	VALUES
+	(N'Nuevo'),
+	(N'En modelado'),
+	(N'Modelado listo'),
+	(N'Aprobado'),
+	(N'En producción'),
+	(N'Post-proceso'),
+	(N'Listo para entrega'),
+	(N'Entregado'),
+	(N'Cancelado');
 END

@@ -1,6 +1,12 @@
-﻿CREATE TABLE TblClientes(
-	ClienteId INT PRIMARY KEY IDENTITY(1,1),
-	Nombre VARCHAR(200) NOT NULL,
-	Telefono VARCHAR(100),
-	Correo VARCHAR(100)
-)
+﻿CREATE TABLE dbo.TblClientes
+(
+    ClienteId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UsuarioId INT NOT NULL,
+    Nombre NVARCHAR(150) NOT NULL,
+    Telefono NVARCHAR(30) NULL,
+    Instagram NVARCHAR(80) NULL,
+    WhatsApp NVARCHAR(30) NULL,
+    Email NVARCHAR(120) NULL,
+    Direccion NVARCHAR(250) NULL,
+    FechaCreacion DATETIME2 NOT NULL DEFAULT (SYSDATETIME())
+);
