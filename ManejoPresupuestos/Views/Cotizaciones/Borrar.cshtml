@@ -1,0 +1,12 @@
+@model ManejoPresupuestos.Models.CotizacionIndexRow
+@{
+    ViewData["Title"] = "Borrar Cotización";
+}
+
+<h3>¿Deseas borrar la cotización #@Model.CotizacionId?</h3>
+
+<form asp-action="BorrarCotizacion" method="post">
+    <input type="hidden" name="cotizacionId" value="@Model.CotizacionId" />
+    <button class="btn btn-danger" type="submit">Borrar</button>
+    <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-secondary">Cancelar</a>
+</form>

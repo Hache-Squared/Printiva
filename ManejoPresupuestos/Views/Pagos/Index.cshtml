@@ -1,0 +1,51 @@
+@model IEnumerable<ManejoPresupuestos.Models.Pago>
+@{
+    ViewData["Title"] = "Pagos";
+    var cot = (ManejoPresupuestos.Models.CotizacionIndexRow)ViewBag.Cotizacion;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Pagos</h1>
+        <div class="text-muted">Cotización #@cot.CotizacionId · Total @cot.TotalCotizado.ToString("0.00") · Saldo @cot.Saldo.ToString("0.00")</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Cotizaciones" asp-action="Detalles" asp-route-id="@cot.CotizacionId" class="btn btn-outline-secondary">Volver</a>
+        <a asp-action="Crear" asp-route-cotizacionId="@cot.CotizacionId" class="btn btn-primary">Registrar pago</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Método</th>
+                        <th>Referencia</th>
+                        <th class="text-end">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <a class="btn btn-primary btn-sm" asp-action="Editar" asp-route-cotizacionId="@p.CotizacionId" asp-route-id="@p.PagoId">Editar</a>
+                            <a class="btn btn-outline-danger btn-sm" asp-action="Borrar" asp-route-cotizacionId="@p.CotizacionId" asp-route-id="@p.PagoId">Borrar</a>
+                        </td>
+                        <td>@p.FechaPago.ToString("dd/MM/yyyy")</td>
+                        <td><span class="badge bg-secondary">@p.PagoTipo</span></td>
+                        <td>@(string.IsNullOrWhiteSpace(p.Metodo) ? "-" : p.Metodo)</td>
+                        <td>@(string.IsNullOrWhiteSpace(p.Referencia) ? "-" : p.Referencia)</td>
+                        <td class="text-end fw-semibold">@p.Monto.ToString("0.00")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

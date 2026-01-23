@@ -1,0 +1,148 @@
+@model ManejoPresupuestos.Models.CotizacionDetalleViewModel
+@{
+    ViewData["Title"] = "Detalle cotización";
+    var c = Model.Cotizacion;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Cotización #@c.CotizacionId</h1>
+        <div class="text-muted">Pedido #@c.PedidoId · @c.CotizacionEstatus</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+        <a asp-action="Editar" asp-route-id="@c.CotizacionId" class="btn btn-primary">Editar</a>
+        <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-outline-secondary">Pagos</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="mb-2">
+                    <div class="text-muted">Creación</div>
+                    <div class="fw-semibold">@c.FechaCreacion.ToString("dd/MM/yyyy")</div>
+                </div>
+                <div class="mb-2">
+                    <div class="text-muted">Vigencia</div>
+                    <div class="fw-semibold">@((c.FechaVigencia?.ToString("dd/MM/yyyy")) ?? "-")</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted">Notas</div>
+                    <div class="fw-semibold">@((string.IsNullOrWhiteSpace(c.Notas)) ? "-" : c.Notas)</div>
+                </div>
+
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between">
+                        <div class="text-muted">Modelado</div>
+                        <div class="fw-semibold">@c.TotalModelado.ToString("0.00")</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <div class="text-muted">Producción</div>
+                        <div class="fw-semibold">@c.TotalProduccion.ToString("0.00")</div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <div class="fw-semibold">Total</div>
+                        <div class="fw-bold fs-5">@c.TotalCotizado.ToString("0.00")</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="text-muted">Pagado</div>
+                        <div class="fw-semibold">@c.TotalPagado.ToString("0.00")</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <div class="text-muted">Saldo</div>
+                        <div class="fw-bold @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</div>
+                    </div>
+                </div>
+
+                <div class="border-top mt-3 pt-3">
+                    <a asp-controller="Pagos" asp-action="Crear" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-primary w-100">Registrar pago</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mt-3">
+            <div class="card-body">
+                <form asp-action="BorrarCotizacion" method="post">
+                    <input type="hidden" name="cotizacionId" value="@c.CotizacionId" />
+                    <button type="submit" class="btn btn-outline-danger w-100">Borrar cotización</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="mb-3">Items</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Concepto</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Subtotal</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var i in Model.Items)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@i.ConceptoTipo</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(i.ProductoNombre) ? "-" : i.ProductoNombre)</td>
+                                <td class="fw-semibold">@i.Concepto</td>
+                                <td class="text-end">@i.Cantidad.ToString("0.00")</td>
+                                <td class="text-end">@i.PrecioUnitario.ToString("0.00")</td>
+                                <td class="text-end fw-semibold">@((i.Cantidad * i.PrecioUnitario).ToString("0.00"))</td>
+                                <td>@(string.IsNullOrWhiteSpace(i.Notas) ? "-" : i.Notas)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mt-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Pagos recientes</h5>
+                    <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-outline-secondary btn-sm">Ver todos</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Método</th>
+                                <th>Referencia</th>
+                                <th class="text-end">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var p in Model.Pagos.Take(5))
+                        {
+                            <tr>
+                                <td>@p.FechaPago.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge bg-secondary">@p.PagoTipo</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(p.Metodo) ? "-" : p.Metodo)</td>
+                                <td>@(string.IsNullOrWhiteSpace(p.Referencia) ? "-" : p.Referencia)</td>
+                                <td class="text-end fw-semibold">@p.Monto.ToString("0.00")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+@model ManejoPresupuestos.Models.PagoEdicionViewModel
+@{
+    ViewData["Title"] = "Registrar pago";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Registrar pago</h1>
+        <div class="text-muted">Asigna el pago a Modelado/Producción/General.</div>
+    </div>
+    <a asp-action="Index" asp-route-cotizacionId="@Model.CotizacionId" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<form asp-action="Crear" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input type="hidden" asp-for="CotizacionId" />
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="PagoTipoId" class="form-label"></label>
+                    <select asp-for="PagoTipoId" asp-items="@Model.Tipos" class="form-select"></select>
+                    <span asp-validation-for="PagoTipoId" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Monto" class="form-label"></label>
+                    <input asp-for="Monto" class="form-control" />
+                    <span asp-validation-for="Monto" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="FechaPago" class="form-label"></label>
+                    <input asp-for="FechaPago" class="form-control" />
+                    <span asp-validation-for="FechaPago" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Metodo" class="form-label"></label>
+                    <input asp-for="Metodo" class="form-control" placeholder="Efectivo, transferencia, etc." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Referencia" class="form-label"></label>
+                    <input asp-for="Referencia" class="form-control" placeholder="Folio/Referencia" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Notas" class="form-label"></label>
+                    <textarea asp-for="Notas" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+
+            <button class="btn btn-primary mt-3" type="submit">Guardar</button>
+            <a asp-action="Index" asp-route-cotizacionId="@Model.CotizacionId" class="btn btn-secondary mt-3">Cancelar</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

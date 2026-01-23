@@ -21,6 +21,57 @@ BEGIN
 			RAISERROR('Usuario no encontrado.',16,1);
 		END
 
+		IF(ISNULL(@Borrar,0) = 1)
+		BEGIN
+			IF NOT EXISTS(
+				SELECT 1
+				FROM dbo.TblCotizaciones c (NOLOCK)
+				WHERE c.CotizacionId = @elementoId AND ISNULL(c.EstaActivo,1) = 1
+			)
+			BEGIN
+				RAISERROR('Cotizacion no encontrada.',16,1);
+			END
+
+			BEGIN TRAN;
+
+			IF OBJECT_ID('dbo.TblCotizacionItems','U') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblCotizacionItems','EstaActivo') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblCotizacionItems','CotizacionId') IS NOT NULL
+			BEGIN
+				UPDATE dbo.TblCotizacionItems
+				SET EstaActivo = 0
+				WHERE CotizacionId = @elementoId AND ISNULL(EstaActivo,1) = 1;
+			END
+
+			IF OBJECT_ID('dbo.TblCotizacionesItems','U') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblCotizacionesItems','EstaActivo') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblCotizacionesItems','CotizacionId') IS NOT NULL
+			BEGIN
+				UPDATE dbo.TblCotizacionesItems
+				SET EstaActivo = 0
+				WHERE CotizacionId = @elementoId AND ISNULL(EstaActivo,1) = 1;
+			END
+
+			IF OBJECT_ID('dbo.TblPagos','U') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblPagos','EstaActivo') IS NOT NULL
+			   AND COL_LENGTH('dbo.TblPagos','CotizacionId') IS NOT NULL
+			BEGIN
+				UPDATE dbo.TblPagos
+				SET EstaActivo = 0
+				WHERE CotizacionId = @elementoId AND ISNULL(EstaActivo,1) = 1;
+			END
+
+			UPDATE dbo.TblCotizaciones
+			SET EstaActivo = 0
+			WHERE CotizacionId = @elementoId;
+
+			COMMIT;
+
+			SET @message = 'Elemento Eliminado';
+			SELECT @result [result], @message [message], @elementoId [elementoId];
+			RETURN;
+		END
+
 		IF(ISNULL(@PedidoId,0) = 0)
 		BEGIN
 			RAISERROR('PedidoId no puede ser 0.',16,1);
@@ -38,15 +89,7 @@ BEGIN
 
 		IF EXISTS(SELECT 1 FROM dbo.TblCotizaciones c (NOLOCK) WHERE c.CotizacionId = @elementoId)
 		BEGIN
-			IF(ISNULL(@Borrar,0) = 1)
-			BEGIN
-				UPDATE dbo.TblCotizaciones
-				SET EstaActivo = 0
-				WHERE CotizacionId = @elementoId;
-
-				SET @message = 'Elemento Eliminado';
-			END
-			ELSE IF(ISNULL(@Actualizar,0) = 1)
+			IF(ISNULL(@Actualizar,0) = 1)
 			BEGIN
 				UPDATE dbo.TblCotizaciones
 				SET PedidoId = @PedidoId,
@@ -78,6 +121,7 @@ BEGIN
 		SELECT @result [result], @message [message], @elementoId [elementoId];
 	END TRY
 	BEGIN CATCH
+		IF(XACT_STATE() <> 0) ROLLBACK;
 		SET @result = 'fail';
 		IF(ISNULL(@message,'') = '')
 		BEGIN

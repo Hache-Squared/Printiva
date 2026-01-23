@@ -48,6 +48,9 @@ builder.Services.AddTransient<IRepositorioPedidos, RepositorioPedidos>();
 builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
 builder.Services.AddTransient<IRepositorioPedidoEstatus, RepositorioPedidoEstatus>();
 
+builder.Services.AddTransient<IRepositorioCotizaciones, RepositorioCotizaciones>();
+builder.Services.AddTransient<IRepositorioPagos, RepositorioPagos>();
+
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();

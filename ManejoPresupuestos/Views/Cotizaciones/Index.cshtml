@@ -1,0 +1,68 @@
+@model IEnumerable<ManejoPresupuestos.Models.CotizacionIndexRow>
+@{
+    ViewData["Title"] = "Cotizaciones";
+    var pedidoId = (int)(ViewBag.PedidoId ?? 0);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-0">Cotizaciones</h1>
+        <div class="text-muted">Modelado y producción se cotizan por separado, los pagos se registran por tipo.</div>
+    </div>
+    <a asp-action="Crear" asp-route-pedidoId="@pedidoId" class="btn btn-primary">Crear nueva</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-4">
+        <input name="pedidoId" value="@pedidoId" class="form-control" placeholder="Filtrar por PedidoId (opcional)" />
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-outline-secondary w-100" type="submit">Filtrar</button>
+    </div>
+</form>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Cotización</th>
+                        <th>Pedido</th>
+                        <th>Estatus</th>
+                        <th>Creación</th>
+                        <th class="text-end">Modelado</th>
+                        <th class="text-end">Producción</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Pagado</th>
+                        <th class="text-end">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <a class="btn btn-outline-primary btn-sm" asp-action="Detalles" asp-route-id="@c.CotizacionId">Ver</a>
+                            <a class="btn btn-primary btn-sm" asp-action="Editar" asp-route-id="@c.CotizacionId">Editar</a>
+                            <a class="btn btn-outline-secondary btn-sm" asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId">Pagos</a>
+                        </td>
+                        <td>#@c.CotizacionId</td>
+                        <td>#@c.PedidoId</td>
+                        <td>
+                            <span class="badge bg-secondary">@c.CotizacionEstatus</span>
+                        </td>
+                        <td>@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">@c.TotalModelado.ToString("0.00")</td>
+                        <td class="text-end">@c.TotalProduccion.ToString("0.00")</td>
+                        <td class="text-end fw-semibold">@c.TotalCotizado.ToString("0.00")</td>
+                        <td class="text-end">@c.TotalPagado.ToString("0.00")</td>
+                        <td class="text-end @(c.Saldo > 0 ? "text-danger" : "text-success") fw-semibold">@c.Saldo.ToString("0.00")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

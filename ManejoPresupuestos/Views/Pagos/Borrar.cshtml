@@ -1,0 +1,14 @@
+@model ManejoPresupuestos.Models.Pago
+@{
+    ViewData["Title"] = "Borrar pago";
+}
+
+<h3>¿Deseas borrar el pago de @Model.Monto.ToString("0.00")?</h3>
+
+<form asp-action="BorrarPago" method="post">
+    <input type="hidden" name="cotizacionId" value="@Model.CotizacionId" />
+    <input type="hidden" name="pagoId" value="@Model.PagoId" />
+
+    <button class="btn btn-danger" type="submit">Borrar</button>
+    <a asp-action="Index" asp-route-cotizacionId="@Model.CotizacionId" class="btn btn-secondary">Cancelar</a>
+</form>
