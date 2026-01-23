@@ -18,6 +18,7 @@
     <form asp-action="Editar" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="PedidoId" />
+        <input type="hidden" asp-for="PedidoEstatusId" />
 
         <div class="row g-3">
             <div class="col-lg-4">
@@ -30,10 +31,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="PedidoEstatusId" class="form-label"></label>
-                            <select asp-for="PedidoEstatusId" asp-items="@Model.Estatus" class="form-select"></select>
-                            <span asp-validation-for="PedidoEstatusId" class="text-danger"></span>
+                            <label class="form-label">Estatus</label>
+                            @{
+                                var estatusNombre = Model.Estatus?
+                                    .FirstOrDefault(x => x.Value == Model.PedidoEstatusId.ToString())
+                                    ?.Text ?? "";
+                            }
+
+                            <input class="form-control" value="@estatusNombre" disabled />
+                            <div class="form-text">El estatus se cambia desde Acciones / Kanban.</div>
                         </div>
+
 
                         <div class="mb-3">
                             <label asp-for="FechaEntregaEstimada" class="form-label"></label>

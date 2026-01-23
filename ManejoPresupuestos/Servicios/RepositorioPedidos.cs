@@ -12,6 +12,9 @@ namespace ManejoPresupuestos.Servicios
         Task<int> Crear(int usuarioId, PedidoCreacionViewModel pedido);
         Task Actualizar(int usuarioId, PedidoCreacionViewModel pedido);
         Task Borrar(int usuarioId, int pedidoId);
+        Task<IEnumerable<PedidoAccionDisponible>> ObtenerAccionesDisponibles(int usuarioId, int pedidoId);
+        Task<ResultProcedureGeneric> CambiarEstatus(int usuarioId, int pedidoId, int haciaEstatusId, string? notas);
+
     }
 
     public class RepositorioPedidos : IRepositorioPedidos
@@ -162,6 +165,36 @@ namespace ManejoPresupuestos.Servicios
             await connection.ExecuteAsync(
                 "procBorrarPedido",
                 new { loginId = usuarioId, pedidoId },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<IEnumerable<PedidoAccionDisponible>> ObtenerAccionesDisponibles(int usuarioId, int pedidoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<PedidoAccionDisponible>(
+                "dbo.procPedidoAccionesDisponibles",
+                new
+                {
+                    PedidoId = pedidoId,
+                    loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<ResultProcedureGeneric> CambiarEstatus(int usuarioId, int pedidoId, int haciaEstatusId, string? notas)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procPedidoCambiarEstatus",
+                new
+                {
+                    PedidoId = pedidoId,
+                    HaciaEstatusId = haciaEstatusId,
+                    Notas = notas ?? "",
+                    loginId = usuarioId
+                },
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }

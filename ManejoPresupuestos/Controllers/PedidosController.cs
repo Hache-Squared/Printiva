@@ -150,8 +150,7 @@ namespace ManejoPresupuestos.Controllers
             var cliente = await repositorioClientes.ObtenerPorId(usuarioId, pedido.ClienteId);
             if (cliente is null) return RedirectToAction("NoEncontrado", "Home");
 
-            var estatus = await repositorioPedidoEstatus.ObtenerTodos();
-            if (!estatus.Any(x => x.PedidoEstatusId == pedido.PedidoEstatusId)) return RedirectToAction("NoEncontrado", "Home");
+            pedido.PedidoEstatusId = existente.PedidoEstatusId; 
 
             if (pedido.Items is null || !pedido.Items.Any(x => x.ProductoId > 0 && x.Cantidad > 0))
             {
@@ -230,6 +229,43 @@ namespace ManejoPresupuestos.Controllers
         {
             var estatus = await repositorioPedidoEstatus.ObtenerTodos();
             return estatus.Select(x => new SelectListItem(x.Nombre, x.PedidoEstatusId.ToString()));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AccionesDisponibles(int pedidoId)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var pedido = await repositorioPedidos.ObtenerPorId(usuarioId, pedidoId);
+            if (pedido is null)
+                return Json(Array.Empty<PedidoAccionDisponible>());
+
+            var acciones = await repositorioPedidos.ObtenerAccionesDisponibles(usuarioId, pedidoId);
+            return Json(acciones);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CambiarEstatus(PedidoCambioEstatusViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var pedido = await repositorioPedidos.ObtenerPorId(usuarioId, modelo.PedidoId);
+            if (pedido is null)
+                return RedirectToAction("NoEncontrado", "Home");
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Datos inválidos para cambiar estatus.";
+                return RedirectToAction("Detalles", new { id = modelo.PedidoId });
+            }
+
+            var result = await repositorioPedidos.CambiarEstatus(usuarioId, modelo.PedidoId, modelo.HaciaEstatusId, modelo.Notas);
+
+            if (result.result != ResultProcedureType.SUCCESS)
+                TempData["Error"] = result.message;
+            else
+                TempData["Success"] = result.message;
+
+            return RedirectToAction("Detalles", new { id = modelo.PedidoId });
         }
     }
 }

@@ -12,6 +12,9 @@
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
             <a class="btn btn-primary" asp-action="Editar" asp-route-id="@Model.Pedido.PedidoId">Editar</a>
+            <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#pedidoAccionesModal" data-pedido-id="@Model.Pedido.PedidoId">
+                Acciones
+            </button>
         </div>
     </div>
 
@@ -100,3 +103,126 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="pedidoAccionesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Acciones del pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="accionesPedidoMsg" class="mb-2"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notas (opcional)</label>
+                    <textarea id="accionesPedidoNotas" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div id="accionesPedidoList" class="d-grid gap-2"></div>
+
+                <form id="formCambiarEstatus" asp-action="CambiarEstatus" method="post" class="d-none">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="PedidoId" id="accionesPedidoId" />
+                    <input type="hidden" name="HaciaEstatusId" id="accionesHaciaEstatusId" />
+                    <input type="hidden" name="Notas" id="accionesNotasHidden" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        (function () {
+            const modalEl = document.getElementById('pedidoAccionesModal');
+            const listEl = document.getElementById('accionesPedidoList');
+            const msgEl = document.getElementById('accionesPedidoMsg');
+            const pedidoIdInput = document.getElementById('accionesPedidoId');
+            const haciaInput = document.getElementById('accionesHaciaEstatusId');
+            const notasUi = document.getElementById('accionesPedidoNotas');
+            const notasHidden = document.getElementById('accionesNotasHidden');
+            const form = document.getElementById('formCambiarEstatus');
+
+            function setMsg(text, type) {
+                if (!text) { msgEl.innerHTML = ''; return; }
+                const cls = type === 'danger' ? 'alert alert-danger' : 'alert alert-success';
+                msgEl.innerHTML = `<div class="${cls} mb-0">${text}</div>`;
+            }
+
+            function clearList() {
+                listEl.innerHTML = '';
+            }
+
+            async function loadAcciones(pedidoId) {
+                setMsg('', '');
+                clearList();
+                listEl.innerHTML = `<button class="btn btn-outline-secondary" type="button" disabled>Cargando...</button>`;
+
+                try {
+                    const res = await fetch(`/Pedidos/AccionesDisponibles?pedidoId=${pedidoId}`, { headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+
+                    clearList();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        listEl.innerHTML = `<div class="text-muted">No hay acciones disponibles.</div>`;
+                        return;
+                    }
+
+                    data.forEach(a => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = a.bloqueada ? 'btn btn-outline-secondary' : 'btn btn-outline-primary';
+                        btn.disabled = !!a.bloqueada;
+                        btn.textContent = a.accionTexto || 'Acción';
+
+                        if (a.bloqueada && a.motivo) {
+                            const small = document.createElement('div');
+                            small.className = 'text-muted small mt-1';
+                            small.textContent = a.motivo;
+
+                            const wrap = document.createElement('div');
+                            wrap.appendChild(btn);
+                            wrap.appendChild(small);
+                            listEl.appendChild(wrap);
+                            return;
+                        }
+
+                        btn.addEventListener('click', () => {
+                            const requiereConfirm = !!a.requiereConfirmacion;
+                            if (requiereConfirm) {
+                                const ok = confirm('¿Confirmas esta acción?');
+                                if (!ok) return;
+                            }
+
+                            pedidoIdInput.value = String(pedidoId);
+                            haciaInput.value = String(a.haciaEstatusId);
+                            notasHidden.value = (notasUi.value || '').trim();
+                            form.submit();
+                        });
+
+                        listEl.appendChild(btn);
+                    });
+
+                } catch (e) {
+                    clearList();
+                    setMsg('No se pudieron cargar acciones.', 'danger');
+                }
+            }
+
+            modalEl.addEventListener('show.bs.modal', (ev) => {
+                const btn = ev.relatedTarget;
+                const pedidoId = btn?.getAttribute('data-pedido-id');
+                notasUi.value = '';
+                if (!pedidoId) {
+                    setMsg('Pedido inválido.', 'danger');
+                    clearList();
+                    return;
+                }
+                loadAcciones(pedidoId);
+            });
+        })();
+    </script>
+}
