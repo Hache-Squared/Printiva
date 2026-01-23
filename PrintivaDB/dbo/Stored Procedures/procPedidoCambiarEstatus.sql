@@ -75,6 +75,13 @@ BEGIN
             END
         END
 
+        DECLARE @EnProduccionPedidoId INT = (SELECT TOP 1 PedidoEstatusId FROM dbo.TblPedidoEstatus (NOLOCK) WHERE Nombre=N'En producción');
+
+        IF @EnProduccionPedidoId IS NOT NULL AND @HaciaEstatusId = @EnProduccionPedidoId
+        BEGIN
+            EXEC dbo.procProduccionInitPorPedido @PedidoId=@PedidoId, @loginId=@loginId;
+        END
+
         UPDATE p
             SET p.PedidoEstatusId = @HaciaEstatusId
         FROM dbo.TblPedidos p
