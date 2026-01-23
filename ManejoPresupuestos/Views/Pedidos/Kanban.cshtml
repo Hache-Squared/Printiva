@@ -1,0 +1,395 @@
+@model ManejoPresupuestos.Models.PedidoKanbanViewModel
+@{
+    ViewData["Title"] = "Kanban de Pedidos";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+        <div>
+            <h1 class="mb-1">Kanban</h1>
+            <div class="text-muted">Vista operativa: mueve pedidos con acciones permitidas y ve cotización/pagos al vuelo.</div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-secondary" asp-action="Index">Lista</a>
+            <a class="btn btn-primary" asp-action="Crear">Crear pedido</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input id="kbSearch" class="form-control" placeholder="Cliente, notas o #Pedido" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cliente</label>
+                    <select id="kbClienteId" class="form-select">
+                        <option value="0">Todos</option>
+                        @foreach (var c in Model.Clientes)
+                        {
+                            <option value="@c.Value">@c.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="kbSoloPendientes" />
+                        <label class="form-check-label" for="kbSoloPendientes">
+                            Solo con saldo pendiente
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button id="kbReload" class="btn btn-outline-primary w-100">Actualizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- anti-forgery token para AJAX -->
+    <form id="afForm" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <div class="d-flex gap-3 overflow-auto pb-3" id="kbBoard" style="min-height: 65vh;">
+        @foreach (var e in Model.Estatus)
+        {
+            <div class="card shadow-sm border-0" style="min-width: 320px; max-width: 320px;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-semibold">@e.Nombre</div>
+                        <span class="badge bg-light text-dark" id="count-@e.PedidoEstatusId">0</span>
+                    </div>
+                    <div class="d-grid gap-2" data-col="@e.PedidoEstatusId" style="min-height: 40px;"></div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal acciones -->
+<div class="modal fade" id="kbModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="kbModalTitle">Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="kbModalMeta" class="mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notas de acción</label>
+                    <textarea id="kbNotas" class="form-control" rows="3" placeholder="Qué cambió / por qué..."></textarea>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted small" id="kbModalHint"></div>
+                    <div class="d-flex gap-2">
+                        <a id="kbVerDetalles" class="btn btn-outline-secondary">Ver</a>
+                        <a id="kbVerCot" class="btn btn-outline-secondary d-none">Cotización</a>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div>
+                    <div class="fw-semibold mb-2">Acciones disponibles</div>
+                    <div id="kbAcciones" class="d-flex flex-wrap gap-2"></div>
+                    <div id="kbAccionesEmpty" class="text-muted d-none">No hay acciones disponibles para este pedido.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function(){
+    const board = document.getElementById('kbBoard');
+    const modalEl = document.getElementById('kbModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    const token = document.querySelector('#afForm input[name="__RequestVerificationToken"]').value;
+
+    let cards = [];
+    let selected = null;
+
+    function fmtMoney(n){
+        const v = Number(n || 0);
+        return v.toLocaleString('es-MX', { style:'currency', currency:'MXN' });
+    }
+
+    function fmtDate(d){
+        if(!d) return '-';
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return '-';
+        return dt.toLocaleDateString('es-MX');
+    }
+
+    function badge(html){ return `<span class="badge rounded-pill ${html}"></span>`; }
+
+    function buildBadges(c){
+        // Cotización
+        let b1 = '';
+        if(!c.tieneCotizacion){
+            b1 = `<span class="badge bg-secondary">Sin cotización</span>`;
+        } else {
+            const cls = c.cotizacionAceptada ? 'bg-success' : 'bg-warning text-dark';
+            b1 = `<span class="badge ${cls}">Cotización: ${escapeHtml(c.cotizacionEstatusNombre || '—')}</span>`;
+        }
+
+        // Saldo
+        let b2 = '';
+        if(c.tieneCotizacion){
+            if(Number(c.saldo) > 0){
+                b2 = `<span class="badge bg-danger">Pendiente: ${fmtMoney(c.saldo)}</span>`;
+            } else {
+                b2 = `<span class="badge bg-success">Pagado</span>`;
+            }
+        }
+
+        return [b1, b2].filter(Boolean).join(' ');
+    }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function clearColumns(){
+        document.querySelectorAll('[data-col]').forEach(col => col.innerHTML = '');
+        document.querySelectorAll('[id^="count-"]').forEach(el => el.textContent = '0');
+    }
+
+    function render(){
+        clearColumns();
+
+        const grouped = new Map();
+        for(const c of cards){
+            if(!grouped.has(c.pedidoEstatusId)) grouped.set(c.pedidoEstatusId, []);
+            grouped.get(c.pedidoEstatusId).push(c);
+        }
+
+        grouped.forEach((list, estatusId) => {
+            const col = document.querySelector(`[data-col="${estatusId}"]`);
+            if(!col) return;
+
+            document.getElementById(`count-${estatusId}`).textContent = String(list.length);
+
+            for(const c of list){
+                const div = document.createElement('div');
+                div.className = 'card border-0 shadow-sm';
+                div.style.cursor = 'pointer';
+
+                const badges = buildBadges(c);
+
+                div.innerHTML = `
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div>
+                                <div class="fw-semibold">Pedido #${c.pedidoId}</div>
+                                <div class="text-muted small">${escapeHtml(c.clienteNombre || '')}</div>
+                            </div>
+                            <a class="btn btn-sm btn-outline-secondary" href="/Pedidos/Detalles/${c.pedidoId}">Ver</a>
+                        </div>
+
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            ${badges}
+                        </div>
+
+                        <div class="mt-2 small text-muted">
+                            Entrega: <span class="fw-semibold">${fmtDate(c.fechaEntregaEstimada)}</span>
+                            <span class="ms-2">Total est.: <span class="fw-semibold">${fmtMoney(c.totalEstimado)}</span></span>
+                        </div>
+
+                        ${c.notas ? `<div class="mt-2 small">${escapeHtml(c.notas)}</div>` : ``}
+                    </div>
+                `;
+
+                div.addEventListener('click', (ev) => {
+                    // evita que el click en el botón "Ver" dispare el modal
+                    if(ev.target.closest('a')) return;
+                    openModal(c);
+                });
+
+                col.appendChild(div);
+            }
+        });
+    }
+
+    async function loadData(){
+        const q = document.getElementById('kbSearch').value || '';
+        const clienteId = Number(document.getElementById('kbClienteId').value || 0);
+        const soloPendientes = document.getElementById('kbSoloPendientes').checked;
+
+        const url = new URL(window.location.origin + '/Pedidos/KanbanData');
+        url.searchParams.set('q', q);
+        url.searchParams.set('clienteId', String(clienteId));
+        url.searchParams.set('soloPendientes', soloPendientes ? 'true' : 'false');
+
+        const res = await fetch(url.toString(), { headers: { 'Accept':'application/json' }});
+        cards = await res.json();
+        render();
+    }
+
+    async function openModal(c){
+        selected = c;
+        document.getElementById('kbModalTitle').textContent = `Pedido #${c.pedidoId}`;
+        document.getElementById('kbNotas').value = '';
+
+        document.getElementById('kbVerDetalles').href = `/Pedidos/Detalles/${c.pedidoId}`;
+
+        const cotBtn = document.getElementById('kbVerCot');
+        if(c.tieneCotizacion && Number(c.cotizacionId) > 0){
+            cotBtn.classList.remove('d-none');
+            cotBtn.href = `/Cotizaciones/Detalles/${c.cotizacionId}`;
+        } else {
+            cotBtn.classList.add('d-none');
+        }
+
+        const meta = `
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="small text-muted">Cliente</div>
+                    <div class="fw-semibold">${escapeHtml(c.clienteNombre || '')}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Entrega</div>
+                    <div class="fw-semibold">${fmtDate(c.fechaEntregaEstimada)}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Total est.</div>
+                    <div class="fw-semibold">${fmtMoney(c.totalEstimado)}</div>
+                </div>
+
+                <div class="col-12 mt-2">
+                    ${buildBadges(c)}
+                </div>
+
+                ${c.tieneCotizacion ? `
+                <div class="col-12 small text-muted mt-2">
+                    Total cotizado: <span class="fw-semibold">${fmtMoney(c.totalCotizado)}</span> ·
+                    Pagado: <span class="fw-semibold">${fmtMoney(c.totalPagado)}</span> ·
+                    Saldo: <span class="fw-semibold">${fmtMoney(c.saldo)}</span>
+                </div>` : ``}
+            </div>
+        `;
+        document.getElementById('kbModalMeta').innerHTML = meta;
+
+        document.getElementById('kbModalHint').textContent =
+            'Las acciones salen del motor (procedure). Si no aparece, no se puede (por reglas).';
+
+        await loadAcciones(c.pedidoId);
+        modal.show();
+    }
+
+    async function loadAcciones(pedidoId){
+        const wrap = document.getElementById('kbAcciones');
+        const empty = document.getElementById('kbAccionesEmpty');
+        wrap.innerHTML = '';
+        empty.classList.add('d-none');
+
+        const res = await fetch(`/Pedidos/AccionesDisponibles?pedidoId=${pedidoId}`, { headers:{'Accept':'application/json'}});
+        const acciones = await res.json();
+
+        if(!acciones || acciones.length === 0){
+            empty.classList.remove('d-none');
+            return;
+        }
+
+        for(const a of acciones){
+            // soporta camelCase y PascalCase
+            const texto =
+                a.accionTexto ?? a.AccionTexto ??
+                a.nombreAccion ?? a.NombreAccion ??
+                a.nombre ?? a.Nombre ??
+                'Acción';
+
+            const haciaEstatusId =
+                a.haciaEstatusId ?? a.HaciaEstatusId ?? 0;
+
+            const bloqueada =
+                a.bloqueada ?? a.Bloqueada ?? false;
+
+            const motivo =
+                a.motivo ?? a.Motivo ?? '';
+
+            const requiereConfirmacion =
+                a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+
+            // Si está bloqueada: se ve “apagada” y con tooltip del motivo
+            if (bloqueada) {
+                btn.className = 'btn btn-outline-secondary';
+                btn.disabled = true;
+                btn.title = motivo || 'Acción no disponible';
+            } else {
+                btn.className = 'btn btn-primary';
+            }
+
+            btn.textContent = texto;
+
+            btn.addEventListener('click', async () => {
+                if (bloqueada) return;
+
+                if (requiereConfirmacion) {
+                    const ok = confirm(`¿Confirmas la acción?\n\n${texto}`);
+                    if (!ok) return;
+                }
+
+                const notas = document.getElementById('kbNotas').value || '';
+                await ejecutarAccion(pedidoId, haciaEstatusId, notas);
+            });
+
+            wrap.appendChild(btn);
+        }
+    }
+
+
+    async function ejecutarAccion(pedidoId, haciaEstatusId, notas){
+        const payload = new URLSearchParams();
+        payload.set('PedidoId', String(pedidoId));
+        payload.set('HaciaEstatusId', String(haciaEstatusId));
+        payload.set('Notas', notas);
+
+        const res = await fetch('/Pedidos/CambiarEstatusAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'RequestVerificationToken': token
+            },
+            body: payload.toString()
+        });
+
+        const r = await res.json();
+        if(!r.ok){
+            alert(r.message || 'No se pudo ejecutar la acción.');
+            return;
+        }
+
+        modal.hide();
+        await loadData();
+    }
+
+    // events
+    document.getElementById('kbReload').addEventListener('click', loadData);
+
+    let t = null;
+    document.getElementById('kbSearch').addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(loadData, 250);
+    });
+
+    document.getElementById('kbClienteId').addEventListener('change', loadData);
+    document.getElementById('kbSoloPendientes').addEventListener('change', loadData);
+
+    // init
+    loadData();
+})();
+</script>
+}

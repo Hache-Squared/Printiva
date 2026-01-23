@@ -48,5 +48,8 @@ namespace ManejoPresupuestos.Models
     {
         public Pedido Pedido { get; set; }
         public IEnumerable<PedidoItem> Items { get; set; } = Enumerable.Empty<PedidoItem>();
+        public int? CotizacionId { get; set; }
+        public string? CotizacionEstatusNombre { get; set; }
+        public bool TieneCotizacion => CotizacionId.HasValue && CotizacionId.Value > 0;
     }
 }

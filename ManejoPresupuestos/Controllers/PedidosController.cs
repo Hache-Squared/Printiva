@@ -13,6 +13,7 @@ namespace ManejoPresupuestos.Controllers
         private readonly IRepositorioClientes repositorioClientes;
         private readonly IRepositorioPedidoEstatus repositorioPedidoEstatus;
         private readonly IRepositorioProductos repositorioProductos;
+        private readonly IRepositorioCotizaciones repositorioCotizaciones;
         private readonly IMapper mapper;
 
         public PedidosController(
@@ -21,6 +22,7 @@ namespace ManejoPresupuestos.Controllers
             IRepositorioClientes repositorioClientes,
             IRepositorioPedidoEstatus repositorioPedidoEstatus,
             IRepositorioProductos repositorioProductos,
+            IRepositorioCotizaciones repositorioCotizaciones,
             IMapper mapper
         )
         {
@@ -29,6 +31,7 @@ namespace ManejoPresupuestos.Controllers
             this.repositorioClientes = repositorioClientes;
             this.repositorioPedidoEstatus = repositorioPedidoEstatus;
             this.repositorioProductos = repositorioProductos;
+            this.repositorioCotizaciones = repositorioCotizaciones;
             this.mapper = mapper;
         }
 
@@ -49,10 +52,16 @@ namespace ManejoPresupuestos.Controllers
 
             var items = await repositorioPedidos.ObtenerItems(usuarioId, id);
 
+            // Traer cotización ligada al pedido (si existe)
+            var cotizaciones = await repositorioCotizaciones.ObtenerTodos(usuarioId, pedidoId: id);
+            var cot = cotizaciones?.OrderByDescending(x => x.CotizacionId).FirstOrDefault(); // latest
+
             var vm = new PedidoDetallesViewModel
             {
                 Pedido = pedido,
-                Items = items
+                Items = items,
+                CotizacionId = cot?.CotizacionId,
+                CotizacionEstatusNombre = cot?.CotizacionEstatus
             };
 
             return View(vm);
@@ -267,5 +276,53 @@ namespace ManejoPresupuestos.Controllers
 
             return RedirectToAction("Detalles", new { id = modelo.PedidoId });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Kanban()
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var estatus = await repositorioPedidoEstatus.ObtenerTodos();
+            var clientes = await repositorioClientes.ObtenerTodos(usuarioId);
+
+            var vm = new PedidoKanbanViewModel
+            {
+                Estatus = estatus.Select(x => new PedidoEstatusRow
+                {
+                    PedidoEstatusId = x.PedidoEstatusId,
+                    Nombre = x.Nombre
+                }).ToList(),
+                Clientes = clientes.Select(x => new SelectListItem(x.Nombre, x.ClienteId.ToString())).ToList()
+            };
+
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> KanbanData(int clienteId = 0, string q = "", bool soloPendientes = false)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var data = await repositorioPedidos.ObtenerKanban(usuarioId, clienteId, q, soloPendientes);
+            return Json(data);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CambiarEstatusAjax(PedidoCambioEstatusViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var pedido = await repositorioPedidos.ObtenerPorId(usuarioId, modelo.PedidoId);
+            if (pedido is null)
+                return Json(new { ok = false, message = "Pedido no encontrado." });
+
+            var result = await repositorioPedidos.CambiarEstatus(usuarioId, modelo.PedidoId, modelo.HaciaEstatusId, modelo.Notas);
+
+            return Json(new
+            {
+                ok = result.result == ResultProcedureType.SUCCESS,
+                message = result.message
+            });
+        }
+
     }
 }

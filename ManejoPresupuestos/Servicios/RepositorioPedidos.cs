@@ -14,6 +14,7 @@ namespace ManejoPresupuestos.Servicios
         Task Borrar(int usuarioId, int pedidoId);
         Task<IEnumerable<PedidoAccionDisponible>> ObtenerAccionesDisponibles(int usuarioId, int pedidoId);
         Task<ResultProcedureGeneric> CambiarEstatus(int usuarioId, int pedidoId, int haciaEstatusId, string? notas);
+        Task<IEnumerable<PedidoKanbanCard>> ObtenerKanban(int usuarioId, int clienteId = 0, string? q = null, bool soloPendientes = false);
 
     }
 
@@ -198,5 +199,22 @@ namespace ManejoPresupuestos.Servicios
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
+
+        public async Task<IEnumerable<PedidoKanbanCard>> ObtenerKanban(int usuarioId, int clienteId = 0, string? q = null, bool soloPendientes = false)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<PedidoKanbanCard>(
+                "dbo.procObtenerPedidosKanban",
+                new
+                {
+                    loginId = usuarioId,
+                    ClienteId = clienteId,
+                    q = q ?? "",
+                    SoloPendientes = soloPendientes ? 1 : 0
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
     }
 }

@@ -12,6 +12,24 @@
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
             <a class="btn btn-primary" asp-action="Editar" asp-route-id="@Model.Pedido.PedidoId">Editar</a>
+            @if (!Model.TieneCotizacion)
+            {
+                <a class="btn btn-primary"
+                asp-controller="Cotizaciones"
+                asp-action="Crear"
+                asp-route-pedidoId="@Model.Pedido.PedidoId">
+                    Generar cotización
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-outline-secondary"
+                asp-controller="Cotizaciones"
+                asp-action="Detalles"
+                asp-route-id="@Model.CotizacionId">
+                    Ver cotización (@Model.CotizacionEstatusNombre)
+                </a>
+            }
             <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#pedidoAccionesModal" data-pedido-id="@Model.Pedido.PedidoId">
                 Acciones
             </button>
