@@ -90,8 +90,12 @@
                     <div class="text-muted small" id="kbModalHint"></div>
                     <div class="d-flex gap-2">
                         <a id="kbVerDetalles" class="btn btn-outline-secondary">Ver</a>
+
                         <a id="kbVerCot" class="btn btn-outline-secondary d-none">Cotización</a>
+
+                        <a id="kbCrearCot" class="btn btn-primary d-none">Crear cotización</a>
                     </div>
+
                 </div>
 
                 <hr />
@@ -241,13 +245,25 @@
         document.getElementById('kbNotas').value = '';
 
         document.getElementById('kbVerDetalles').href = `/Pedidos/Detalles/${c.pedidoId}`;
-
         const cotBtn = document.getElementById('kbVerCot');
-        if(c.tieneCotizacion && Number(c.cotizacionId) > 0){
+        const crearCotBtn = document.getElementById('kbCrearCot');
+
+        if (c.tieneCotizacion && Number(c.cotizacionId) > 0) {
+            // Mostrar "Cotización"
             cotBtn.classList.remove('d-none');
             cotBtn.href = `/Cotizaciones/Detalles/${c.cotizacionId}`;
+
+            // Ocultar "Crear cotización"
+            crearCotBtn.classList.add('d-none');
+            crearCotBtn.removeAttribute('href');
         } else {
+            // Ocultar "Cotización"
             cotBtn.classList.add('d-none');
+            cotBtn.removeAttribute('href');
+
+            // Mostrar "Crear cotización"
+            crearCotBtn.classList.remove('d-none');
+            crearCotBtn.href = `/Cotizaciones/Crear?pedidoId=${c.pedidoId}`;
         }
 
         const meta = `
