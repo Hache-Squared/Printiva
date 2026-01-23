@@ -1,0 +1,204 @@
+@model ManejoPresupuestos.Models.ProduccionPedidoViewModel
+@{
+    ViewData["Title"] = "Producción del Pedido";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="mb-1">Producción — Pedido #@Model.Pedido.PedidoId</h1>
+            <div class="text-muted">@Model.Pedido.ClienteNombre · @Model.Pedido.EstatusNombre</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="/Pedidos/Detalles/@Model.Pedido.PedidoId">Volver al pedido</a>
+            <a class="btn btn-outline-secondary" href="/Pedidos/Kanban">Kanban</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="small text-muted">Cliente</div>
+                    <div class="fw-semibold">@Model.Pedido.ClienteNombre</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Entrega</div>
+                    <div class="fw-semibold">@((Model.Pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy")) ?? "-")</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Total estimado</div>
+                    <div class="fw-semibold">@((Model.Pedido.TotalEstimado ?? 0).ToString("N2"))</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-forgery para AJAX -->
+    <form id="afForm" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Items de producción</h5>
+                <div class="text-muted small">El avance del pedido se desbloquea cuando todos los items avanzan (motor).</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th style="width:120px;">Cantidad</th>
+                            <th style="width:220px;">Estatus</th>
+                            <th style="width:140px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var it in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@it.ProductoNombre</td>
+                                <td>@it.Cantidad</td>
+                                <td>
+                                    <span class="badge @it.BadgeClass">@it.EstatusNombre</span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary btnProdAcciones"
+                                            data-id="@it.ProduccionItemId"
+                                            data-producto="@it.ProductoNombre">
+                                        Acciones
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Items.Any())
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin items de producción</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Acciones -->
+<div class="modal fade" id="prodModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="prodModalTitle">Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Notas</label>
+                    <textarea id="prodNotas" class="form-control" rows="3" placeholder="Qué cambió / por qué..."></textarea>
+                </div>
+
+                <hr />
+
+                <div class="fw-semibold mb-2">Acciones disponibles</div>
+                <div id="prodAcciones" class="d-flex flex-wrap gap-2"></div>
+                <div id="prodAccionesEmpty" class="text-muted d-none">No hay acciones disponibles para este item.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function(){
+    const token = document.querySelector('#afForm input[name="__RequestVerificationToken"]').value;
+
+    const modalEl = document.getElementById('prodModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    let currentItemId = 0;
+
+    async function loadAcciones(produccionItemId){
+        const wrap = document.getElementById('prodAcciones');
+        const empty = document.getElementById('prodAccionesEmpty');
+        wrap.innerHTML = '';
+        empty.classList.add('d-none');
+
+        const res = await fetch(`/Produccion/AccionesDisponibles?produccionItemId=${produccionItemId}`, { headers:{'Accept':'application/json'}});
+        const acciones = await res.json();
+
+        if(!acciones || acciones.length === 0){
+            empty.classList.remove('d-none');
+            return;
+        }
+
+        for(const a of acciones){
+            const texto = a.accionTexto ?? a.AccionTexto ?? 'Acción';
+            const hacia = a.haciaEstatusId ?? a.HaciaEstatusId ?? 0;
+            const reqConf = a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary';
+            btn.textContent = texto;
+
+            btn.addEventListener('click', async () => {
+                if(reqConf){
+                    const ok = confirm(`¿Confirmas la acción?\n\n${texto}`);
+                    if(!ok) return;
+                }
+
+                const notas = document.getElementById('prodNotas').value || '';
+                await ejecutarAccion(produccionItemId, hacia, notas);
+            });
+
+            wrap.appendChild(btn);
+        }
+    }
+
+    async function ejecutarAccion(produccionItemId, haciaEstatusId, notas){
+        const payload = new URLSearchParams();
+        payload.set('ProduccionItemId', String(produccionItemId));
+        payload.set('HaciaEstatusId', String(haciaEstatusId));
+        payload.set('Notas', notas);
+
+        const res = await fetch('/Produccion/CambiarEstatusItemAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'RequestVerificationToken': token
+            },
+            body: payload.toString()
+        });
+
+        const r = await res.json();
+        if(!r.ok){
+            alert(r.message || 'No se pudo ejecutar la acción.');
+            return;
+        }
+
+        modal.hide();
+        // simple y efectivo: refrescar para ver los badges actualizados
+        window.location.reload();
+    }
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btnProdAcciones');
+        if(!btn) return;
+
+        currentItemId = Number(btn.getAttribute('data-id') || 0);
+        const producto = btn.getAttribute('data-producto') || 'Item';
+
+        document.getElementById('prodModalTitle').textContent = producto;
+        document.getElementById('prodNotas').value = '';
+
+        await loadAcciones(currentItemId);
+        modal.show();
+    });
+})();
+</script>
+}

@@ -50,6 +50,7 @@ builder.Services.AddTransient<IRepositorioPedidoEstatus, RepositorioPedidoEstatu
 
 builder.Services.AddTransient<IRepositorioCotizaciones, RepositorioCotizaciones>();
 builder.Services.AddTransient<IRepositorioPagos, RepositorioPagos>();
+builder.Services.AddTransient<IRepositorioProduccion, RepositorioProduccion>();
 
 
 //configuramos Identity

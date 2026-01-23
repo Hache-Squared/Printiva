@@ -12,9 +12,10 @@
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" asp-action="Index">Volver</a>
             <a class="btn btn-primary" asp-action="Editar" asp-route-id="@Model.Pedido.PedidoId">Editar</a>
+            <a class="btn btn-outline-primary" href="/Produccion/Pedido/@Model.Pedido.PedidoId">Producción</a>
             @if (!Model.TieneCotizacion)
             {
-                <a class="btn btn-primary"
+                <a class="btn btn-outline-primary"
                 asp-controller="Cotizaciones"
                 asp-action="Crear"
                 asp-route-pedidoId="@Model.Pedido.PedidoId">
@@ -31,7 +32,7 @@
                 </a>
             }
             <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#pedidoAccionesModal" data-pedido-id="@Model.Pedido.PedidoId">
-                Acciones
+                Más
             </button>
         </div>
     </div>
