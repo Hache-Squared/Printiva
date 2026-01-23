@@ -12,7 +12,7 @@ Version     Author     Date         Description     Ticket
 -------------------------------------------------------------------------------
 1.0         AGHH     27/07/2025     First Version   N/A
 */
-CREATE PROCEDURE dbo.procAlteraReceta
+CREATE OR ALTER PROCEDURE dbo.procAlteraReceta
 @ElementoAlterarId  INT = 0,
 @Nombre				VARCHAR(200) = '',
 @TiempoImpresion	VARCHAR(200) = '',
@@ -82,11 +82,13 @@ BEGIN
 			)
 			BEGIN 
 				
-				DELETE tgt
+				UPDATE tgt
+					SET EstaActivo = 0
 				FROM dbo.TblRecetasInventarios tgt
 				WHERE tgt.RecetaId = @elementoId
 				
-				DELETE tgt
+				UPDATE tgt
+					SET EstaActivo = 0
 				FROM dbo.TblRecetas tgt
 				WHERE tgt.RecetaId = @elementoId
 

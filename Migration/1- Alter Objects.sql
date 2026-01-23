@@ -67,8 +67,12 @@ ADD
     PrecioSugerido DECIMAL(18,2) NULL,
     EstaActivo BIT NOT NULL CONSTRAINT DF_TblProductos_EstaActivo DEFAULT(1);
 
-
-
 UPDATE dbo.TblProductos
 SET EstaActivo = 1
 WHERE EstaActivo IS NULL;
+
+ALTER TABLE dbo.TblRecetas
+ADD EstaActivo BIT NOT NULL CONSTRAINT DF_TblRecetas_EstaActivo DEFAULT(1);
+
+ALTER TABLE dbo.TblRecetasInventarios
+ADD EstaActivo BIT NOT NULL CONSTRAINT DF_TblRecetasInventarios_EstaActivo DEFAULT(1);
