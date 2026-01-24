@@ -113,9 +113,11 @@
                                     <button type="button"
                                             class="btn btn-sm btn-outline-primary btnProdAcciones"
                                             data-id="@it.ProduccionItemId"
-                                            data-producto="@it.ProductoNombre">
+                                            data-producto="@it.ProductoNombre"
+                                            data-inv="@(it.InventarioAplicado ? "1" : "0")">
                                         Más
                                     </button>
+
                                 </td>
                             </tr>
                         }
@@ -179,6 +181,16 @@
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
     let currentProduccionItemId = 0;
+    let currentInvAplicado = false;
+
+    function parseBool(v){
+        return v === true || v === 1 || v === '1' || v === 'true' || v === 'True';
+    }
+
+    function okFromResponse(r){
+        // soporta {ok:true} o {result:'success'}
+        return (r && (r.ok === true || r.result === 'success'));
+    }
 
     // ---------- Recetas ----------
     async function loadRecetasItem(produccionItemId) {
@@ -188,10 +200,18 @@
         sel.innerHTML = '';
         info.textContent = '';
 
+        // Si ya aplicó inventario: UI bloquea (SP también lo bloquea)
+        sel.disabled = !!currentInvAplicado;
+        document.getElementById('btnAsignarReceta').disabled = !!currentInvAplicado;
+
         try {
             const res = await fetch(`/Produccion/RecetasDisponiblesPorItem?produccionItemId=${produccionItemId}`, {
                 headers: { 'Accept': 'application/json' }
             });
+
+            if(!res.ok){
+                throw new Error('HTTP ' + res.status);
+            }
 
             const recetas = await res.json();
 
@@ -200,25 +220,38 @@
                 opt.value = '';
                 opt.textContent = '(sin recetas)';
                 sel.appendChild(opt);
-                info.textContent = 'No hay recetas para este producto.';
+
+                info.textContent = currentInvAplicado
+                    ? 'Receta bloqueada: inventario ya aplicado.'
+                    : 'No hay recetas para este producto.';
+
                 return;
             }
 
             let selected = null;
 
             for (const r of recetas) {
-                const recetaId = r.recetaId ?? r.RecetaId ?? 0;
+                const recetaId = Number(r.recetaId ?? r.RecetaId ?? 0);
                 const nombre = r.nombre ?? r.Nombre ?? '(sin nombre)';
-                const isSelected = r.isSelected ?? r.IsSelected ?? false;
+                const isSelected = parseBool(r.isSelected ?? r.IsSelected ?? false);
 
                 const opt = document.createElement('option');
                 opt.value = String(recetaId);
                 opt.textContent = isSelected ? `✅ ${nombre}` : nombre;
-                opt.selected = !!isSelected;
+                opt.selected = isSelected;
 
                 sel.appendChild(opt);
 
                 if (isSelected) selected = r;
+            }
+
+            if (currentInvAplicado) {
+                const nombre = selected ? (selected.nombre ?? selected.Nombre ?? '') : '';
+                const t = selected ? (selected.tiempoImpresion ?? selected.TiempoImpresion ?? '') : '';
+                info.textContent = nombre
+                    ? `Receta bloqueada (inventario aplicado). Seleccionada: ${nombre}${t ? ` · Tiempo: ${t}` : ''}`
+                    : 'Receta bloqueada (inventario aplicado).';
+                return;
             }
 
             if (selected) {
@@ -234,12 +267,18 @@
             opt.value = '';
             opt.textContent = '(error cargando recetas)';
             sel.appendChild(opt);
+
             info.textContent = 'Error cargando recetas.';
             console.error(err);
         }
     }
 
     document.getElementById('btnAsignarReceta').addEventListener('click', async () => {
+        if (currentInvAplicado) {
+            alert('No puedes cambiar receta: inventario ya aplicado (Post-procesado).');
+            return;
+        }
+
         const sel = document.getElementById('prodRecetaSelect');
         const recetaId = Number(sel.value || 0);
 
@@ -266,7 +305,7 @@
         });
 
         const r = await res.json();
-        if (!r.ok) {
+        if (!okFromResponse(r)) {
             alert(r.message || 'No se pudo asignar la receta.');
             return;
         }
@@ -289,6 +328,10 @@
                 headers: { 'Accept': 'application/json' }
             });
 
+            if(!res.ok){
+                throw new Error('HTTP ' + res.status);
+            }
+
             const acciones = await res.json();
 
             if (!acciones || acciones.length === 0) {
@@ -298,15 +341,18 @@
 
             for (const a of acciones) {
                 const texto = a.accionTexto ?? a.AccionTexto ?? 'Acción';
-                const hacia = a.haciaEstatusId ?? a.HaciaEstatusId ?? 0;
-                const reqConf = a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false;
+                const hacia = Number(a.haciaEstatusId ?? a.HaciaEstatusId ?? 0);
+                const reqConf = parseBool(a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false);
 
-                const bloqueada = a.bloqueada ?? a.Bloqueada ?? false;
+                const bloqueada = parseBool(a.bloqueada ?? a.Bloqueada ?? false);
                 const motivo = a.motivo ?? a.Motivo ?? '';
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.textContent = texto;
+
+                // ✅ FIX: amarra el ID real aquí
+                btn.dataset.hacia = String(hacia);
 
                 if (bloqueada) {
                     btn.className = 'btn btn-outline-secondary';
@@ -330,13 +376,20 @@
 
                 btn.className = 'btn btn-primary';
                 btn.addEventListener('click', async () => {
+                    const haciaId = Number(btn.dataset.hacia || 0);
+
+                    if (!haciaId) {
+                        alert('Acción inválida: no llegó el HaciaEstatusId. Recarga la página.');
+                        return;
+                    }
+
                     if (reqConf) {
                         const ok = confirm(`¿Confirmas la acción?\n\n${texto}`);
                         if (!ok) return;
                     }
 
                     const notas = document.getElementById('prodNotas').value || '';
-                    await ejecutarAccion(produccionItemId, hacia, notas);
+                    await ejecutarAccion(produccionItemId, haciaId, notas);
                 });
 
                 wrap.appendChild(btn);
@@ -364,7 +417,7 @@
         });
 
         const r = await res.json();
-        if (!r.ok) {
+        if (!okFromResponse(r)) {
             alert(r.message || 'No se pudo ejecutar la acción.');
             return;
         }
@@ -382,6 +435,9 @@
         const producto = btn.getAttribute('data-producto') || 'Item';
 
         currentProduccionItemId = itemId;
+
+        // UI: si traes data-inv="1" lo bloquea en el modal
+        currentInvAplicado = parseBool(btn.getAttribute('data-inv'));
 
         document.getElementById('prodModalTitle').textContent = producto;
         document.getElementById('prodNotas').value = '';
@@ -420,7 +476,7 @@
         });
 
         const r = await res.json();
-        if (!r.ok) {
+        if (!okFromResponse(r)) {
             alert(r.message || 'No se pudo guardar.');
             return;
         }

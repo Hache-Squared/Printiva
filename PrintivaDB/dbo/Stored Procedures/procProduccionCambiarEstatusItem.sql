@@ -142,12 +142,106 @@ BEGIN
                 THROW 50000, @msg, 1;
             END
 
-            -- Descontar inventario
+            /* ============================
+               >>> SOLO LO NUEVO: SNAPSHOT LOG <<<
+               - arma detalle con nombres + disponibles antes/después
+               - se inserta 1 fila por InventarioId requerido
+               ============================ */
+
+            DECLARE @RecetaNombre NVARCHAR(200) =
+            (
+                SELECT TOP 1 r.Nombre
+                FROM dbo.TblRecetas r WITH (NOLOCK)
+                WHERE r.RecetaId = @RecetaId
+            );
+
+            DECLARE @ConsumoDet TABLE
+            (
+                InventarioId INT NOT NULL,
+                Cantidad DECIMAL(18,2) NOT NULL,
+                InventarioUnidadId INT NULL,
+                InsumoNombre NVARCHAR(200) NULL,
+                UnidadNombre NVARCHAR(100) NULL,
+                DisponibleAntes DECIMAL(18,2) NULL,
+                DisponibleDespues DECIMAL(18,2) NULL
+            );
+
+            INSERT INTO @ConsumoDet (InventarioId, Cantidad, InventarioUnidadId, InsumoNombre, UnidadNombre, DisponibleAntes, DisponibleDespues)
+            SELECT
+                r.InventarioId,
+                r.Requiere AS Cantidad,
+                i.InventarioUnidadId,
+                COALESCE(n.Nombre, CONCAT(N'InventarioId=', r.InventarioId)) AS InsumoNombre,
+                u.Nombre AS UnidadNombre,
+                CAST(ISNULL(i.Cantidad,0) AS DECIMAL(18,2)) AS DisponibleAntes,
+                CAST(ISNULL(i.Cantidad,0) - r.Requiere AS DECIMAL(18,2)) AS DisponibleDespues
+            FROM @Req r
+            LEFT JOIN dbo.TblInventarios i WITH (UPDLOCK, HOLDLOCK)
+                   ON i.InventarioId = r.InventarioId
+                  AND i.EstaActivo=1
+            LEFT JOIN dbo.TblInventariosNombres n WITH (NOLOCK)
+                   ON n.InventarioNombreId = i.InventarioNombreId
+            LEFT JOIN dbo.TblInventariosUnidades u WITH (NOLOCK)
+                   ON u.InventarioUnidadId = i.InventarioUnidadId;
+
+            /* ============================
+               (Tu lógica original) Descontar inventario
+               ============================ */
             UPDATE i
                SET i.Cantidad = i.Cantidad - r.Requiere
             FROM dbo.TblInventarios i
             INNER JOIN @Req r ON r.InventarioId = i.InventarioId
             WHERE i.EstaActivo=1;
+
+            /* ============================
+               >>> INSERT A LA TABLA LOG (SNAPSHOT) <<<
+               ============================ */
+            INSERT INTO dbo.TblProduccionInventarioConsumo
+            (
+                ProduccionItemId,
+                RecetaId,
+                InventarioId,
+                Cantidad,
+                InventarioUnidadId,
+                UsuarioId,
+                Fecha,
+
+                -- extras snapshot (si agregaste columnas)
+                PedidoId,
+                PedidoItemId,
+                ProductoId,
+                CantidadItem,
+                DesdeEstatusId,
+                HaciaEstatusId,
+                Notas,
+                RecetaNombre,
+                InsumoNombre,
+                UnidadNombre,
+                DisponibleAntes,
+                DisponibleDespues
+            )
+            SELECT
+                @ProduccionItemId,
+                @RecetaId,
+                d.InventarioId,
+                d.Cantidad,
+                d.InventarioUnidadId,
+                @loginId,
+                SYSDATETIME(),
+
+                @PedidoId,
+                @PedidoItemId,
+                @ProductoId,
+                @CantidadItem,
+                @DesdeId,
+                @HaciaEstatusId,
+                NULLIF(@Notas,''),
+                @RecetaNombre,
+                d.InsumoNombre,
+                d.UnidadNombre,
+                d.DisponibleAntes,
+                d.DisponibleDespues
+            FROM @ConsumoDet d;
 
             -- Marca aplicado (candado de receta + idempotencia)
             UPDATE dbo.TblProduccionItems
