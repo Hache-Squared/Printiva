@@ -105,7 +105,7 @@
                                     <button type="button"
                                             class="btn btn-outline-primary btn-sm kbGuardar"
                                             data-id="@it.ProduccionItemId">
-                                        Guardar Impresora
+                                        Guardar
                                     </button>
                                 </td>
 
@@ -145,6 +145,15 @@
 
             <div class="modal-body">
                 <div class="mb-3">
+                    <label class="form-label">Receta para este item</label>
+                    <div class="d-flex gap-2">
+                        <select id="prodRecetaSelect" class="form-select"></select>
+                        <button id="btnAsignarReceta" type="button" class="btn btn-outline-primary">Asignar</button>
+                    </div>
+                    <div id="prodRecetaInfo" class="small text-muted mt-1"></div>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label">Notas</label>
                     <textarea id="prodNotas" class="form-control" rows="3" placeholder="Qué cambió / por qué..."></textarea>
                 </div>
@@ -161,54 +170,185 @@
 
 @section Scripts {
 <script>
-(function(){
-    const token = document.querySelector('#afForm input[name="__RequestVerificationToken"]').value;
+(function () {
+    const tokenEl = document.querySelector('#afForm input[name="__RequestVerificationToken"]');
+    const token = tokenEl ? tokenEl.value : '';
 
-    // Modal acciones
+    // Modal
     const modalEl = document.getElementById('prodModal');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-    async function loadAcciones(produccionItemId){
-        const wrap = document.getElementById('prodAcciones');
-        const empty = document.getElementById('prodAccionesEmpty');
-        wrap.innerHTML = '';
-        empty.classList.add('d-none');
+    let currentProduccionItemId = 0;
 
-        const res = await fetch(`/Produccion/AccionesDisponibles?produccionItemId=${produccionItemId}`, {
-            headers:{'Accept':'application/json'}
-        });
-        const acciones = await res.json();
+    // ---------- Recetas ----------
+    async function loadRecetasItem(produccionItemId) {
+        const sel = document.getElementById('prodRecetaSelect');
+        const info = document.getElementById('prodRecetaInfo');
 
-        if(!acciones || acciones.length === 0){
-            empty.classList.remove('d-none');
-            return;
-        }
+        sel.innerHTML = '';
+        info.textContent = '';
 
-        for(const a of acciones){
-            const texto = a.accionTexto ?? a.AccionTexto ?? 'Acción';
-            const hacia = a.haciaEstatusId ?? a.HaciaEstatusId ?? 0;
-            const reqConf = a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false;
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-primary';
-            btn.textContent = texto;
-
-            btn.addEventListener('click', async () => {
-                if(reqConf){
-                    const ok = confirm(`¿Confirmas la acción?\n\n${texto}`);
-                    if(!ok) return;
-                }
-
-                const notas = document.getElementById('prodNotas').value || '';
-                await ejecutarAccion(produccionItemId, hacia, notas);
+        try {
+            const res = await fetch(`/Produccion/RecetasDisponiblesPorItem?produccionItemId=${produccionItemId}`, {
+                headers: { 'Accept': 'application/json' }
             });
 
-            wrap.appendChild(btn);
+            const recetas = await res.json();
+
+            if (!recetas || recetas.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '(sin recetas)';
+                sel.appendChild(opt);
+                info.textContent = 'No hay recetas para este producto.';
+                return;
+            }
+
+            let selected = null;
+
+            for (const r of recetas) {
+                const recetaId = r.recetaId ?? r.RecetaId ?? 0;
+                const nombre = r.nombre ?? r.Nombre ?? '(sin nombre)';
+                const isSelected = r.isSelected ?? r.IsSelected ?? false;
+
+                const opt = document.createElement('option');
+                opt.value = String(recetaId);
+                opt.textContent = isSelected ? `✅ ${nombre}` : nombre;
+                opt.selected = !!isSelected;
+
+                sel.appendChild(opt);
+
+                if (isSelected) selected = r;
+            }
+
+            if (selected) {
+                const nombre = selected.nombre ?? selected.Nombre ?? '';
+                const t = selected.tiempoImpresion ?? selected.TiempoImpresion ?? '';
+                info.textContent = `Seleccionada: ${nombre}${t ? ` · Tiempo: ${t}` : ''}`;
+            } else {
+                info.textContent = 'Selecciona una receta (necesaria para Post-procesado).';
+            }
+        } catch (err) {
+            sel.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '(error cargando recetas)';
+            sel.appendChild(opt);
+            info.textContent = 'Error cargando recetas.';
+            console.error(err);
         }
     }
 
-    async function ejecutarAccion(produccionItemId, haciaEstatusId, notas){
+    document.getElementById('btnAsignarReceta').addEventListener('click', async () => {
+        const sel = document.getElementById('prodRecetaSelect');
+        const recetaId = Number(sel.value || 0);
+
+        if (!currentProduccionItemId) {
+            alert('No hay item seleccionado.');
+            return;
+        }
+        if (!recetaId) {
+            alert('Selecciona una receta.');
+            return;
+        }
+
+        const payload = new URLSearchParams();
+        payload.set('ProduccionItemId', String(currentProduccionItemId));
+        payload.set('RecetaId', String(recetaId));
+
+        const res = await fetch('/Produccion/AsignarRecetaItemAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'RequestVerificationToken': token
+            },
+            body: payload.toString()
+        });
+
+        const r = await res.json();
+        if (!r.ok) {
+            alert(r.message || 'No se pudo asignar la receta.');
+            return;
+        }
+
+        // refresca receta + acciones (para desbloquear Post)
+        await loadRecetasItem(currentProduccionItemId);
+        await loadAcciones(currentProduccionItemId);
+    });
+
+    // ---------- Acciones ----------
+    async function loadAcciones(produccionItemId) {
+        const wrap = document.getElementById('prodAcciones');
+        const empty = document.getElementById('prodAccionesEmpty');
+
+        wrap.innerHTML = '';
+        empty.classList.add('d-none');
+
+        try {
+            const res = await fetch(`/Produccion/AccionesDisponibles?produccionItemId=${produccionItemId}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const acciones = await res.json();
+
+            if (!acciones || acciones.length === 0) {
+                empty.classList.remove('d-none');
+                return;
+            }
+
+            for (const a of acciones) {
+                const texto = a.accionTexto ?? a.AccionTexto ?? 'Acción';
+                const hacia = a.haciaEstatusId ?? a.HaciaEstatusId ?? 0;
+                const reqConf = a.requiereConfirmacion ?? a.RequiereConfirmacion ?? false;
+
+                const bloqueada = a.bloqueada ?? a.Bloqueada ?? false;
+                const motivo = a.motivo ?? a.Motivo ?? '';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = texto;
+
+                if (bloqueada) {
+                    btn.className = 'btn btn-outline-secondary';
+                    btn.disabled = true;
+                    btn.title = motivo || 'Acción bloqueada';
+
+                    const box = document.createElement('div');
+                    box.className = 'd-flex flex-column gap-1';
+                    box.appendChild(btn);
+
+                    if (motivo) {
+                        const small = document.createElement('div');
+                        small.className = 'small text-muted';
+                        small.textContent = motivo;
+                        box.appendChild(small);
+                    }
+
+                    wrap.appendChild(box);
+                    continue;
+                }
+
+                btn.className = 'btn btn-primary';
+                btn.addEventListener('click', async () => {
+                    if (reqConf) {
+                        const ok = confirm(`¿Confirmas la acción?\n\n${texto}`);
+                        if (!ok) return;
+                    }
+
+                    const notas = document.getElementById('prodNotas').value || '';
+                    await ejecutarAccion(produccionItemId, hacia, notas);
+                });
+
+                wrap.appendChild(btn);
+            }
+        } catch (err) {
+            empty.classList.remove('d-none');
+            empty.textContent = 'Error cargando acciones.';
+            console.error(err);
+        }
+    }
+
+    async function ejecutarAccion(produccionItemId, haciaEstatusId, notas) {
         const payload = new URLSearchParams();
         payload.set('ProduccionItemId', String(produccionItemId));
         payload.set('HaciaEstatusId', String(haciaEstatusId));
@@ -224,7 +364,7 @@
         });
 
         const r = await res.json();
-        if(!r.ok){
+        if (!r.ok) {
             alert(r.message || 'No se pudo ejecutar la acción.');
             return;
         }
@@ -233,38 +373,40 @@
         window.location.reload();
     }
 
+    // Abrir modal (carga recetas + acciones)
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.btnProdAcciones');
-        if(!btn) return;
+        if (!btn) return;
 
         const itemId = Number(btn.getAttribute('data-id') || 0);
         const producto = btn.getAttribute('data-producto') || 'Item';
 
+        currentProduccionItemId = itemId;
+
         document.getElementById('prodModalTitle').textContent = producto;
         document.getElementById('prodNotas').value = '';
 
+        await loadRecetasItem(itemId);
         await loadAcciones(itemId);
+
         modal.show();
     });
 
-    // Guardado datos extra (impresora, peso, notas operativas)
-    function getVal(cls, id){
+    // ---------- Guardado datos extra ----------
+    function getVal(cls, id) {
         const el = document.querySelector(`.${cls}[data-id="${id}"]`);
         return el ? el.value : '';
     }
 
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.kbGuardar');
-        if(!btn) return;
+        if (!btn) return;
 
         const id = Number(btn.getAttribute('data-id'));
 
         const payload = new URLSearchParams();
         payload.set('ProduccionItemId', String(id));
-
-        // permitir limpiar impresora: manda '' si está vacío
         payload.set('ImpresoraId', getVal('kbImpresora', id) || '');
-
         payload.set('PesoRealGr', getVal('kbPesoReal', id) || '');
         payload.set('NotasOperativas', getVal('kbNotasOper', id) || '');
 
@@ -278,14 +420,14 @@
         });
 
         const r = await res.json();
-        if(!r.ok){
+        if (!r.ok) {
             alert(r.message || 'No se pudo guardar.');
             return;
         }
 
-        // opcional: feedback rápido
         alert('Guardado');
     });
+
 })();
 </script>
 }

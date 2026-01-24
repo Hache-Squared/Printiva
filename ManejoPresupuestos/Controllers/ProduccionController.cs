@@ -98,5 +98,28 @@ namespace ManejoPresupuestos.Controllers
             return Json(new { ok = true, message = result.message });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> RecetasDisponiblesPorItem(int produccionItemId)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var recetas = await repositorioProduccion.RecetasDisponiblesPorItem(usuarioId, produccionItemId);
+            return Json(recetas);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AsignarRecetaItemAjax(AsignarRecetaItemViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            if (!ModelState.IsValid) return Json(new { ok=false, message="Datos inválidos." });
+
+            var r = await repositorioProduccion.AsignarRecetaItem(usuarioId, modelo.ProduccionItemId, modelo.RecetaId);
+            if (r.result != ResultProcedureType.SUCCESS)
+                return Json(new { ok=false, message=r.message });
+
+            return Json(new { ok=true, message=r.message });
+        }
+
+
     }
 }

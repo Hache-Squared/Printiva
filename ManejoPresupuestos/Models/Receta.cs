@@ -12,4 +12,20 @@ namespace ManejoPresupuestos.Models
 
         public int[] InventariosIds { get; set; }
     }
+
+    public class RecetaRow
+    {
+        public int RecetaId { get; set; }
+        public string Nombre { get; set; } = "";
+        public bool EstaActivo { get; set; }
+        public string? TiempoImpresion { get; set; }
+        public bool IsSelected { get; set; }
+    }
+
+    public class AsignarRecetaItemViewModel
+    {
+        [Required] public int ProduccionItemId { get; set; }
+        [Required] public int RecetaId { get; set; }
+    }
+
 }

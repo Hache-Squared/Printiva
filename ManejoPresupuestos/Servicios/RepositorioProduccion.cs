@@ -12,6 +12,8 @@ namespace ManejoPresupuestos.Servicios
         Task<ResultProcedureGeneric> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas);
         Task<IEnumerable<ProduccionEstatus>> ObtenerEstatus();
         Task<ResultProcedureGeneric> ActualizarItemDatos(int usuarioId, ProduccionActualizarDatosViewModel modelo);
+        Task<IEnumerable<RecetaRow>> RecetasDisponiblesPorItem(int usuarioId, int produccionItemId);
+        Task<ResultProcedureGeneric> AsignarRecetaItem(int usuarioId, int produccionItemId, int recetaId);
 
     }
 
@@ -91,6 +93,27 @@ namespace ManejoPresupuestos.Servicios
                     FechaFin = (DateTime?)modelo.FechaFin,
                     loginId = usuarioId
                 },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+
+        public async Task<IEnumerable<RecetaRow>> RecetasDisponiblesPorItem(int usuarioId, int produccionItemId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<RecetaRow>(
+                "dbo.procProduccionRecetasDisponiblesPorItem",
+                new { ProduccionItemId = produccionItemId, loginId = usuarioId },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<ResultProcedureGeneric> AsignarRecetaItem(int usuarioId, int produccionItemId, int recetaId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procProduccionAsignarRecetaItem",
+                new { ProduccionItemId = produccionItemId, RecetaId = recetaId, loginId = usuarioId },
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
