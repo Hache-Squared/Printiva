@@ -1,0 +1,38 @@
+@model ImpresoraEdicionViewModel
+@{
+    ViewData["Title"] = "Nueva impresora";
+}
+
+    <h1 class="mb-3">Nueva impresora</h1>
+
+    <form asp-action="Crear" method="post"> 
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    
+        <div class="mb-3">
+            <label asp-for="Nombre" class="form-label"></label>
+            <input asp-for="Nombre" name="Nombre" class="form-control" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Modelo" class="form-label"></label>
+            <input asp-for="Modelo" name="Modelo" class="form-control" />
+            <span asp-validation-for="Modelo" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Notas" class="form-label"></label>
+            <textarea asp-for="Notas" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Notas" class="text-danger"></span>
+        </div>
+
+        
+        
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

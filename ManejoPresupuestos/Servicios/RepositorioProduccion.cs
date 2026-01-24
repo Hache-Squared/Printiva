@@ -11,6 +11,8 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<ProduccionAccionDisponible>> AccionesDisponibles(int usuarioId, int produccionItemId);
         Task<ResultProcedureGeneric> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas);
         Task<IEnumerable<ProduccionEstatus>> ObtenerEstatus();
+        Task<ResultProcedureGeneric> ActualizarItemDatos(int usuarioId, ProduccionActualizarDatosViewModel modelo);
+
     }
 
     public class RepositorioProduccion : IRepositorioProduccion
@@ -72,5 +74,26 @@ namespace ManejoPresupuestos.Servicios
                   ORDER BY Orden ASC;"
             );
         }
+
+        public async Task<ResultProcedureGeneric> ActualizarItemDatos(int usuarioId, ProduccionActualizarDatosViewModel modelo)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procProduccionActualizarItemDatos",
+                new
+                {
+                    ProduccionItemId = modelo.ProduccionItemId,
+                    ImpresoraId = (int?)modelo.ImpresoraId,
+                    NotasOperativas = modelo.NotasOperativas ?? "",
+                    PesoEstimadoGr = (decimal?)modelo.PesoEstimadoGr,
+                    PesoRealGr = (decimal?)modelo.PesoRealGr,
+                    FechaInicio = (DateTime?)modelo.FechaInicio,
+                    FechaFin = (DateTime?)modelo.FechaFin,
+                    loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
     }
 }

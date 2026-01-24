@@ -1,6 +1,7 @@
 using ManejoPresupuestos.Models;
 using ManejoPresupuestos.Servicios;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ManejoPresupuestos.Controllers
 {
@@ -9,16 +10,19 @@ namespace ManejoPresupuestos.Controllers
         private readonly IServicioUsuarios servicioUsuarios;
         private readonly IRepositorioPedidos repositorioPedidos;
         private readonly IRepositorioProduccion repositorioProduccion;
+        private readonly IRepositorioImpresoras repositorioImpresoras;
 
         public ProduccionController(
             IServicioUsuarios servicioUsuarios,
             IRepositorioPedidos repositorioPedidos,
-            IRepositorioProduccion repositorioProduccion
+            IRepositorioProduccion repositorioProduccion,
+            IRepositorioImpresoras repositorioImpresoras
         )
         {
             this.servicioUsuarios = servicioUsuarios;
             this.repositorioPedidos = repositorioPedidos;
             this.repositorioProduccion = repositorioProduccion;
+            this.repositorioImpresoras = repositorioImpresoras;
         }
 
         [HttpGet]
@@ -35,11 +39,13 @@ namespace ManejoPresupuestos.Controllers
             var items = await repositorioProduccion.ObtenerPorPedido(usuarioId, id);
             var estatus = await repositorioProduccion.ObtenerEstatus();
 
+            var impresoras = await repositorioImpresoras.ObtenerTodos(usuarioId, soloActivas: true);
             var vm = new ProduccionPedidoViewModel
             {
                 Pedido = pedido,
                 Items = items,
-                Estatus = estatus
+                Estatus = estatus,
+                Impresoras = impresoras.Select(x => new SelectListItem(x.Nombre, x.ImpresoraId.ToString()))
             };
 
             return View(vm);
@@ -74,5 +80,23 @@ namespace ManejoPresupuestos.Controllers
 
             return Json(new { ok = true, message = result.message });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActualizarItemDatosAjax(ProduccionActualizarDatosViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            if (!ModelState.IsValid)
+                return Json(new { ok = false, message = "Datos inválidos." });
+
+            var result = await repositorioProduccion.ActualizarItemDatos(usuarioId, modelo);
+
+            if (result.result != ResultProcedureType.SUCCESS)
+                return Json(new { ok = false, message = result.message });
+
+            return Json(new { ok = true, message = result.message });
+        }
+
     }
 }

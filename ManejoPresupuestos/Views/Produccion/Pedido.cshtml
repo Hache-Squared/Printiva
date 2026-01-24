@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    <!-- Anti-forgery para AJAX -->
+    <!-- Anti-forgery para AJAX (UNO SOLO) -->
     <form id="afForm" method="post">
         @Html.AntiForgeryToken()
     </form>
@@ -52,8 +52,14 @@
                         <tr>
                             <th>Producto</th>
                             <th style="width:120px;">Cantidad</th>
-                            <th style="width:220px;">Estatus</th>
-                            <th style="width:140px;"></th>
+                            <th style="width:200px;">Estatus</th>
+
+                            <th style="width:220px;">Impresora</th>
+                            <th style="width:150px;">Peso real (gr)</th>
+                            <th>Notas operativas</th>
+
+                            <th style="width:120px;"></th>
+                            <th style="width:120px;"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,22 +68,63 @@
                             <tr>
                                 <td class="fw-semibold">@it.ProductoNombre</td>
                                 <td>@it.Cantidad</td>
+
                                 <td>
                                     <span class="badge @it.BadgeClass">@it.EstatusNombre</span>
                                 </td>
+
+                                <td>
+                                    <select class="form-select form-select-sm kbImpresora" data-id="@it.ProduccionItemId">
+                                        <option value="">(sin asignar)</option>
+                                        @foreach (var imp in Model.Impresoras)
+                                        {
+                                            <option value="@imp.Value" selected="@(it.ImpresoraId?.ToString() == imp.Value)">
+                                                @imp.Text
+                                            </option>
+                                        }
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           step="0.01"
+                                           class="form-control form-control-sm kbPesoReal"
+                                           data-id="@it.ProduccionItemId"
+                                           value="@(it.PesoRealGr?.ToString() ?? "")"
+                                           placeholder="0.00" />
+                                </td>
+
+                                <td>
+                                    <input class="form-control form-control-sm kbNotasOper"
+                                           data-id="@it.ProduccionItemId"
+                                           value="@(it.NotasOperativas ?? "")"
+                                           placeholder="Notas operativas..." />
+                                </td>
+
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm kbGuardar"
+                                            data-id="@it.ProduccionItemId">
+                                        Guardar Impresora
+                                    </button>
+                                </td>
+
                                 <td class="text-end">
                                     <button type="button"
                                             class="btn btn-sm btn-outline-primary btnProdAcciones"
                                             data-id="@it.ProduccionItemId"
                                             data-producto="@it.ProductoNombre">
-                                        Acciones
+                                        Más
                                     </button>
                                 </td>
                             </tr>
                         }
+
                         @if (!Model.Items.Any())
                         {
-                            <tr><td colspan="4" class="text-center text-muted py-4">Sin items de producción</td></tr>
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">Sin items de producción</td>
+                            </tr>
                         }
                     </tbody>
                 </table>
@@ -117,10 +164,9 @@
 (function(){
     const token = document.querySelector('#afForm input[name="__RequestVerificationToken"]').value;
 
+    // Modal acciones
     const modalEl = document.getElementById('prodModal');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-
-    let currentItemId = 0;
 
     async function loadAcciones(produccionItemId){
         const wrap = document.getElementById('prodAcciones');
@@ -128,7 +174,9 @@
         wrap.innerHTML = '';
         empty.classList.add('d-none');
 
-        const res = await fetch(`/Produccion/AccionesDisponibles?produccionItemId=${produccionItemId}`, { headers:{'Accept':'application/json'}});
+        const res = await fetch(`/Produccion/AccionesDisponibles?produccionItemId=${produccionItemId}`, {
+            headers:{'Accept':'application/json'}
+        });
         const acciones = await res.json();
 
         if(!acciones || acciones.length === 0){
@@ -182,7 +230,6 @@
         }
 
         modal.hide();
-        // simple y efectivo: refrescar para ver los badges actualizados
         window.location.reload();
     }
 
@@ -190,14 +237,54 @@
         const btn = e.target.closest('.btnProdAcciones');
         if(!btn) return;
 
-        currentItemId = Number(btn.getAttribute('data-id') || 0);
+        const itemId = Number(btn.getAttribute('data-id') || 0);
         const producto = btn.getAttribute('data-producto') || 'Item';
 
         document.getElementById('prodModalTitle').textContent = producto;
         document.getElementById('prodNotas').value = '';
 
-        await loadAcciones(currentItemId);
+        await loadAcciones(itemId);
         modal.show();
+    });
+
+    // Guardado datos extra (impresora, peso, notas operativas)
+    function getVal(cls, id){
+        const el = document.querySelector(`.${cls}[data-id="${id}"]`);
+        return el ? el.value : '';
+    }
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.kbGuardar');
+        if(!btn) return;
+
+        const id = Number(btn.getAttribute('data-id'));
+
+        const payload = new URLSearchParams();
+        payload.set('ProduccionItemId', String(id));
+
+        // permitir limpiar impresora: manda '' si está vacío
+        payload.set('ImpresoraId', getVal('kbImpresora', id) || '');
+
+        payload.set('PesoRealGr', getVal('kbPesoReal', id) || '');
+        payload.set('NotasOperativas', getVal('kbNotasOper', id) || '');
+
+        const res = await fetch('/Produccion/ActualizarItemDatosAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'RequestVerificationToken': token
+            },
+            body: payload.toString()
+        });
+
+        const r = await res.json();
+        if(!r.ok){
+            alert(r.message || 'No se pudo guardar.');
+            return;
+        }
+
+        // opcional: feedback rápido
+        alert('Guardado');
     });
 })();
 </script>

@@ -1,0 +1,67 @@
+@model IEnumerable<ManejoPresupuestos.Models.Impresora>
+@{
+    ViewData["Title"] = "Impresoras";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-1">Impresoras</h1>
+            <div class="text-muted">Administra tus impresoras activas e históricas.</div>
+        </div>
+        <a class="btn btn-primary" asp-action="Crear">Nueva impresora</a>
+    </div>
+
+    @if (TempData["Error"] is not null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] is not null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Modelo</th>
+                            <th>Notas</th>
+                            @* <th class="text-center">Activo</th> *@
+                            <th style="width:200px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var i in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@i.Nombre</td>
+                            <td>@(i.Modelo ?? "-")</td>
+                            <td class="text-muted">@((i.Notas ?? "").Length > 80 ? (i.Notas!.Substring(0,80) + "...") : (i.Notas ?? "-"))</td>
+                            @* <td class="text-center">
+                                @if (i.EstaActivo) { <span class="badge bg-success">Sí</span> }
+                                else { <span class="badge bg-secondary">No</span> }
+                            </td> *@
+                            <td class="text-end">
+                                <a class="btn btn-outline-primary btn-sm" asp-action="Editar" asp-route-id="@i.ImpresoraId">Editar</a>
+
+                                <form asp-action="Borrar" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="impresoraId" value="@i.ImpresoraId" />
+                                    <button class="btn btn-outline-danger btn-sm" type="submit"
+                                            onclick="return confirm('¿Desactivar impresora \"@i.Nombre\"?');">
+                                        Borrar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

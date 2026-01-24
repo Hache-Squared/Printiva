@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace ManejoPresupuestos.Models
 {
     public class ProduccionEstatus
@@ -24,6 +26,16 @@ namespace ManejoPresupuestos.Models
         public string? Notas { get; set; }
         public DateTime FechaCreacion { get; set; }
         public DateTime? FechaActualizacion { get; set; }
+
+        public int? ImpresoraId { get; set; }
+        public string? ImpresoraNombre { get; set; }
+        public string? NotasOperativas { get; set; }
+        public decimal? PesoEstimadoGr { get; set; }
+        public decimal? PesoRealGr { get; set; }
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
+        public bool InventarioAplicado { get; set; }
+
     }
 
     public class ProduccionAccionDisponible
@@ -48,5 +60,7 @@ namespace ManejoPresupuestos.Models
         public Pedido Pedido { get; set; } = new Pedido();
         public IEnumerable<ProduccionItemRow> Items { get; set; } = Enumerable.Empty<ProduccionItemRow>();
         public IEnumerable<ProduccionEstatus> Estatus { get; set; } = Enumerable.Empty<ProduccionEstatus>();
+        public IEnumerable<SelectListItem> Impresoras { get; set; } = Enumerable.Empty<SelectListItem>();
+
     }
 }
