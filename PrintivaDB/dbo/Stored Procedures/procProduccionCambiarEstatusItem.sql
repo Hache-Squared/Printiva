@@ -262,6 +262,54 @@ BEGIN
         VALUES
             (@ProduccionItemId, @PedidoId, @PedidoItemId, @loginId, @DesdeId, @HaciaEstatusId, NULLIF(@Notas,''));
 
+
+        /* =========================================================
+        AUTO-AVANCE DEL ESTATUS DEL PEDIDO
+        - Solo si el pedido ya está en el tramo de producción (5-8)
+        - Avanza cuando TODOS los items alcanzaron el siguiente paso
+        ========================================================= */
+
+        DECLARE @MinOrdenProd INT;
+        DECLARE @NombreEstatusProd NVARCHAR(100);
+        DECLARE @NuevoPedidoEstatusId INT;
+
+        -- 1) El “más atrasado” manda (si uno se queda atrás, el pedido no avanza)
+        SELECT
+            @MinOrdenProd = MIN(es.Orden)
+        FROM dbo.TblProduccionItems pi WITH (NOLOCK)
+        INNER JOIN dbo.TblProduccionEstatus es WITH (NOLOCK)
+            ON es.ProduccionEstatusId = pi.ProduccionEstatusId
+        AND es.EstaActivo = 1
+        WHERE pi.PedidoId = @PedidoId
+        AND pi.EstaActivo = 1;
+
+        -- 2) Nombre del estatus de producción según ese orden
+        SELECT TOP 1
+            @NombreEstatusProd = es.Nombre
+        FROM dbo.TblProduccionEstatus es WITH (NOLOCK)
+        WHERE es.EstaActivo = 1
+        AND es.Orden = @MinOrdenProd;
+
+        -- 3) Buscar el PedidoEstatusId por el mismo nombre (tus nombres coinciden)
+        SELECT TOP 1
+            @NuevoPedidoEstatusId = pe.PedidoEstatusId
+        FROM dbo.TblPedidoEstatus pe WITH (NOLOCK)
+        WHERE pe.Nombre = @NombreEstatusProd;
+
+        -- 4) Avanzar pedido SOLO si ya está en producción (5-8) y solo hacia adelante
+        IF (@NuevoPedidoEstatusId IS NOT NULL)
+        BEGIN
+            UPDATE p
+            SET p.PedidoEstatusId = @NuevoPedidoEstatusId
+            FROM dbo.TblPedidos p WITH (UPDLOCK, HOLDLOCK)
+            WHERE p.PedidoId = @PedidoId
+            AND p.UsuarioId = @loginId
+            AND p.PedidoEstatusId IN (5,6,7,8)      -- tramo producción
+            AND p.PedidoEstatusId <> 9              -- no tocar cancelado
+            AND p.PedidoEstatusId < @NuevoPedidoEstatusId;  -- solo avanza
+        END
+
+
         COMMIT;
 
         SELECT @result [result], @message [message], @elementoId [elementoId];
