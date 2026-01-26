@@ -1,0 +1,109 @@
+@model ReporteCosteoViewModel
+@{
+    ViewData["Title"] = "Costeo real vs estimado";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Costeo real vs estimado</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">PedidoId</label>
+                <input class="form-control" name="pedidoId" value="@(Model.PedidoId?.ToString() ?? "")" />
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="/Reportes/Costeo">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Pedidos</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th class="text-end">Estimado</th>
+                        <th class="text-end">Real</th>
+                        <th class="text-end">Diferencia</th>
+                        <th>Consumo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model.Pedidos)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Reportes/Costeo?desde=@Model.Desde.ToString("yyyy-MM-dd")&hasta=@Model.Hasta.ToString("yyyy-MM-dd")&pedidoId=@p.PedidoId">
+                                #@p.PedidoId
+                            </a>
+                        </td>
+                        <td>@p.ClienteNombre</td>
+                        <td class="text-end">@((p.TotalEstimado ?? 0).ToString("N2"))</td>
+                        <td class="text-end">@((p.CostoReal ?? 0).ToString("N2"))</td>
+                        <td class="text-end">@((p.Diferencia ?? 0).ToString("N2"))</td>
+                        <td>@(p.PrimerConsumo?.ToString("yyyy-MM-dd") ?? "-") → @(p.UltimoConsumo?.ToString("yyyy-MM-dd") ?? "-")</td>
+                    </tr>
+                }
+                @if(!Model.Pedidos.Any())
+                {
+                    <tr><td colspan="6" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.PedidoId.HasValue)
+    {
+        <div class="card">
+            <div class="card-header fw-semibold">Detalle por insumo (Pedido #@Model.PedidoId)</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>InventarioId</th>
+                            <th>Insumo</th>
+                            <th>Unidad</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Costo unitario</th>
+                            <th class="text-end">Costo total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var d in Model.Detalle)
+                    {
+                        <tr>
+                            <td>@d.InventarioId</td>
+                            <td>@d.InsumoNombre</td>
+                            <td>@d.UnidadNombre</td>
+                            <td class="text-end">@d.Cantidad.ToString("N2")</td>
+                            <td class="text-end">@d.CostoUnitario.ToString("N2")</td>
+                            <td class="text-end">@d.CostoTotal.ToString("N2")</td>
+                        </tr>
+                    }
+                    @if(!Model.Detalle.Any())
+                    {
+                        <tr><td colspan="6" class="text-muted text-center py-3">Sin detalle</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

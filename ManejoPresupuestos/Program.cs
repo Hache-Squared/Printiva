@@ -53,6 +53,9 @@ builder.Services.AddTransient<IRepositorioPagos, RepositorioPagos>();
 builder.Services.AddTransient<IRepositorioProduccion, RepositorioProduccion>();
 builder.Services.AddTransient<IRepositorioImpresoras, RepositorioImpresoras>();
 
+builder.Services.AddTransient<IRepositorioReportes, RepositorioReportes>();
+
+
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();
@@ -115,7 +118,7 @@ app.UseAuthorization();
  */
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Transacciones}/{action=Index}/{id?}");
+    pattern: "{controller=Reportes}/{action=Index}/{id?}");
 //pattern: "{controller=Home}/{action=Index}/{id?}/{extra?}/{full?}");
 
 app.Run();

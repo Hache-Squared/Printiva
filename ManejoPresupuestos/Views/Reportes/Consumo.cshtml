@@ -1,0 +1,129 @@
+@model ReporteConsumoViewModel
+@{
+    ViewData["Title"] = "Consumo de inventario";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Consumo de inventario</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">PedidoId</label>
+                <input class="form-control" name="pedidoId" value="@(Model.PedidoId?.ToString() ?? "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">InventarioId</label>
+                <input class="form-control" name="inventarioId" value="@(Model.InventarioId?.ToString() ?? "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">ProductoId</label>
+                <input class="form-control" name="productoId" value="@(Model.ProductoId?.ToString() ?? "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">RecetaId</label>
+                <input class="form-control" name="recetaId" value="@(Model.RecetaId?.ToString() ?? "")" />
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="/Reportes/Consumo">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Movimientos</div><div class="fs-4">@Model.Totales.Movimientos</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Pedidos</div><div class="fs-4">@Model.Totales.Pedidos</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Insumos</div><div class="fs-4">@Model.Totales.Insumos</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Total consumido</div><div class="fs-4">@((Model.Totales.TotalConsumido ?? 0).ToString("N2"))</div></div></div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Top insumos</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>InventarioId</th>
+                        <th>Insumo</th>
+                        <th>Unidad</th>
+                        <th class="text-end">Consumido</th>
+                        <th class="text-end">Movs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var t in Model.TopInsumos)
+                {
+                    <tr>
+                        <td>@t.InventarioId</td>
+                        <td>@t.InsumoNombre</td>
+                        <td>@t.UnidadNombre</td>
+                        <td class="text-end">@t.Consumido.ToString("N2")</td>
+                        <td class="text-end">@t.Movimientos</td>
+                    </tr>
+                }
+                @if(!Model.TopInsumos.Any())
+                {
+                    <tr><td colspan="5" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header fw-semibold">Detalle</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Pedido</th>
+                        <th>ProdItem</th>
+                        <th>Receta</th>
+                        <th>Insumo</th>
+                        <th>Unidad</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Antes</th>
+                        <th class="text-end">Después</th>
+                        <th>Estatus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var r in Model.Rows)
+                {
+                    <tr>
+                        <td>@r.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(r.PedidoId?.ToString() ?? "-")</td>
+                        <td>@(r.ProduccionItemId?.ToString() ?? "-")</td>
+                        <td>@(r.RecetaNombre ?? r.RecetaId?.ToString() ?? "-")</td>
+                        <td>@(r.InsumoNombre ?? r.InventarioId.ToString())</td>
+                        <td>@r.UnidadNombre</td>
+                        <td class="text-end">@r.Cantidad.ToString("N2")</td>
+                        <td class="text-end">@((r.DisponibleAntes ?? 0).ToString("N2"))</td>
+                        <td class="text-end">@((r.DisponibleDespues ?? 0).ToString("N2"))</td>
+                        <td>@(r.DesdeEstatusNombre ?? r.DesdeEstatusId?.ToString() ?? "-") → @(r.HaciaEstatusNombre ?? r.HaciaEstatusId?.ToString() ?? "-")</td>
+                    </tr>
+                }
+                @if(!Model.Rows.Any())
+                {
+                    <tr><td colspan="10" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

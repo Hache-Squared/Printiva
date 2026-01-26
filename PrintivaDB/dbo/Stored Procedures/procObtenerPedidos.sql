@@ -21,5 +21,6 @@ BEGIN
     INNER JOIN dbo.TblPedidoEstatus e ON e.PedidoEstatusId = p.PedidoEstatusId
     WHERE p.UsuarioId = @loginId
       AND (@elementoObtenerId IS NULL OR p.PedidoId = @elementoObtenerId)
+      AND p.EstaActivo = 1 
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END

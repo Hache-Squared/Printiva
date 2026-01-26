@@ -1,0 +1,60 @@
+@model ReporteProduccionViewModel
+@{
+    ViewData["Title"] = "Dashboard Producción";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Dashboard producción</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">Items por estatus</div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Estatus</th><th class="text-end">Items</th></tr></thead>
+                        <tbody>
+                        @foreach (var x in Model.ItemsPorEstatus)
+                        {
+                            <tr><td>@x.Nombre</td><td class="text-end">@x.Items</td></tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">Pedidos por estatus</div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Estatus</th><th class="text-end">Pedidos</th></tr></thead>
+                        <tbody>
+                        @foreach (var x in Model.PedidosPorEstatus)
+                        {
+                            <tr><td>@x.Nombre</td><td class="text-end">@x.Pedidos</td></tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="text-muted small">Items totales</div>
+                <div class="fs-4">@Model.Wip.ItemsTotales</div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted small">Items WIP (no entregados)</div>
+                <div class="fs-4">@Model.Wip.ItemsWIP</div>
+            </div>
+        </div>
+    </div>
+</div>

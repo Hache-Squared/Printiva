@@ -7,7 +7,12 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM dbo.TblPedidos WHERE PedidoId = @pedidoId AND UsuarioId = @loginId)
     BEGIN
-        DELETE FROM dbo.TblPedidoItems WHERE PedidoId = @pedidoId;
-        DELETE FROM dbo.TblPedidos WHERE PedidoId = @pedidoId AND UsuarioId = @loginId;
+        UPDATE dbo.TblPedidoItems
+            SET EstaActivo = 0 
+        WHERE PedidoId = @pedidoId;
+
+        UPDATE dbo.TblPedidos 
+            SET EstaActivo = 0
+        WHERE PedidoId = @pedidoId AND UsuarioId = @loginId;
     END
 END

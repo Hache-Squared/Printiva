@@ -29,5 +29,6 @@ BEGIN
     FROM dbo.TblPedidoItems i
     INNER JOIN dbo.TblProductos p ON p.ProductoId = i.ProductoId
     WHERE i.PedidoId = @pedidoId
+    AND i.EstaActivo = 1 
     ORDER BY i.PedidoItemId;
 END
