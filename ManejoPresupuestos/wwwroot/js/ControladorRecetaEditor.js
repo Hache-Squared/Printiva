@@ -56,7 +56,9 @@
                 TiempoImpresionMin: tiempoImpresionMin,
                 TiempoPostMin: tiempoPostMin,
 
-                ProductoId: 0,
+                // ✅ OJO: NO mandamos ProductoId aquí
+                // ProductoId se asigna/actualiza desde el Index (modal)
+
                 Inventarios: inventariosAEnviar
             };
 

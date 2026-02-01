@@ -159,11 +159,28 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> RecetaEditorGuardar([FromBody] CrearRecetaViewModel modelo)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            int productoIdFinal = modelo.ProductoId;
+
+            if (modelo.RecetaId != 0 && productoIdFinal == 0)
+            {
+                var recetaDb = await repositorioRecetas.ObtenerRecetaPorId(modelo.RecetaId, usuarioId);
+                if (recetaDb is null || recetaDb.RecetaId == 0)
+                {
+                    return Json(new
+                    {
+                        result = "fail",
+                        message = "Receta no encontrada para actualizar."
+                    });
+                }
+
+                productoIdFinal = recetaDb.ProductoId; // ✅ conservar
+            }
+
             var param = new ParametroAlterarReceta()
             {
                 LoginId = usuarioId,
                 Nombre = modelo.Nombre,
-                ProductoId = modelo.ProductoId,
+                ProductoId = productoIdFinal,
 
                 // legacy (opcional)
                 Tiempo = (modelo.TiempoImpresionMin > 0 ? modelo.TiempoImpresionMin.ToString() : (modelo.Tiempo ?? "0")),
@@ -177,10 +194,8 @@ namespace ManejoPresupuestos.Controllers
                 Borrar = 0
             };
 
-
-
             var crearReceta = await repositorioRecetas.CrearReceta(param);
-            if(crearReceta.result != ResultProcedureType.SUCCESS)
+            if (crearReceta.result != ResultProcedureType.SUCCESS)
             {
                 return Json(new
                 {
@@ -188,29 +203,32 @@ namespace ManejoPresupuestos.Controllers
                     message = "Receta no modificada: " + crearReceta.message
                 });
             }
+
             var json = JsonConvert.SerializeObject(modelo.Inventarios, new JsonSerializerSettings
             {
-                ContractResolver = new DefaultContractResolver(), // Respeta las mayúsculas
+                ContractResolver = new DefaultContractResolver(),
                 Formatting = Formatting.None
             });
+
             var paramRelation = new ParametroCrearRelacionRecetaInventario()
             {
                 LoginId = usuarioId,
                 RecetaId = crearReceta.elementoId,
                 Json = json
             };
+
             var crearRecetaRelacion = await repositorioRecetas.CrearRelacionRecetaInventario(paramRelation);
             if (crearRecetaRelacion.result != ResultProcedureType.SUCCESS)
             {
                 return Json(new
                 {
                     result = "fail",
-                    message = "Receta no creada: " + crearRecetaRelacion.message 
+                    message = "Receta no creada: " + crearRecetaRelacion.message
                 });
             }
 
-
-            return Json(new {
+            return Json(new
+            {
                 result = "success",
                 message = "Receta guardada con exito"
             });

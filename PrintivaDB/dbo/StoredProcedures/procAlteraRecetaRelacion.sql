@@ -13,157 +13,168 @@ Version     Author     Date         Description     Ticket
 1.0         AGHH     27/07/2025     First Version   N/A
 */
 CREATE PROCEDURE dbo.procAlteraRecetaRelacion
-@loginId			INT = 0,
+@loginId            INT = 0,
 @ElementoAlterarId  INT = 0,
-@Json				VARCHAR(MAX) = '[]'
+@Json               VARCHAR(MAX) = '[]'
 AS
 BEGIN 
-	--
-	SET NOCOUNT ON;
-	--
-	DECLARE @result VARCHAR(100) = '';
-	DECLARE @message VARCHAR(MAX) = '';
-	DECLARE @elementoId INT = 0;
+    SET NOCOUNT ON;
 
+    DECLARE @result VARCHAR(100) = '';
+    DECLARE @message VARCHAR(MAX) = '';
+    DECLARE @elementoId INT = 0;
 
-	BEGIN TRY
+    BEGIN TRY
 
-		SET @elementoId = ISNULL(@ElementoAlterarId,0);
+        SET @elementoId = ISNULL(@ElementoAlterarId,0);
 
-		IF NOT EXISTS(
-			SELECT 1 
-			FROM dbo.Usuarios u (NOLOCK)
-			WHERE u.Id = @loginId
-		)
-		BEGIN
-			SET @message = 'Usuario no encontrado.';
-			RAISERROR(@message, 16, 1);
-		END
+        IF NOT EXISTS(
+            SELECT 1 
+            FROM dbo.Usuarios u (NOLOCK)
+            WHERE u.Id = @loginId
+        )
+        BEGIN
+            SET @message = 'Usuario no encontrado.';
+            RAISERROR(@message, 16, 1);
+        END
 
-		IF NOT EXISTS(
-			SELECT 1 
-			FROM dbo.TblRecetas r (NOLOCK)
-			WHERE r.RecetaId = @elementoId
-		)
-		BEGIN
-			SET @message = 'Receta no encontrada.';
-			RAISERROR(@message, 16, 1);
-		END
+        IF NOT EXISTS(
+            SELECT 1 
+            FROM dbo.TblRecetas r (NOLOCK)
+            WHERE r.RecetaId = @elementoId
+        )
+        BEGIN
+            SET @message = 'Receta no encontrada.';
+            RAISERROR(@message, 16, 1);
+        END
 
-		SET @Json = ISNULL(@Json, '[]')
-		
-		IF(ISJSON(@Json) = 0)
-		BEGIN 
-			SET @message = 'Json no valido.';
-			RAISERROR(@message, 16, 1);
-		END
+        SET @Json = ISNULL(@Json, '[]');
 
-		CREATE TABLE #Temp(
-			Id INT PRIMARY KEY IDENTITY(1,1),
-			InventarioId INT,
-			Cantidad DECIMAL(10,2)
-		)
+        IF (ISJSON(@Json) = 0)
+        BEGIN 
+            SET @message = 'Json no valido.';
+            RAISERROR(@message, 16, 1);
+        END
 
-		INSERT INTO #Temp(InventarioId, Cantidad)
-		SELECT 
-			InventarioId,
-			Cantidad
-		FROM OPENJSON(@Json) WITH (
-			InventarioId INT '$.InventarioId',
-			Cantidad	 DECIMAL(10,2) '$.Cantidad'
-		);
+        CREATE TABLE #Temp(
+            Id INT PRIMARY KEY IDENTITY(1,1),
+            InventarioId INT,
+            Cantidad DECIMAL(10,2)
+        );
 
-		IF EXISTS(
-			SELECT 1
-			FROM #Temp t
-			WHERE ISNULL(t.Cantidad,0) = 0
-		)
-		BEGIN 
-			SET @message = 'Algunas cantidades no tienen valor.';
-			RAISERROR(@message, 16, 1);
-		END;
+        INSERT INTO #Temp(InventarioId, Cantidad)
+        SELECT 
+            InventarioId,
+            Cantidad
+        FROM OPENJSON(@Json) WITH (
+            InventarioId INT '$.InventarioId',
+            Cantidad     DECIMAL(10,2) '$.Cantidad'
+        );
 
-		IF EXISTS(
-			SELECT 1
-			FROM #Temp t
-			WHERE ISNumeric(t.Cantidad) = 0
-		)
-		BEGIN 
-			SET @message = 'Algunas cantidades no son un numero.';
-			RAISERROR(@message, 16, 1);
-		END;
+        IF EXISTS(
+            SELECT 1
+            FROM #Temp t
+            WHERE ISNULL(t.Cantidad,0) = 0
+        )
+        BEGIN 
+            SET @message = 'Algunas cantidades no tienen valor.';
+            RAISERROR(@message, 16, 1);
+        END;
 
-		IF EXISTS(
-			SELECT 1
-			FROM #Temp t
-			WHERE t.Cantidad < 0
-		)
-		BEGIN 
-			SET @message = 'Algunas cantidades son negativas.';
-			RAISERROR(@message, 16, 1);
-		END;
+        -- Nota: ISNUMERIC en DECIMAL realmente sobra, pero lo dejo por compatibilidad
+        IF EXISTS(
+            SELECT 1
+            FROM #Temp t
+            WHERE ISNUMERIC(t.Cantidad) = 0
+        )
+        BEGIN 
+            SET @message = 'Algunas cantidades no son un numero.';
+            RAISERROR(@message, 16, 1);
+        END;
 
-		IF EXISTS(
-			SELECT 1
-			FROM #Temp t
-			LEFT JOIN dbo.TblInventarios i (NOLOCK)
-				ON t.InventarioId = i.InventarioId
-			WHERE i.InventarioId IS NULL
-		)
-		BEGIN 
-			SET @message = 'Algunos elementos de inventario no existen.';
-			RAISERROR(@message, 16, 1);
-		END;
+        IF EXISTS(
+            SELECT 1
+            FROM #Temp t
+            WHERE t.Cantidad < 0
+        )
+        BEGIN 
+            SET @message = 'Algunas cantidades son negativas.';
+            RAISERROR(@message, 16, 1);
+        END;
 
-		MERGE dbo.TblRecetasInventarios AS TARGET
-		USING (
-			SELECT 
-				@elementoId [RecetaId],
-				t.InventarioId [InventarioId],
-				t.Cantidad [Cantidad]
-			FROM #Temp t
-		) AS SOURCE  
-			ON (
-				TARGET.RecetaId = SOURCE.RecetaId AND
-				TARGET.InventarioId = SOURCE.InventarioId
-			)
-		WHEN MATCHED THEN 
-			UPDATE SET TARGET.Cantidad = SOURCE.Cantidad
-		WHEN NOT MATCHED BY TARGET THEN 
-			INSERT (
-				RecetaId,
-				InventarioId,
-				Cantidad
-			)
-			VALUES(
-				SOURCE.RecetaId,
-				SOURCE.InventarioId,
-				SOURCE.Cantidad
-			)
-		WHEN NOT MATCHED BY SOURCE 
-		AND TARGET.RecetaId = @elementoId THEN  -- Esto filtra correctamente el DELETE
-			DELETE;
+        IF EXISTS(
+            SELECT 1
+            FROM #Temp t
+            LEFT JOIN dbo.TblInventarios i (NOLOCK)
+                ON t.InventarioId = i.InventarioId
+            WHERE i.InventarioId IS NULL
+        )
+        BEGIN 
+            SET @message = 'Algunos elementos de inventario no existen.';
+            RAISERROR(@message, 16, 1);
+        END;
 
-			
+        /* 
+          IMPORTANTE:
+          - Soft delete: EstaActivo = 0
+          - Reactivar si vuelve a venir: EstaActivo = 1
+          - Agrupar por InventarioId para evitar que el MERGE falle si hay duplicados en JSON.
+        */
+        MERGE dbo.TblRecetasInventarios AS TARGET
+        USING (
+            SELECT 
+                @elementoId AS RecetaId,
+                t.InventarioId,
+                SUM(t.Cantidad) AS Cantidad
+            FROM #Temp t
+            GROUP BY t.InventarioId
+        ) AS SOURCE  
+            ON (
+                TARGET.RecetaId = SOURCE.RecetaId AND
+                TARGET.InventarioId = SOURCE.InventarioId
+            )
+        WHEN MATCHED THEN 
+            UPDATE SET 
+                TARGET.Cantidad = SOURCE.Cantidad,
+                TARGET.EstaActivo = 1
+        WHEN NOT MATCHED BY TARGET THEN 
+            INSERT (
+                RecetaId,
+                InventarioId,
+                Cantidad,
+                EstaActivo
+            )
+            VALUES(
+                SOURCE.RecetaId,
+                SOURCE.InventarioId,
+                SOURCE.Cantidad,
+                1
+            )
+        WHEN NOT MATCHED BY SOURCE 
+             AND TARGET.RecetaId = @elementoId THEN
+            UPDATE SET 
+                TARGET.EstaActivo = 0;
 
-		SET @result = 'success';
-		SET @message = IIF(@message = '','Ningun error', @message);
+        SET @result = 'success';
+        SET @message = IIF(@message = '','Ningun error', @message);
 
+        SELECT @result [result],
+               @message [message],
+               @elementoId [elementoId];
 
-		SELECT @result [result],
-			   @message [message],
-			   @elementoId [elementoId];
-	END TRY
-	BEGIN CATCH
-		SET @result = 'fail';
-		IF(ISNULL(@message,'') = '')
-		BEGIN 
-			SET @message = CONCAT(ERROR_MESSAGE(),'. Error Line: *', ERROR_LINE(), '*.');
-		END
-		
-		SELECT @result [result],
-			   @message [message],
-			   @elementoId [elementoId];
-	END CATCH
-	DROP TABLE IF EXISTS #Temp;
+    END TRY
+    BEGIN CATCH
+        SET @result = 'fail';
+        IF(ISNULL(@message,'') = '')
+        BEGIN 
+            SET @message = CONCAT(ERROR_MESSAGE(),'. Error Line: *', ERROR_LINE(), '*.');
+        END
+        
+        SELECT @result [result],
+               @message [message],
+               @elementoId [elementoId];
+    END CATCH
+
+    DROP TABLE IF EXISTS #Temp;
 END
+GO
