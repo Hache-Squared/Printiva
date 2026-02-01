@@ -41,8 +41,7 @@ builder.Services.AddTransient<IRepositorioCompraCategorias, RepositorioCompraCat
 builder.Services.AddTransient<IRepositorioCompraTipos, RepositorioCompraTipos>();
 builder.Services.AddTransient<IRepositorioFilamentoTipos, RepositorioFilamentoTipos>();
 builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
-builder.Services.AddTransient<IRepositorioVentaRecetas, RepositorioVentaRecetas>();
-builder.Services.AddTransient<IRepositorioVentas, RepositorioVentas>();
+
 
 builder.Services.AddTransient<IRepositorioPedidos, RepositorioPedidos>();
 builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
