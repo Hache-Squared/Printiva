@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procAlteraPago
+CREATE   PROCEDURE dbo.procAlteraPago
 @ElementoAlterarId INT = 0,
 @CotizacionId INT = 0,
 @PagoTipoId INT = 0,
@@ -97,3 +97,4 @@ BEGIN
 	END CATCH
 END
 GO
+

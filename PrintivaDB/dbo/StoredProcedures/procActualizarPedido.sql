@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procActualizarPedido
+CREATE   PROCEDURE dbo.procActualizarPedido
     @loginId INT,
     @pedidoId INT,
     @clienteId INT,
@@ -18,3 +18,5 @@ BEGIN
         TotalEstimado = @totalEstimado
     WHERE PedidoId = @pedidoId AND UsuarioId = @loginId;
 END
+GO
+

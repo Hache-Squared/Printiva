@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procReportesCosteoPedidos
+CREATE   PROCEDURE dbo.procReportesCosteoPedidos
     @FechaDesde DATE = NULL,
     @FechaHasta DATE = NULL,
     @PedidoId INT = NULL,
@@ -39,3 +39,4 @@ BEGIN
     ORDER BY p.PedidoId DESC;
 END
 GO
+

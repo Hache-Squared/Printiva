@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procCrearPedido
+CREATE   PROCEDURE dbo.procCrearPedido
     @loginId INT,
     @clienteId INT,
     @pedidoEstatusId INT,
@@ -14,3 +14,5 @@ BEGIN
 
     SELECT CAST(SCOPE_IDENTITY() AS INT) AS PedidoId;
 END
+GO
+

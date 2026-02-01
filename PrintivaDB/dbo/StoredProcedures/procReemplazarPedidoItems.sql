@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procReemplazarPedidoItems
+CREATE   PROCEDURE dbo.procReemplazarPedidoItems
     @loginId INT,
     @pedidoId INT
 AS
@@ -10,3 +10,5 @@ BEGIN
 
     DELETE FROM dbo.TblPedidoItems WHERE PedidoId = @pedidoId;
 END
+GO
+

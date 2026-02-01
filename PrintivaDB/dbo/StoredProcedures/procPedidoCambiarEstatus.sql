@@ -1,5 +1,5 @@
 
-CREATE OR ALTER PROCEDURE dbo.procPedidoCambiarEstatus
+CREATE   PROCEDURE dbo.procPedidoCambiarEstatus
 @PedidoId INT = 0,
 @HaciaEstatusId INT = 0,
 @Notas VARCHAR(500) = '',
@@ -103,3 +103,5 @@ BEGIN
         SELECT @result [result], @message [message], @elementoId [elementoId];
     END CATCH
 END
+GO
+

@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionInitPorPedido
+CREATE   PROCEDURE dbo.procProduccionInitPorPedido
     @PedidoId INT,
     @loginId INT
 AS
@@ -48,3 +48,4 @@ BEGIN
     END CATCH
 END
 GO
+

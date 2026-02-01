@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procReportesProduccionDashboard
+CREATE   PROCEDURE dbo.procReportesProduccionDashboard
     @loginId INT
 AS
 BEGIN
@@ -47,3 +47,4 @@ BEGIN
     WHERE i.UsuarioId=@loginId AND i.EstaActivo=1;
 END
 GO
+

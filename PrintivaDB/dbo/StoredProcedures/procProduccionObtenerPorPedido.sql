@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionObtenerPorPedido
+CREATE   PROCEDURE dbo.procProduccionObtenerPorPedido
     @PedidoId INT,
     @loginId INT
 AS
@@ -50,3 +50,4 @@ BEGIN
     ORDER BY pe.Orden ASC, pr.ProduccionItemId ASC;
 END
 GO
+

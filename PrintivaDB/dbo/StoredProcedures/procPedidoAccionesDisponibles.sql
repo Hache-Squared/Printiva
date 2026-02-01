@@ -1,5 +1,5 @@
 
-CREATE OR ALTER PROCEDURE dbo.procPedidoAccionesDisponibles
+CREATE   PROCEDURE dbo.procPedidoAccionesDisponibles
 @PedidoId INT = 0,
 @loginId INT = 0
 AS
@@ -102,3 +102,5 @@ BEGIN
         SELECT @result [result], @message [message], @elementoId [elementoId];
     END CATCH
 END
+GO
+

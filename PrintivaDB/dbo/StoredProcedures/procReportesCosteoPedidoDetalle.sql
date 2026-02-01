@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procReportesCosteoPedidoDetalle
+CREATE   PROCEDURE dbo.procReportesCosteoPedidoDetalle
     @PedidoId INT,
     @loginId INT
 AS
@@ -27,3 +27,4 @@ BEGIN
     ORDER BY SUM(c.Cantidad * ISNULL(inv.CostoUnitario,0)) DESC;
 END
 GO
+

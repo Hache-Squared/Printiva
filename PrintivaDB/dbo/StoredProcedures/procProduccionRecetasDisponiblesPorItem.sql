@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionRecetasDisponiblesPorItem
+CREATE   PROCEDURE dbo.procProduccionRecetasDisponiblesPorItem
     @ProduccionItemId INT,
     @loginId INT
 AS
@@ -35,3 +35,4 @@ BEGIN
     ORDER BY r.RecetaId DESC;
 END
 GO
+

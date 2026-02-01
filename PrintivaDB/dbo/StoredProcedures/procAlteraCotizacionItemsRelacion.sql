@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procAlteraCotizacionItemsRelacion
+CREATE   PROCEDURE dbo.procAlteraCotizacionItemsRelacion
 @loginId INT = 0,
 @CotizacionId INT = 0,
 @Json VARCHAR(MAX) = '[]'
@@ -145,3 +145,4 @@ BEGIN
 	END CATCH
 END
 GO
+

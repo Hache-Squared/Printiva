@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerCotizaciones
+CREATE   PROCEDURE dbo.procObtenerCotizaciones
 @ElementoObtenerId INT = 0,
 @PedidoId INT = 0,
 @loginId INT = 0
@@ -79,3 +79,4 @@ BEGIN
 	DROP TABLE IF EXISTS #TempData;
 END
 GO
+

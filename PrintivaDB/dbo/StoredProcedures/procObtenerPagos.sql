@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerPagos
+CREATE   PROCEDURE dbo.procObtenerPagos
 @CotizacionId INT = 0,
 @ElementoObtenerId INT = 0,
 @loginId INT = 0
@@ -58,3 +58,4 @@ BEGIN
 	END
 END
 GO
+

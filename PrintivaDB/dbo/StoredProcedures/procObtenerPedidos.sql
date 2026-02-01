@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerPedidos
+CREATE   PROCEDURE dbo.procObtenerPedidos
     @loginId INT,
     @elementoObtenerId INT = NULL
 AS
@@ -24,3 +24,5 @@ BEGIN
       AND p.EstaActivo = 1 
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END
+GO
+

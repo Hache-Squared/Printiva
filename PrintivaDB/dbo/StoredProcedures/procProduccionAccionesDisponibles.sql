@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionAccionesDisponibles
+CREATE   PROCEDURE dbo.procProduccionAccionesDisponibles
     @ProduccionItemId INT,
     @loginId INT
 AS
@@ -148,3 +148,4 @@ BEGIN
     ORDER BY pe.Orden ASC;
 END
 GO
+

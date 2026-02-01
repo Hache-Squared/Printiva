@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.procObtenerProductos
+CREATE   PROCEDURE dbo.procObtenerProductos
 @ElementoObtenerId INT = 0,
 @loginId INT = 0,
 @SoloActivos BIT = 1
@@ -91,3 +91,4 @@ BEGIN
     DROP TABLE IF EXISTS #TempData;
 END
 GO
+

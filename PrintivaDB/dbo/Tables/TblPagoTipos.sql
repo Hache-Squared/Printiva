@@ -1,4 +1,7 @@
-CREATE TABLE dbo.TblPagoTipos(
-    PagoTipoId INT PRIMARY KEY IDENTITY(1,1),
-    Nombre VARCHAR(100) NOT NULL
+CREATE TABLE [dbo].[TblPagoTipos] (
+    [PagoTipoId] INT           IDENTITY (1, 1) NOT NULL,
+    [Nombre]     VARCHAR (100) NOT NULL,
+    PRIMARY KEY CLUSTERED ([PagoTipoId] ASC)
 );
+GO
+

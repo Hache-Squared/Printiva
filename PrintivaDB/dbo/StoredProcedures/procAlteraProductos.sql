@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.procAlteraProductos
+CREATE   PROCEDURE dbo.procAlteraProductos
 @ElementoAlterarId INT = 0,
 @Nombre VARCHAR(200) = '',
 @ProductoCategoriaId INT = 0,
@@ -121,3 +121,4 @@ BEGIN
     END CATCH
 END
 GO
+

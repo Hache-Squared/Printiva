@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionActualizarItemDatos
+CREATE   PROCEDURE dbo.procProduccionActualizarItemDatos
     @ProduccionItemId INT,
     @ImpresoraId INT = NULL,
     @NotasOperativas NVARCHAR(500) = NULL,
@@ -63,3 +63,4 @@ BEGIN
     END CATCH
 END
 GO
+

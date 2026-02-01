@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procAlteraImpresora
+CREATE   PROCEDURE dbo.procAlteraImpresora
     @ElementoAlterarId INT = 0,
     @Nombre NVARCHAR(150) = NULL,
     @Modelo NVARCHAR(150) = NULL,
@@ -76,3 +76,4 @@ BEGIN
     END CATCH
 END
 GO
+

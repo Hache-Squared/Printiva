@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionAsignarRecetaItem
+CREATE   PROCEDURE dbo.procProduccionAsignarRecetaItem
     @ProduccionItemId INT,
     @RecetaId INT,
     @loginId INT
@@ -51,3 +51,4 @@ BEGIN
     END CATCH
 END
 GO
+

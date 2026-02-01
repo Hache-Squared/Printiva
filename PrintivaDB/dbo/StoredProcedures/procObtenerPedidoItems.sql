@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerPedidoItems
+CREATE   PROCEDURE dbo.procObtenerPedidoItems
     @loginId INT,
     @pedidoId INT
 AS
@@ -32,3 +32,5 @@ BEGIN
     AND i.EstaActivo = 1 
     ORDER BY i.PedidoItemId;
 END
+GO
+

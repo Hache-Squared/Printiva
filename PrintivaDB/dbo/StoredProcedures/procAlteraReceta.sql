@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===============================================================================
 Author: AGHH
 Date: 27/07/2025
@@ -12,7 +12,7 @@ Version     Author     Date         Description     Ticket
 -------------------------------------------------------------------------------
 1.0         AGHH     27/07/2025     First Version   N/A
 */
-CREATE OR ALTER PROCEDURE dbo.procAlteraReceta
+CREATE   PROCEDURE dbo.procAlteraReceta
 @ElementoAlterarId  INT = 0,
 @Nombre				VARCHAR(200) = '',
 @TiempoImpresion	VARCHAR(200) = '',
@@ -139,3 +139,5 @@ BEGIN
 			   @elementoId [elementoId];
 	END CATCH
 END
+GO
+

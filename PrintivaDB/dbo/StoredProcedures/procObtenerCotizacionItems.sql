@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerCotizacionItems
+CREATE   PROCEDURE dbo.procObtenerCotizacionItems
 @CotizacionId INT = 0,
 @loginId INT = 0
 AS
@@ -36,3 +36,4 @@ BEGIN
 	ORDER BY i.CotizacionItemId ASC;
 END
 GO
+

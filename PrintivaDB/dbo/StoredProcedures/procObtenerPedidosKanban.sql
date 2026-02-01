@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerPedidosKanban
+CREATE   PROCEDURE dbo.procObtenerPedidosKanban
     @loginId INT,
     @ClienteId INT = 0,
     @q VARCHAR(200) = '',
@@ -85,3 +85,5 @@ BEGIN
       AND p.EstaActivo = 1 
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END
+GO
+

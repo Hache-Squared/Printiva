@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerImpresoras
+CREATE   PROCEDURE dbo.procObtenerImpresoras
     @loginId INT,
     @ElementoObtenerId INT = NULL,
     @SoloActivas BIT = 0
@@ -28,3 +28,4 @@ BEGIN
     ORDER BY i.EstaActivo DESC, i.Nombre ASC, i.ImpresoraId DESC;
 END
 GO
+

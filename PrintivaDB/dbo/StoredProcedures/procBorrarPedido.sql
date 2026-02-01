@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procBorrarPedido
+CREATE   PROCEDURE dbo.procBorrarPedido
     @loginId INT,
     @pedidoId INT
 AS
@@ -16,3 +16,5 @@ BEGIN
         WHERE PedidoId = @pedidoId AND UsuarioId = @loginId;
     END
 END
+GO
+

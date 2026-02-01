@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procReportesConsumoInventarioDetalle
+CREATE   PROCEDURE dbo.procReportesConsumoInventarioDetalle
     @FechaDesde DATE = NULL,
     @FechaHasta DATE = NULL,
     @PedidoId INT = NULL,
@@ -57,3 +57,4 @@ BEGIN
     ORDER BY c.Fecha DESC, c.ProduccionInventarioConsumoId DESC;
 END
 GO
+

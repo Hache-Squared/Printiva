@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procAlteraCotizacion
+CREATE   PROCEDURE dbo.procAlteraCotizacion
 @ElementoAlterarId INT = 0,
 @PedidoId INT = 0,
 @CotizacionEstatusId INT = 1,
@@ -131,3 +131,4 @@ BEGIN
 	END CATCH
 END
 GO
+

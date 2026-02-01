@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.procObtenerClientes
+CREATE   PROCEDURE dbo.procObtenerClientes
     @loginId INT,
     @elementoObtenerId INT = NULL
 AS
@@ -20,3 +20,5 @@ BEGIN
       AND (@elementoObtenerId IS NULL OR ClienteId = @elementoObtenerId)
     ORDER BY Nombre;
 END
+GO
+

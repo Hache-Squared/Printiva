@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procObtenerPedidoEstatus
+CREATE   PROCEDURE dbo.procObtenerPedidoEstatus
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -7,3 +7,5 @@ BEGIN
     FROM dbo.TblPedidoEstatus
     ORDER BY PedidoEstatusId;
 END
+GO
+
