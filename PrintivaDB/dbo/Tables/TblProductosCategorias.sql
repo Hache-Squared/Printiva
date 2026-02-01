@@ -5,7 +5,3 @@ CREATE TABLE [dbo].[TblProductosCategorias] (
     PRIMARY KEY CLUSTERED ([ProductoCategoriaId] ASC)
 );
 GO
-ALTER TABLE [dbo].[TblProductosCategorias]
-    ADD CONSTRAINT [DF_TblProductosCategorias_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-

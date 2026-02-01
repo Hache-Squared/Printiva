@@ -6,7 +6,3 @@ CREATE TABLE [dbo].[TblInventariosNombres] (
     PRIMARY KEY CLUSTERED ([InventarioNombreId] ASC)
 );
 GO
-ALTER TABLE [dbo].[TblInventariosNombres]
-    ADD CONSTRAINT [DF_TblInventariosNombres_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-

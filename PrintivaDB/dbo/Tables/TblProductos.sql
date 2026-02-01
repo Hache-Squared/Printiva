@@ -9,7 +9,3 @@ CREATE TABLE [dbo].[TblProductos] (
     CONSTRAINT [FK_TblProductos_TblProductosCategorias] FOREIGN KEY ([ProductoCategoriaId]) REFERENCES [dbo].[TblProductosCategorias] ([ProductoCategoriaId])
 );
 GO
-ALTER TABLE [dbo].[TblProductos]
-    ADD CONSTRAINT [DF_TblProductos_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-

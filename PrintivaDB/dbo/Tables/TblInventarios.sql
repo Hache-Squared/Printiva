@@ -17,12 +17,3 @@ CREATE TABLE [dbo].[TblInventarios] (
     CONSTRAINT [FK_TblInventarios_TblInventariosUnidades] FOREIGN KEY ([InventarioUnidadId]) REFERENCES [dbo].[TblInventariosUnidades] ([InventarioUnidadId])
 );
 GO
-ALTER TABLE [dbo].[TblInventarios]
-    ADD CONSTRAINT [DF_TblInventarios_CostoUnitario] DEFAULT ((0)) FOR [CostoUnitario];
-GO
-
-
-ALTER TABLE [dbo].[TblInventarios]
-    ADD CONSTRAINT [DF_TblInventarios_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-

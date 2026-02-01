@@ -8,7 +8,3 @@ CREATE TABLE [dbo].[TblRecetasInventarios] (
     CONSTRAINT [FK_TblRecetasInventarios_TblRecetas] FOREIGN KEY ([RecetaId]) REFERENCES [dbo].[TblRecetas] ([RecetaId])
 );
 GO
-ALTER TABLE [dbo].[TblRecetasInventarios]
-    ADD CONSTRAINT [DF_TblRecetasInventarios_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
