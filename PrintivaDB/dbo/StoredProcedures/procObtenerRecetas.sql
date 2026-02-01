@@ -47,7 +47,9 @@ BEGIN
 			ProductoNombre VARCHAR(200),
 			ProductoCategoriaId INT,
 			ProductoCategoria VARCHAR(200),
-			ProductoSKU VARCHAR(200)
+			ProductoSKU VARCHAR(200),
+			TiempoImpresionMin INT,
+			TiempoPostMin INT
 		)
 
 
@@ -59,7 +61,9 @@ BEGIN
 			ProductoNombre,
 			ProductoCategoriaId,
 			ProductoCategoria,
-			ProductoSKU
+			ProductoSKU,
+			TiempoImpresionMin,
+			TiempoPostMin
 		)
 		SELECT 
 			r.RecetaId,
@@ -70,6 +74,8 @@ BEGIN
 			p.ProductoCategoriaId,
 			pc.Nombre,
 			p.SKU
+			, COALESCE(r.TiempoImpresionMin, TRY_CONVERT(int, NULLIF(r.TiempoImpresion,'')), 0) AS TiempoImpresionMin
+			, COALESCE(r.TiempoPostMin, 0) AS TiempoPostMin
 		FROM dbo.TblRecetas r (NOLOCK)
 		LEFT JOIN dbo.TblProductos p (NOLOCK)
 			ON r.ProductoId = p.ProductoId
@@ -87,7 +93,9 @@ BEGIN
 				ProductoNombre,
 				ProductoCategoriaId,
 				ProductoCategoria,
-				ProductoSKU
+				ProductoSKU,
+				TiempoImpresionMin,
+				TiempoPostMin
 			FROM #TempData
 		
 		END
@@ -101,7 +109,9 @@ BEGIN
 				ProductoNombre,
 				ProductoCategoriaId,
 				ProductoCategoria,
-				ProductoSKU
+				ProductoSKU,
+				TiempoImpresionMin,
+				TiempoPostMin
 			FROM #TempData t
 			WHERE t.RecetaId = @elementoId
 		END

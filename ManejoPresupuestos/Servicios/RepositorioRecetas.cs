@@ -66,15 +66,24 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     Nombre = param.Nombre,
+
+                    // legacy
                     TiempoImpresion = param.Tiempo,
+
+                    // nuevos
+                    TiempoImpresionMin = param.TiempoImpresionMin,
+                    TiempoPostMin = param.TiempoPostMin,
+
                     ProductoId = param.ProductoId,
                     loginId = param.LoginId,
                     Actualizar = param.Actualizar,
+                    Borrar = param.Borrar,
                     ElementoAlterarId = param.ElementoAlterarId,
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
+        
         public async Task<ResultProcedureGeneric> CrearRelacionRecetaInventario(ParametroCrearRelacionRecetaInventario param)
         {
             using var connection = new SqlConnection(connectionString);

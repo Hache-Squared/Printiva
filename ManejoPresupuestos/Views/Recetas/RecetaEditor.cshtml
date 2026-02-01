@@ -11,20 +11,31 @@
         <h2>Editor de receta para producto.</h2>
         <span>Registrar o actualizar producto con sus materiales.</span>
     </div>
+
     <div class="container col-6 row">
-        <input type="hidden" id="receta-id" value="@(ViewBag.Receta?.Id ?? 0)" />  
+        <input id="receta-id" type="hidden" value="@(ViewBag.Receta != null ? ViewBag.Receta.Id : 0)" />
 
-        <h4>Producto: 
-            <input id="nombre-receta" type="text" class="form-control"
-                   placeholder="Carrito/Casco Ingeniero ..."
-                   value="@(ViewBag.Receta?.Nombre ?? "")" />
-        </h4>
+        <h4>Producto:</h4>
+        <input id="nombre-receta" type="text" class="form-control mb-3"
+               placeholder="Carrito/Casco Ingeniero ..."
+               value="@(ViewBag.Receta != null ? ViewBag.Receta.Nombre : "")" />
 
-        <span>Tiempo de impresión (en minutos):
-            <input id="tiempo-receta" type="text" class="form-control"
-                   placeholder="40 minutos..."
-                   value="@(ViewBag.Receta?.Tiempo ?? "")" />
-        </span>
+        <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">Tiempo de impresión (min):</div>
+            <div class="col-sm-8">
+                <input id="tiempo-receta" class="form-control" type="number" min="1" step="1"
+                       placeholder="40"
+                       value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoImpresionMin : 0)" />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">Tiempo de post-proceso (min):</div>
+            <div class="col-sm-8">
+                <input id="tiempo-post-receta" class="form-control" type="number" min="0" step="1"
+                       value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoPostMin : 0)" />
+            </div>
+        </div>
 
         <a id="btn-guardar-receta" class="btn btn-primary mt-1">Guardar</a>
     </div>
@@ -55,29 +66,28 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/ControladorRecetaEditor.js" asp-append-version="true"></script>
+
     <script>
         const urlRecetaGuardar = '@Url.Action("RecetaEditorGuardar")';
+
         let items = @Html.Raw(JsonConvert.SerializeObject(Model)); // inventarios disponibles
         let itemsSeleccionados = @Html.Raw(JsonConvert.SerializeObject(ViewBag.MaterialesSeleccionados ?? new List<object>()));
+
         itemsSeleccionados = itemsSeleccionados?.map(x => {
             return {
                 ...x,
                 cantidadRequerida: x?.CantidadAsignada ?? 0
             }
-        })
-        console.log({
-            items,
-            itemsSeleccionados
-        })
+        });
+
         $(function () {
             const recetaId = parseInt($("#receta-id").val()) || 0;
             if (recetaId > 0) {
                 $("#btn-guardar-receta").text("Actualizar");
             }
-            
+
             ControladorRecetaEditor.LimpiarLocalStorage();
             ControladorRecetaEditor.inicializarListas(items, itemsSeleccionados);
-
             ControladorRecetaEditor.inicializarListener(urlRecetaGuardar);
         });
     </script>

@@ -8,6 +8,9 @@
         public int ProductoId { get; set; }
         public string TiempoImpresion { get; set; }
 
+        public int TiempoImpresionMin { get; set; }
+        public int TiempoPostMin { get; set; }
+
         public string ProductoNombre { get; set; }
         public int ProductoCategoriaId { get; set; }
 

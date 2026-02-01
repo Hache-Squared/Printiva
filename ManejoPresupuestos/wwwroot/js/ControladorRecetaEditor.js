@@ -9,14 +9,29 @@
                 alert(resultadoReceta?.mensaje);
                 return;
             }
+
             let nombre = $("#nombre-receta").val();
-            let tiempo = $("#tiempo-receta").val();
+
+            // Tiempo impresión (min)
+            let tiempoImpresionRaw = $("#tiempo-receta").val();
+            let tiempoImpresionMin = parseInt(tiempoImpresionRaw, 10);
+
+            // Tiempo post (min)
+            let tiempoPostRaw = $("#tiempo-post-receta").val();
+            let tiempoPostMin = parseInt(tiempoPostRaw, 10);
+
             if (nombre?.trim() === "") {
                 alert("Nombre para receta es requerido");
                 return;
             }
-            if (tiempo?.trim() === "") {
-                alert("Tiempo para receta es requerido");
+
+            if (isNaN(tiempoImpresionMin) || tiempoImpresionMin <= 0) {
+                alert("Tiempo de impresión debe ser un número mayor a 0 (minutos).");
+                return;
+            }
+
+            if (isNaN(tiempoPostMin) || tiempoPostMin < 0) {
+                alert("Tiempo de post-proceso debe ser un número válido (0 o mayor).");
                 return;
             }
 
@@ -26,24 +41,30 @@
                     InventarioId: x?.InventarioId,
                     Cantidad: x?.cantidadRequerida
                 }
-            })
+            });
 
             let recetaId = parseInt($("#receta-id").val()) || 0;
+
             const form = {
                 RecetaId: recetaId,
                 Nombre: nombre,
-                Tiempo: tiempo,
+
+                // legacy (por si algo viejo lo usa aún)
+                Tiempo: tiempoImpresionMin.toString(),
+
+                // nuevos
+                TiempoImpresionMin: tiempoImpresionMin,
+                TiempoPostMin: tiempoPostMin,
+
                 ProductoId: 0,
                 Inventarios: inventariosAEnviar
-            }
+            };
 
             const respuesta = await fetch(url, {
                 method: "POST",
                 body: JSON.stringify(form),
-                headers: {
-                    'Content-type': 'application/json'
-                }
-            })
+                headers: { 'Content-type': 'application/json' }
+            });
 
             const json = await respuesta.json();
             if (json?.result !== "success") {
@@ -52,18 +73,16 @@
             }
 
             alert(json?.message);
-            ControladorRecetaEditor.LimpiarLocalStorage(); // Limpia persistencia
+            ControladorRecetaEditor.LimpiarLocalStorage();
             window.location.href = '/Recetas';
         });
     },
 
     inicializarListas: function (listaInventariosDisponibles = [], listInventariosParaReceta = []) {
-        // Si hay datos en localStorage, los usamos
         if (!this.CargarDesdeLocalStorage()) {
             this.listItemsInventariosDisponibles = listaInventariosDisponibles;
             this.listItemsInventariosParaReceta = listInventariosParaReceta;
         }
-
         this.refrescarListas();
     },
 
@@ -77,7 +96,6 @@
         this.inicializarRecetaEditor();
         this.GuardarEnLocalStorage();
 
-        // Asigna evento de cambio en inputs de cantidad
         $(".control-value-quantity").off("input").on("input", function () {
             const payload = JSON.parse($(this).closest(".item-for-inventory").attr("data-payload"));
             const item = ControladorRecetaEditor.listItemsInventariosParaReceta.find(x => x.InventarioId === payload.InventarioId);
@@ -98,9 +116,7 @@
                 let selected = e.target;
                 let data = $(this).data("payload");
 
-                rightBox.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                });
+                rightBox.addEventListener("dragover", function (e) { e.preventDefault(); });
                 rightBox.addEventListener("drop", function (e) {
                     if (selected !== null) {
                         let index = ControladorRecetaEditor.listItemsInventariosDisponibles.findIndex(x => x.InventarioId === data.InventarioId);
@@ -113,9 +129,7 @@
                     ControladorRecetaEditor.refrescarListas();
                 });
 
-                leftBox.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                });
+                leftBox.addEventListener("dragover", function (e) { e.preventDefault(); });
                 leftBox.addEventListener("drop", function (e) {
                     if (selected !== null) {
                         let index = ControladorRecetaEditor.listItemsInventariosParaReceta.findIndex(x => x.InventarioId === data.InventarioId);
@@ -166,11 +180,7 @@
     GetInventarioParaReceta: function () {
         const elementos = document.querySelectorAll('.item-for-inventory');
         const resultado = [];
-        const objeto = {
-            resultados: [],
-            esValido: true,
-            mensaje: ""
-        };
+        const objeto = { resultados: [], esValido: true, mensaje: "" };
         let error = false;
         let msg = "";
 
@@ -186,6 +196,7 @@
                 error = true;
                 msg = "La cantidad debe ser un número mayor a cero.";
             }
+
             item.cantidadRequerida = isNaN(cantidad) ? 0 : cantidad;
             resultado.push(item);
         });
@@ -206,7 +217,6 @@
         return !isNaN(numero) && numero > 0;
     },
 
-    // 🔹 Persistencia Local
     GuardarEnLocalStorage: function () {
         localStorage.setItem('inventariosDisponibles', JSON.stringify(this.listItemsInventariosDisponibles));
         localStorage.setItem('inventariosParaReceta', JSON.stringify(this.listItemsInventariosParaReceta));

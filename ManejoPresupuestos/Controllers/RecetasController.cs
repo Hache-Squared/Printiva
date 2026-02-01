@@ -86,11 +86,20 @@ namespace ManejoPresupuestos.Controllers
             var inventariosDisponibles = inventariosReceta.Where(x => !idsSeleccionados.Contains(x.InventarioId)).ToList();
 
             // Guardar info en ViewBag
+            // fallback por si todavía hay recetas viejas con TiempoImpresion string
+            int tiempoImp = receta.TiempoImpresionMin;
+            if (tiempoImp <= 0 && !string.IsNullOrWhiteSpace(receta.TiempoImpresion) && int.TryParse(receta.TiempoImpresion, out var tmpImp))
+            {
+                tiempoImp = tmpImp;
+            }
+            int tiempoPost = receta.TiempoPostMin;
+
             ViewBag.Receta = new
             {
                 Id = receta.RecetaId,
                 Nombre = receta.Nombre,
-                Tiempo = receta.TiempoImpresion
+                TiempoImpresionMin = tiempoImp,
+                TiempoPostMin = tiempoPost
             };
 
             // Mandar los materiales ya seleccionados
@@ -111,14 +120,29 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> AsignarProductoAReceta([FromBody] AsignarProductoViewModel modelo)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            // fallback por si llega legacy
+            var tiempoImp = modelo.TiempoImpresionMin;
+            if (tiempoImp <= 0 && !string.IsNullOrWhiteSpace(modelo.Tiempo) && int.TryParse(modelo.Tiempo, out var tmpImp))
+            {
+                tiempoImp = tmpImp;
+            }
+
             var param = new ParametroAlterarReceta()
             {
                 LoginId = usuarioId,
                 ElementoAlterarId = modelo.RecetaId,
                 ProductoId = modelo.ProductoId,
                 Actualizar = 1,
+                Borrar = 0,
                 Nombre = modelo.Nombre,
-                Tiempo = modelo.Tiempo
+
+                // legacy (opcional)
+                Tiempo = tiempoImp.ToString(),
+
+                // nuevos
+                TiempoImpresionMin = tiempoImp,
+                TiempoPostMin = modelo.TiempoPostMin
             };
 
             var result = await repositorioRecetas.CrearReceta(param);
@@ -135,32 +159,23 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> RecetaEditorGuardar([FromBody] CrearRecetaViewModel modelo)
         {
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-
-            ParametroAlterarReceta param;
-            
-            if(modelo.RecetaId != 0)
+            var param = new ParametroAlterarReceta()
             {
-                param = new ParametroAlterarReceta()
-                {
-                    LoginId = usuarioId,
-                    Nombre = modelo.Nombre,
-                    ProductoId = modelo.ProductoId,
-                    Tiempo = modelo.Tiempo,
-                    ElementoAlterarId = modelo.RecetaId,
-                    Actualizar = 1
-                };
+                LoginId = usuarioId,
+                Nombre = modelo.Nombre,
+                ProductoId = modelo.ProductoId,
 
-            }
-            else
-            {
-                param = new ParametroAlterarReceta()
-                {
-                    LoginId = usuarioId,
-                    Nombre = modelo.Nombre,
-                    ProductoId = modelo.ProductoId,
-                    Tiempo = modelo.Tiempo,
-                };
-            }
+                // legacy (opcional)
+                Tiempo = (modelo.TiempoImpresionMin > 0 ? modelo.TiempoImpresionMin.ToString() : (modelo.Tiempo ?? "0")),
+
+                // nuevos
+                TiempoImpresionMin = modelo.TiempoImpresionMin,
+                TiempoPostMin = modelo.TiempoPostMin,
+
+                ElementoAlterarId = modelo.RecetaId,
+                Actualizar = (modelo.RecetaId != 0 ? 1 : 0),
+                Borrar = 0
+            };
 
 
 

@@ -13,7 +13,7 @@
         <tr>
             <th class="text-center">Acciones</th>
             <th class="text-center">Nombre</th>
-            <th class="text-center">Tiempo de Impresión</th>
+            <th class="text-center">Tiempos</th>
             <th class="text-center">Producto</th>
         </tr>
     </thead>
@@ -24,8 +24,13 @@
                 <td class="text-center">
                     <a class="btn btn-primary" asp-action="RecetaEditorUpdate" asp-route-recetaId="@receta.RecetaId">Editar</a>
                 </td>
+
                 <td class="text-center">@receta.Nombre</td>
-                <td class="text-center">@receta.TiempoImpresion minutos</td>
+
+                <td class="text-center">
+                    @receta.TiempoImpresionMin min
+                    <span class="text-muted">/ post: @receta.TiempoPostMin</span>
+                </td>
 
                 <td>
                     <div class="row align-items-center text-center">
@@ -35,7 +40,7 @@
 
                         <div class="col-3">
                             <button class="btn btn-outline-primary btn-sm w-100"
-                                    onclick="abrirModalSeleccionProducto(@receta.RecetaId, '@receta.Nombre', '@receta.TiempoImpresion')">
+                                    onclick="abrirModalSeleccionProducto(@receta.RecetaId, '@receta.Nombre', @receta.TiempoImpresionMin, @receta.TiempoPostMin)">
                                 @(string.IsNullOrEmpty(receta.ProductoNombre) ? "Asignar" : "Actualizar")
                             </button>
                         </div>
@@ -44,21 +49,19 @@
                             @if (!string.IsNullOrEmpty(receta.ProductoNombre) && receta.ProductoId != 0)
                             {
                                 <button class="btn btn-outline-danger btn-sm w-100"
-                                        onclick="quitarRelacionProducto(@receta.RecetaId, '@receta.Nombre', '@receta.TiempoImpresion')">
+                                        onclick="quitarRelacionProducto(@receta.RecetaId, '@receta.Nombre', @receta.TiempoImpresionMin, @receta.TiempoPostMin)">
                                     Quitar
                                 </button>
                             }
                         </div>
                     </div>
                 </td>
-
-
             </tr>
         }
     </tbody>
 </table>
 
-<!--  Modal de selección de producto -->
+<!-- Modal de selección de producto -->
 <div class="modal fade" id="modalSeleccionProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -66,6 +69,7 @@
                 <h5 class="modal-title">Seleccionar Producto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body">
                 <input id="buscarProducto" type="text" class="form-control mb-3" placeholder="Buscar por nombre o SKU...">
 
@@ -85,28 +89,33 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
         let productosCache = [];
 
-        //  Abre el modal para seleccionar producto
-        async function abrirModalSeleccionProducto(recetaId, nombre, tiempo) {
+        // Abre el modal para seleccionar producto (y guarda contexto de receta)
+        async function abrirModalSeleccionProducto(recetaId, nombre, tiempoImpMin, tiempoPostMin) {
+            $('#modalSeleccionProducto')
+                .data('receta-id', recetaId)
+                .data('receta-nombre', nombre)
+                .data('receta-tiempo-imp', tiempoImpMin ?? 0)
+                .data('receta-tiempo-post', tiempoPostMin ?? 0);
+
             $('#modalSeleccionProducto').modal('show');
-            await cargarProductos(recetaId, nombre, tiempo);
+            await cargarProductos(recetaId, nombre, tiempoImpMin, tiempoPostMin);
         }
 
-        //  Carga los productos disponibles
-        async function cargarProductos(recetaId, nombre, tiempo) {
+        // Carga los productos disponibles
+        async function cargarProductos(recetaId, nombre, tiempoImpMin, tiempoPostMin) {
             if (productosCache.length === 0) {
                 const resp = await fetch('@Url.Action("ObtenerProductos")');
                 productosCache = await resp.json();
             }
-            renderProductos(productosCache, recetaId, nombre, tiempo);
+            renderProductos(productosCache, recetaId, nombre, tiempoImpMin, tiempoPostMin);
         }
 
-        //  Renderiza la lista de productos
-        function renderProductos(lista, recetaId, nombre, tiempo) {
+        // Renderiza la lista de productos
+        function renderProductos(lista, recetaId, nombre, tiempoImpMin, tiempoPostMin) {
             const html = lista.map(p => `
                 <tr>
                     <td>${p.nombre}</td>
@@ -114,7 +123,7 @@
                     <td>${p.sku ?? '-'}</td>
                     <td>
                         <button class="btn btn-success btn-sm"
-                            onclick="asignarProducto(${p.productoId}, ${recetaId}, '${escapeHtml(nombre)}', '${escapeHtml(tiempo)}')">
+                            onclick="asignarProducto(${p.productoId}, ${recetaId}, '${escapeHtml(nombre)}', ${tiempoImpMin ?? 0}, ${tiempoPostMin ?? 0})">
                             Seleccionar
                         </button>
                     </td>
@@ -123,27 +132,31 @@
             $('#productosList').html(html);
         }
 
-        // Búsqueda
+        // Búsqueda (usa el contexto guardado en el modal)
         $('#buscarProducto').on('input', function () {
             const texto = $(this).val().toLowerCase();
             const filtrados = productosCache.filter(p =>
                 p.nombre.toLowerCase().includes(texto) ||
                 (p.sku ?? '').toLowerCase().includes(texto)
             );
-            // Recuperar la última receta usada del dataset del modal
+
             const recetaId = $('#modalSeleccionProducto').data('receta-id');
             const nombre = $('#modalSeleccionProducto').data('receta-nombre');
-            const tiempo = $('#modalSeleccionProducto').data('receta-tiempo');
-            renderProductos(filtrados, recetaId, nombre, tiempo);
+            const tiempoImpMin = $('#modalSeleccionProducto').data('receta-tiempo-imp') ?? 0;
+            const tiempoPostMin = $('#modalSeleccionProducto').data('receta-tiempo-post') ?? 0;
+
+            renderProductos(filtrados, recetaId, nombre, tiempoImpMin, tiempoPostMin);
         });
 
         // Asignar o actualizar producto
-        async function asignarProducto(productoId, recetaId, nombre, tiempo) {
+        async function asignarProducto(productoId, recetaId, nombre, tiempoImpMin, tiempoPostMin) {
             const body = {
                 RecetaId: recetaId,
                 ProductoId: productoId,
                 Nombre: nombre,
-                Tiempo: tiempo
+                TiempoImpresionMin: tiempoImpMin ?? 0,
+                TiempoPostMin: tiempoPostMin ?? 0,
+                Tiempo: String(tiempoImpMin ?? 0) // legacy
             };
 
             const resp = await fetch('@Url.Action("AsignarProductoAReceta")', {
@@ -153,26 +166,26 @@
             });
 
             const json = await resp.json();
-            
-            console.log(json)
+
             if (json.result === 'success') {
-                const productoNombre = productosCache.find(p => p.productoId === productoId)?.nombre ?? "";
-                const celda = $(`button[onclick*="${recetaId}"]`).closest('td');
-                celda.find('.producto-nombre').text(productoNombre || 'Sin asignar');
                 $('#modalSeleccionProducto').modal('hide');
+                location.reload();
+            } else {
+                alert(json.message ?? 'Error asignando producto');
             }
-            location.reload();
         }
 
-        //  Quitar relación (ProductoId = 0)
-        async function quitarRelacionProducto(recetaId, nombre, tiempo) {
+        // Quitar relación (ProductoId = 0)
+        async function quitarRelacionProducto(recetaId, nombre, tiempoImpMin, tiempoPostMin) {
             if (!confirm("¿Seguro que deseas quitar el producto asociado a esta receta?")) return;
 
             const body = {
                 RecetaId: recetaId,
                 ProductoId: 0,
                 Nombre: nombre,
-                Tiempo: tiempo
+                TiempoImpresionMin: tiempoImpMin ?? 0,
+                TiempoPostMin: tiempoPostMin ?? 0,
+                Tiempo: String(tiempoImpMin ?? 0) // legacy
             };
 
             const resp = await fetch('@Url.Action("AsignarProductoAReceta")', {
@@ -182,16 +195,15 @@
             });
 
             const json = await resp.json();
-            console.log(json)
 
             if (json.result === 'success') {
-                const celda = $(`button[onclick*="${recetaId}"]`).closest('td');
-                celda.find('.producto-nombre').text('Sin asignar');
+                location.reload();
+            } else {
+                alert(json.message ?? 'Error quitando producto');
             }
-            location.reload();
         }
 
-        // 🔸 Utilidad: escapar texto para evitar errores en atributos
+        // Utilidad: escapar texto para evitar errores en atributos
         function escapeHtml(text) {
             return text?.replace(/'/g, "\\'") ?? '';
         }
