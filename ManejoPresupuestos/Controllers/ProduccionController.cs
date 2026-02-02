@@ -11,18 +11,22 @@ namespace ManejoPresupuestos.Controllers
         private readonly IRepositorioPedidos repositorioPedidos;
         private readonly IRepositorioProduccion repositorioProduccion;
         private readonly IRepositorioImpresoras repositorioImpresoras;
+        private readonly IServicioCosteoTarifas servicioCosteoTarifas;
+        
 
         public ProduccionController(
             IServicioUsuarios servicioUsuarios,
             IRepositorioPedidos repositorioPedidos,
             IRepositorioProduccion repositorioProduccion,
-            IRepositorioImpresoras repositorioImpresoras
+            IRepositorioImpresoras repositorioImpresoras,
+            IServicioCosteoTarifas servicioCosteoTarifas1
         )
         {
             this.servicioUsuarios = servicioUsuarios;
             this.repositorioPedidos = repositorioPedidos;
             this.repositorioProduccion = repositorioProduccion;
             this.repositorioImpresoras = repositorioImpresoras;
+            this.servicioCosteoTarifas = servicioCosteoTarifas1;
         }
 
         [HttpGet]
@@ -78,7 +82,37 @@ namespace ManejoPresupuestos.Controllers
             if (result.result != ResultProcedureType.SUCCESS)
                 return Json(new { ok = false, message = result.message });
 
-            return Json(new { ok = true, message = result.message });
+            //  Si en ESTA transición se aplicó inventario (Post-procesado):
+            string? warning = null;
+
+            if (result.InventarioAplicadoAhora)
+            {
+                try
+                {
+                    // 1) Lee consumos REALES ya aplicados (snapshot)
+                    var consumos = await repositorioProduccion.ObtenerConsumosAplicadosPorItem(usuarioId, modelo.ProduccionItemId);
+
+                    // 2) Calcula por tarifas
+                    var costeo = await servicioCosteoTarifas.CalcularMaterialPorInventario(consumos, usuarioId);
+
+                    // 3) Guarda snapshot de costeo (header+detalle)
+                    var r2 = await repositorioProduccion.GuardarCosteoMaterial(usuarioId, modelo.ProduccionItemId, costeo);
+
+                    if (r2.result != ResultProcedureType.SUCCESS)
+                        warning = "Inventario aplicado, pero no se pudo registrar el costeo: " + (r2.message ?? "");
+                }
+                catch (Exception ex)
+                {
+                    warning = "Inventario aplicado, pero falló el motor de costeo: " + ex.Message;
+                }
+            }
+
+            return Json(new
+            {
+                ok = true,
+                message = warning ?? result.message,
+                warning
+            });
         }
 
         [HttpPost]

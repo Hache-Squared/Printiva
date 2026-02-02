@@ -54,6 +54,7 @@ builder.Services.AddTransient<IRepositorioImpresoras, RepositorioImpresoras>();
 
 builder.Services.AddTransient<IRepositorioReportes, RepositorioReportes>();
 builder.Services.AddTransient<IRepositorioTarifas, RepositorioTarifas>();
+builder.Services.AddTransient<IServicioCosteoTarifas, ServicioCosteoTarifas>();
 
 
 

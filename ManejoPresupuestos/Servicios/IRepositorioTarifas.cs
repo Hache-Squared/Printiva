@@ -18,6 +18,7 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<TarifaHistoricoDto>> ObtenerHistorico(int tarifaId, int loginId);
         Task<IEnumerable<TarifaSelectorInventarioDto>> SelectorInventarios(int loginId);
         Task<IEnumerable<TarifaSelectorImpresoraDto>> SelectorImpresoras(int loginId);
+        Task<IEnumerable<TarifaAplicableDto>> ObtenerAplicables(string tarifaConceptoCodigo, int? impresoraId, int? inventarioId, int loginId);
     }
 
     public class RepositorioTarifas : IRepositorioTarifas
@@ -149,15 +150,11 @@ namespace ManejoPresupuestos.Servicios
             // Proyección para UI (Display + Unidad)
             var result = rows.Select(r =>
             {
-                var color = string.IsNullOrWhiteSpace(r.InventarioColorAbreviatura)
-                    ? r.InventarioColor
-                    : r.InventarioColorAbreviatura;
+                var color = r.InventarioColor;
 
-                var nombre = string.IsNullOrWhiteSpace(r.InventarioNombreAbreviatura)
-                    ? r.InventarioNombre
-                    : r.InventarioNombreAbreviatura; // más corto para la UI
+                var nombre = r.InventarioNombre;
 
-                var display = $"{r.InventarioTipo} {nombre} {color} {r.InventarioMarca}"
+                var display = $"{nombre} - {color} - {r.InventarioTipo} -  {r.InventarioMarca}"
                     .Replace("  ", " ")
                     .Trim();
 
@@ -196,6 +193,39 @@ namespace ManejoPresupuestos.Servicios
 
             return rows;
         }
+
+        private sealed class TarifaAplicableRow
+        {
+            public string? result { get; set; }
+            public string? message { get; set; }
+
+            public int TarifaId { get; set; }
+            public string TarifaNombre { get; set; } = "";
+            public int TarifaOrden { get; set; }
+
+            public int? ImpresoraId { get; set; }
+            public int? InventarioId { get; set; }
+
+            public decimal Monto { get; set; }
+            public string Moneda { get; set; } = "MXN";
+        }
+
+        public async Task<IEnumerable<TarifaAplicableDto>> ObtenerAplicables(
+            string tarifaConceptoCodigo,
+            int? impresoraId,
+            int? inventarioId,
+            int loginId)
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            // Si tu SP mete result/message por fila, usa el “Row seguro” que ya te dejé antes.
+            return await connection.QueryAsync<TarifaAplicableDto>(
+                "dbo.procTarifasObtenerAplicables",
+                new { TarifaConceptoCodigo = tarifaConceptoCodigo, ImpresoraId = impresoraId, InventarioId = inventarioId, loginId },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
     }
     
 }

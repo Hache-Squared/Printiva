@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Dapper;
 using ManejoPresupuestos.Models;
 using Microsoft.Data.SqlClient;
@@ -9,15 +10,16 @@ namespace ManejoPresupuestos.Servicios
         Task<ResultProcedureGeneric> InitPorPedido(int usuarioId, int pedidoId);
         Task<IEnumerable<ProduccionItemRow>> ObtenerPorPedido(int usuarioId, int pedidoId);
         Task<IEnumerable<ProduccionAccionDisponible>> AccionesDisponibles(int usuarioId, int produccionItemId);
-        Task<ResultProcedureGeneric> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas);
+        Task<ProduccionCambiarEstatusResultDto> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas);
         Task<IEnumerable<ProduccionEstatus>> ObtenerEstatus();
         Task<ResultProcedureGeneric> ActualizarItemDatos(int usuarioId, ProduccionActualizarDatosViewModel modelo);
         Task<IEnumerable<RecetaRow>> RecetasDisponiblesPorItem(int usuarioId, int produccionItemId);
         Task<ResultProcedureGeneric> AsignarRecetaItem(int usuarioId, int produccionItemId, int recetaId);
-
+        Task<IEnumerable<ConsumoInventarioDto>> ObtenerConsumosAplicadosPorItem(int usuarioId, int produccionItemId);
+        Task<ResultProcedureGeneric> GuardarCosteoMaterial(int usuarioId, int produccionItemId, CosteoResumenDto resumen);
     }
 
-    public class RepositorioProduccion : IRepositorioProduccion
+        public class RepositorioProduccion : IRepositorioProduccion
     {
         private readonly string connectionString;
 
@@ -56,10 +58,10 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-        public async Task<ResultProcedureGeneric> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas)
+        public async Task<ProduccionCambiarEstatusResultDto> CambiarEstatusItem(int usuarioId, int produccionItemId, int haciaEstatusId, string? notas)
         {
             using var connection = new SqlConnection(connectionString);
-            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+            return await connection.QuerySingleAsync<ProduccionCambiarEstatusResultDto>(
                 "dbo.procProduccionCambiarEstatusItem",
                 new { ProduccionItemId = produccionItemId, HaciaEstatusId = haciaEstatusId, Notas = notas ?? "", loginId = usuarioId },
                 commandType: System.Data.CommandType.StoredProcedure
@@ -97,7 +99,6 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-
         public async Task<IEnumerable<RecetaRow>> RecetasDisponiblesPorItem(int usuarioId, int produccionItemId)
         {
             using var connection = new SqlConnection(connectionString);
@@ -118,5 +119,37 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
+        // ==========================
+        // ✅ NUEVOS: motor costeo
+        // ==========================
+        public async Task<IEnumerable<ConsumoInventarioDto>> ObtenerConsumosAplicadosPorItem(int usuarioId, int produccionItemId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<ConsumoInventarioDto>(
+                "dbo.procProduccionObtenerConsumosAplicadosPorItem",
+                new { ProduccionItemId = produccionItemId, loginId = usuarioId },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<ResultProcedureGeneric> GuardarCosteoMaterial(int usuarioId, int produccionItemId, CosteoResumenDto resumen)
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            var detallesJson = JsonSerializer.Serialize(resumen?.Detalles ?? new List<CosteoDetalleDto>());
+
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procProduccionCosteoMaterialUpsert",
+                new
+                {
+                    ProduccionItemId = produccionItemId,
+                    Moneda = (resumen?.Moneda ?? "MXN").Trim().ToUpperInvariant(),
+                    Total = resumen?.Total ?? 0m,
+                    DetallesJson = detallesJson,
+                    loginId = usuarioId
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
     }
 }

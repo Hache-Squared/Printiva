@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.procProduccionCambiarEstatusItem
+CREATE OR ALTER PROCEDURE dbo.procProduccionCambiarEstatusItem
     @ProduccionItemId INT,
     @HaciaEstatusId INT,
     @Notas NVARCHAR(500) = NULL,
@@ -10,6 +10,9 @@ BEGIN
     DECLARE @result VARCHAR(20) = 'success';
     DECLARE @message VARCHAR(MAX) = 'Estatus actualizado.';
     DECLARE @elementoId INT = @ProduccionItemId;
+
+    -- ✅ NUEVO: bandera para que C# sepa si en ESTA transición se aplicó inventario
+    DECLARE @InventarioAplicadoAhora BIT = 0;
 
     BEGIN TRY
         IF (@HaciaEstatusId IS NULL OR @HaciaEstatusId <= 0)
@@ -142,12 +145,6 @@ BEGIN
                 THROW 50000, @msg, 1;
             END
 
-            /* ============================
-               >>> SOLO LO NUEVO: SNAPSHOT LOG <<<
-               - arma detalle con nombres + disponibles antes/después
-               - se inserta 1 fila por InventarioId requerido
-               ============================ */
-
             DECLARE @RecetaNombre NVARCHAR(200) =
             (
                 SELECT TOP 1 r.Nombre
@@ -184,18 +181,14 @@ BEGIN
             LEFT JOIN dbo.TblInventariosUnidades u WITH (NOLOCK)
                    ON u.InventarioUnidadId = i.InventarioUnidadId;
 
-            /* ============================
-               (Tu lógica original) Descontar inventario
-               ============================ */
+            -- Descontar inventario
             UPDATE i
                SET i.Cantidad = i.Cantidad - r.Requiere
             FROM dbo.TblInventarios i
             INNER JOIN @Req r ON r.InventarioId = i.InventarioId
             WHERE i.EstaActivo=1;
 
-            /* ============================
-               >>> INSERT A LA TABLA LOG (SNAPSHOT) <<<
-               ============================ */
+            -- INSERT log
             INSERT INTO dbo.TblProduccionInventarioConsumo
             (
                 ProduccionItemId,
@@ -206,7 +199,6 @@ BEGIN
                 UsuarioId,
                 Fecha,
 
-                -- extras snapshot (si agregaste columnas)
                 PedidoId,
                 PedidoItemId,
                 ProductoId,
@@ -248,6 +240,9 @@ BEGIN
                SET InventarioAplicado = 1,
                    FechaActualizacion = SYSDATETIME()
             WHERE ProduccionItemId=@ProduccionItemId;
+
+            -- ✅ NUEVO: “en esta transición sí aplicó inventario”
+            SET @InventarioAplicadoAhora = 1;
         END
 
         -- Cambio de estatus + bitácora
@@ -262,18 +257,13 @@ BEGIN
         VALUES
             (@ProduccionItemId, @PedidoId, @PedidoItemId, @loginId, @DesdeId, @HaciaEstatusId, NULLIF(@Notas,''));
 
-
         /* =========================================================
         AUTO-AVANCE DEL ESTATUS DEL PEDIDO
-        - Solo si el pedido ya está en el tramo de producción (5-8)
-        - Avanza cuando TODOS los items alcanzaron el siguiente paso
         ========================================================= */
-
         DECLARE @MinOrdenProd INT;
         DECLARE @NombreEstatusProd NVARCHAR(100);
         DECLARE @NuevoPedidoEstatusId INT;
 
-        -- 1) El “más atrasado” manda (si uno se queda atrás, el pedido no avanza)
         SELECT
             @MinOrdenProd = MIN(es.Orden)
         FROM dbo.TblProduccionItems pi WITH (NOLOCK)
@@ -283,20 +273,17 @@ BEGIN
         WHERE pi.PedidoId = @PedidoId
         AND pi.EstaActivo = 1;
 
-        -- 2) Nombre del estatus de producción según ese orden
         SELECT TOP 1
             @NombreEstatusProd = es.Nombre
         FROM dbo.TblProduccionEstatus es WITH (NOLOCK)
         WHERE es.EstaActivo = 1
         AND es.Orden = @MinOrdenProd;
 
-        -- 3) Buscar el PedidoEstatusId por el mismo nombre (tus nombres coinciden)
         SELECT TOP 1
             @NuevoPedidoEstatusId = pe.PedidoEstatusId
         FROM dbo.TblPedidoEstatus pe WITH (NOLOCK)
         WHERE pe.Nombre = @NombreEstatusProd;
 
-        -- 4) Avanzar pedido SOLO si ya está en producción (5-8) y solo hacia adelante
         IF (@NuevoPedidoEstatusId IS NOT NULL)
         BEGIN
             UPDATE p
@@ -304,23 +291,36 @@ BEGIN
             FROM dbo.TblPedidos p WITH (UPDLOCK, HOLDLOCK)
             WHERE p.PedidoId = @PedidoId
             AND p.UsuarioId = @loginId
-            AND p.PedidoEstatusId IN (5,6,7,8)      -- tramo producción
-            AND p.PedidoEstatusId <> 9              -- no tocar cancelado
-            AND p.PedidoEstatusId < @NuevoPedidoEstatusId;  -- solo avanza
+            AND p.PedidoEstatusId IN (5,6,7,8)
+            AND p.PedidoEstatusId <> 9
+            AND p.PedidoEstatusId < @NuevoPedidoEstatusId;
         END
-
 
         COMMIT;
 
-        SELECT @result [result], @message [message], @elementoId [elementoId];
+        -- ✅ NUEVO: devuelve campos extra para que C# dispare el costeo
+        SELECT
+            @result [result],
+            @message [message],
+            @elementoId [elementoId],
+            @DesdeId [desdeEstatusId],
+            @HaciaEstatusId [haciaEstatusId],
+            @InventarioAplicadoAhora [inventarioAplicadoAhora];
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK;
 
         SET @result = 'fail';
         SET @message = CONCAT(ERROR_MESSAGE(), '. Error Line: *', ERROR_LINE(), '*.');
-        SELECT @result [result], @message [message], @elementoId [elementoId];
+
+        -- ✅ NUEVO: devuelve mismas columnas para que el mapeo no falle
+        SELECT
+            @result [result],
+            @message [message],
+            @elementoId [elementoId],
+            NULL [desdeEstatusId],
+            @HaciaEstatusId [haciaEstatusId],
+            0 [inventarioAplicadoAhora];
     END CATCH
 END
 GO
-

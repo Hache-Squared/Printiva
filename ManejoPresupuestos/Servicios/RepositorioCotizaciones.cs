@@ -42,6 +42,7 @@ namespace ManejoPresupuestos.Servicios
 
         public async Task<CotizacionIndexRow?> ObtenerPorId(int usuarioId, int cotizacionId)
         {
+            if (cotizacionId <= 0) return null;
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryFirstOrDefaultAsync<CotizacionIndexRow>(
                 "dbo.procObtenerCotizaciones",
@@ -57,6 +58,8 @@ namespace ManejoPresupuestos.Servicios
 
         public async Task<IEnumerable<CotizacionItem>> ObtenerItems(int usuarioId, int cotizacionId)
         {
+            if (cotizacionId <= 0) return Enumerable.Empty<CotizacionItem>();
+
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<CotizacionItem>(
                 "dbo.procObtenerCotizacionItems",

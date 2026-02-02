@@ -69,6 +69,13 @@ namespace ManejoPresupuestos.Controllers
 
             var cotizacionId = result.elementoId;
 
+            if (cotizacionId <= 0)
+            {
+                ModelState.AddModelError("", "La cotización se guardó, pero el SP no devolvió el ID (elementoId). Revisa procAlteraCotizacion.");
+                modelo.Estatus = await ObtenerEstatusSelect();
+                return View(modelo);
+            }
+
             modelo.Items = modelo.Items ?? new List<CotizacionItemEdicionViewModel>();
             var itemsResult = await repositorioCotizaciones.GuardarItems(usuarioId, cotizacionId, modelo.Items);
 
@@ -154,6 +161,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpGet]
         public async Task<IActionResult> Detalles(int id)
         {
+            if (id <= 0) return RedirectToAction("NoEncontrado", "Home");
+
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
             var cotizacion = await repositorioCotizaciones.ObtenerPorId(usuarioId, id);
 
