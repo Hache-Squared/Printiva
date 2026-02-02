@@ -7,7 +7,7 @@
     var scopeId = Model.ScopeId;
 
     var isInventario = scopeType == ManejoPresupuestos.Models.TarifaScopeType.Inventario;
-    var scopeLabel = isInventario ? "InventarioId" : "ImpresoraId";
+    var scopeLabel = isInventario ? "inventario" : "impresora";
 }
 
 <h1>@Model.ScopeTitulo</h1>
@@ -190,6 +190,11 @@
     const modalTarifa = new bootstrap.Modal(document.getElementById('modalTarifa'));
     const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
 
+    function setConceptoDisabled(disabled) {
+        const sel = document.getElementById("concepto-codigo");
+        sel.disabled = !!disabled;
+    }
+
     // Mostrar unidad al cambiar concepto
     document.getElementById("concepto-codigo").addEventListener("change", function () {
         const opt = this.options[this.selectedIndex];
@@ -215,8 +220,11 @@
         document.getElementById("btn-guardar").innerText = "Guardar";
 
         document.getElementById("tarifa-id").value = 0;
+
+        setConceptoDisabled(false);
         document.getElementById("concepto-codigo").value = "";
         document.getElementById("concepto-unidad").innerText = "-";
+
         document.getElementById("tarifa-nombre").value = "";
         document.getElementById("monto").value = "";
         document.getElementById("moneda").value = "MXN";
@@ -233,8 +241,31 @@
         document.getElementById("btn-guardar").innerText = "Actualizar";
 
         document.getElementById("tarifa-id").value = tr.dataset.tarifaId;
-        document.getElementById("concepto-codigo").value = tr.dataset.conceptoCodigo;
-        document.getElementById("concepto-unidad").innerText = tr.dataset.unidad || "-";
+
+        // En editar NO cambies concepto (tu SP actualizar no lo usa).
+        setConceptoDisabled(true);
+
+        // Si por filtro el concepto no existe en el select, lo agregamos temporalmente
+        const sel = document.getElementById("concepto-codigo");
+        const codigo = (tr.dataset.conceptoCodigo || "").trim();
+        const nombreConcepto = (tr.dataset.conceptoNombre || codigo).trim();
+        const unidad = (tr.dataset.unidad || "-").trim();
+
+        if (codigo) {
+            const existe = Array.from(sel.options).some(o => o.value === codigo);
+            if (!existe) {
+                const opt = document.createElement("option");
+                opt.value = codigo;
+                opt.text = `${nombreConcepto} (${codigo})`;
+                opt.setAttribute("data-unidad", unidad);
+                sel.appendChild(opt);
+            }
+            sel.value = codigo;
+        } else {
+            sel.value = "";
+        }
+
+        document.getElementById("concepto-unidad").innerText = unidad || "-";
         document.getElementById("tarifa-nombre").value = tr.dataset.tarifaNombre || "";
         document.getElementById("monto").value = tr.dataset.monto || "0";
         document.getElementById("moneda").value = tr.dataset.moneda || "MXN";

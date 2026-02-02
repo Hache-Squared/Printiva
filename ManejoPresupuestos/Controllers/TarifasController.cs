@@ -9,6 +9,21 @@ namespace ManejoPresupuestos.Controllers
         private readonly IServicioUsuarios servicioUsuarios;
         private readonly IRepositorioTarifas repositorioTarifas;
 
+        // Conceptos que SOLO deben aparecer en pantalla de IMPRESORA
+        private static readonly HashSet<string> ConceptosSoloImpresora = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "PRINT_HOUR",
+            "POST_HOUR",
+            "MATERIAL_GENERAL_PRN_GLOBAL"
+        };
+
+        // Conceptos que SOLO deben aparecer en pantalla de INVENTARIO
+        private static readonly HashSet<string> ConceptosSoloInventario = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "MATERIAL_UNIT",
+            "MATERIAL_GENERAL_INV_GLOBAL"
+        };
+
         public TarifasController(
             IServicioUsuarios servicioUsuarios,
             IRepositorioTarifas repositorioTarifas
@@ -18,20 +33,42 @@ namespace ManejoPresupuestos.Controllers
             this.repositorioTarifas = repositorioTarifas;
         }
 
+        private static string StripLeadingId(string? display)
+        {
+            if (string.IsNullOrWhiteSpace(display)) return "";
+            // Ej: "12 - PLA - Rojo - ..."
+            var parts = display.Split(" - ", 2, StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length == 2 ? parts[1].Trim() : display.Trim();
+        }
+
         // GET: /Tarifas/Inventario?inventarioId=123
         [HttpGet]
         public async Task<IActionResult> Inventario(int inventarioId)
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
 
-            var conceptos = (await repositorioTarifas.ObtenerConceptos()).ToList();
+            // 1) Traer display del inventario (sin cambiar SPs)
+            var invSelector = (await repositorioTarifas.SelectorInventarios(loginId))
+                .FirstOrDefault(x => x.InventarioId == inventarioId);
+
+            var invNombre = invSelector != null
+                ? StripLeadingId(invSelector.Display)
+                : $"#{inventarioId}";
+
+            // 2) Conceptos filtrados: en inventario NO muestres los de impresora
+            var conceptos = (await repositorioTarifas.ObtenerConceptos())
+                .Where(c => !ConceptosSoloImpresora.Contains(c.Codigo))
+                .ToList();
+
             var tarifas = (await repositorioTarifas.ObtenerPorInventario(inventarioId, loginId)).ToList();
 
             var vm = new TarifaScopeViewModel
             {
                 ScopeType = TarifaScopeType.Inventario,
                 ScopeId = inventarioId,
-                ScopeTitulo = $"Tarifas — Inventario #{inventarioId}",
+                ScopeTitulo = invSelector != null
+                    ? $"Tarifas — Inventario: {invNombre}"
+                    : $"Tarifas — Inventario #{inventarioId}",
                 Conceptos = conceptos,
                 Tarifas = tarifas
             };
@@ -45,14 +82,32 @@ namespace ManejoPresupuestos.Controllers
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
 
-            var conceptos = (await repositorioTarifas.ObtenerConceptos()).ToList();
+            // 1) Traer display de la impresora (sin cambiar SPs)
+            var impSelector = (await repositorioTarifas.SelectorImpresoras(loginId))
+                .FirstOrDefault(x => x.ImpresoraId == impresoraId);
+
+            var impNombreBonito = "";
+            if (impSelector != null)
+            {
+                impNombreBonito = $"{impSelector.Nombre} {impSelector.Modelo}".Replace("  ", " ").Trim();
+                if (string.IsNullOrWhiteSpace(impNombreBonito))
+                    impNombreBonito = StripLeadingId(impSelector.Display);
+            }
+
+            // 2) Conceptos filtrados: en impresora NO muestres los de inventario
+            var conceptos = (await repositorioTarifas.ObtenerConceptos())
+                .Where(c => !ConceptosSoloInventario.Contains(c.Codigo))
+                .ToList();
+
             var tarifas = (await repositorioTarifas.ObtenerPorImpresora(impresoraId, loginId)).ToList();
 
             var vm = new TarifaScopeViewModel
             {
                 ScopeType = TarifaScopeType.Impresora,
                 ScopeId = impresoraId,
-                ScopeTitulo = $"Tarifas — Impresora #{impresoraId}",
+                ScopeTitulo = impSelector != null
+                    ? $"Tarifas — Impresora: {impNombreBonito}"
+                    : $"Tarifas — Impresora #{impresoraId}",
                 Conceptos = conceptos,
                 Tarifas = tarifas
             };
@@ -128,6 +183,7 @@ namespace ManejoPresupuestos.Controllers
             var res = await repositorioTarifas.Eliminar(dto.TarifaId, loginId);
             return Json(new { result = res.result, message = res.message });
         }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
