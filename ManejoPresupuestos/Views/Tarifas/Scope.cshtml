@@ -8,6 +8,25 @@
 
     var isInventario = scopeType == ManejoPresupuestos.Models.TarifaScopeType.Inventario;
     var scopeLabel = isInventario ? "inventario" : "impresora";
+
+    var tarifasAll = Model.Tarifas ?? new List<ManejoPresupuestos.Models.TarifaListadoDto>();
+
+    // Global = no está ligada a inventario ni impresora
+    var tarifasGlobales = tarifasAll
+        .Where(x => x.InventarioId == null && x.ImpresoraId == null)
+        .ToList();
+
+    var tarifasEspecificas = tarifasAll
+        .Where(x => !(x.InventarioId == null && x.ImpresoraId == null))
+        .ToList();
+
+    var labelGlobal = isInventario
+        ? "Tarifas globales (aplican a TODOS los inventarios)"
+        : "Tarifas globales (aplican a TODAS las impresoras)";
+
+    var labelLocal = isInventario
+        ? "Tarifas específicas de este inventario"
+        : "Tarifas específicas de esta impresora";
 }
 
 <h1>@Model.ScopeTitulo</h1>
@@ -35,7 +54,7 @@
     </thead>
 
     <tbody>
-        @if (Model.Tarifas == null || Model.Tarifas.Count == 0)
+        @if (tarifasEspecificas.Count == 0 && tarifasGlobales.Count == 0)
         {
             <tr>
                 <td colspan="8" class="text-center text-muted py-4">
@@ -45,37 +64,94 @@
         }
         else
         {
-            foreach (var t in Model.Tarifas)
+            <tr class="table-light">
+                <td colspan="8" class="fw-semibold">@labelLocal</td>
+            </tr>
+
+            if (tarifasEspecificas.Count == 0)
             {
-                var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
-                <tr
-                    data-tarifa-id="@t.TarifaId"
-                    data-concepto-codigo="@t.ConceptoCodigo"
-                    data-concepto-nombre="@t.ConceptoNombre"
-                    data-unidad="@t.Unidad"
-                    data-tarifa-nombre="@t.TarifaNombre"
-                    data-monto="@montoInvariant"
-                    data-moneda="@t.Moneda"
-                    data-orden="@t.TarifaOrden"
-                >
-                    <td>
-                        <div class="fw-semibold">@t.ConceptoNombre</div>
-                        <div class="text-muted small">@t.ConceptoCodigo</div>
-                    </td>
-                    <td>@t.Unidad</td>
-                    <td>@t.TarifaNombre</td>
-                    <td class="text-end">@t.Monto.ToString("0.####")</td>
-                    <td>@t.Moneda</td>
-                    <td class="text-end">@t.TarifaOrden</td>
-                    <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
-                            <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
-                        </div>
-                    </td>
-                </tr>
+                <tr><td colspan="8" class="text-center text-muted">Sin tarifas específicas.</td></tr>
+            }
+            else
+            {
+                foreach (var t in tarifasEspecificas)
+                {
+                    var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
+                    <tr
+                        data-tarifa-id="@t.TarifaId"
+                        data-concepto-codigo="@t.ConceptoCodigo"
+                        data-concepto-nombre="@t.ConceptoNombre"
+                        data-unidad="@t.Unidad"
+                        data-tarifa-nombre="@t.TarifaNombre"
+                        data-monto="@montoInvariant"
+                        data-moneda="@t.Moneda"
+                        data-orden="@t.TarifaOrden"
+                    >
+                        <td>
+                            <div class="fw-semibold">@t.ConceptoNombre</div>
+                            <div class="text-muted small">@t.ConceptoCodigo</div>
+                        </td>
+                        <td>@t.Unidad</td>
+                        <td>@t.TarifaNombre</td>
+                        <td class="text-end">@t.Monto.ToString("0.####")</td>
+                        <td>@t.Moneda</td>
+                        <td class="text-end">@t.TarifaOrden</td>
+                        <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+
+            <tr class="table-light">
+                <td colspan="8" class="fw-semibold">@labelGlobal</td>
+            </tr>
+
+            if (tarifasGlobales.Count == 0)
+            {
+                <tr><td colspan="8" class="text-center text-muted">Sin tarifas globales.</td></tr>
+            }
+            else
+            {
+                foreach (var t in tarifasGlobales)
+                {
+                    var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
+                    <tr
+                        data-tarifa-id="@t.TarifaId"
+                        data-concepto-codigo="@t.ConceptoCodigo"
+                        data-concepto-nombre="@t.ConceptoNombre"
+                        data-unidad="@t.Unidad"
+                        data-tarifa-nombre="@t.TarifaNombre"
+                        data-monto="@montoInvariant"
+                        data-moneda="@t.Moneda"
+                        data-orden="@t.TarifaOrden"
+                    >
+                        <td>
+                            <div class="fw-semibold">
+                                @t.ConceptoNombre <span class="badge text-bg-secondary ms-2">GLOBAL</span>
+                            </div>
+                            <div class="text-muted small">@t.ConceptoCodigo</div>
+                        </td>
+                        <td>@t.Unidad</td>
+                        <td>@t.TarifaNombre</td>
+                        <td class="text-end">@t.Monto.ToString("0.####")</td>
+                        <td>@t.Moneda</td>
+                        <td class="text-end">@t.TarifaOrden</td>
+                        <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
             }
         }
     </tbody>
@@ -299,15 +375,17 @@
         let body = null;
 
         if (tarifaId === 0) {
-            // CREAR
+            // ✅ Si termina en _GLOBAL => se crea global (sin inventarioId ni impresoraId)
+            const esGlobal = conceptoCodigo.toUpperCase().endsWith("_GLOBAL");
+
             body = {
                 tarifaConceptoCodigo: conceptoCodigo,
                 monto: monto,
                 moneda: moneda,
                 nombre: nombre,
                 orden: orden,
-                inventarioId: scopeType === "inventario" ? scopeId : null,
-                impresoraId: scopeType === "impresora" ? scopeId : null
+                inventarioId: esGlobal ? null : (scopeType === "inventario" ? scopeId : null),
+                impresoraId: esGlobal ? null : (scopeType === "impresora" ? scopeId : null)
             };
         } else {
             // ACTUALIZAR

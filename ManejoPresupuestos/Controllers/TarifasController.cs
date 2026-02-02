@@ -60,6 +60,7 @@ namespace ManejoPresupuestos.Controllers
                 .Where(c => !ConceptosSoloImpresora.Contains(c.Codigo))
                 .ToList();
 
+            // 3) Trae específicas + globales (tu SP ya trae globales)
             var tarifas = (await repositorioTarifas.ObtenerPorInventario(inventarioId, loginId)).ToList();
 
             var vm = new TarifaScopeViewModel
@@ -99,6 +100,7 @@ namespace ManejoPresupuestos.Controllers
                 .Where(c => !ConceptosSoloInventario.Contains(c.Codigo))
                 .ToList();
 
+            // 3) Trae específicas + globales (tu SP ya trae globales)
             var tarifas = (await repositorioTarifas.ObtenerPorImpresora(impresoraId, loginId)).ToList();
 
             var vm = new TarifaScopeViewModel
@@ -130,17 +132,33 @@ namespace ManejoPresupuestos.Controllers
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
 
-            // Validación mínima para evitar basura:
-            var tieneInventario = dto.InventarioId.HasValue && dto.InventarioId.Value > 0;
-            var tieneImpresora = dto.ImpresoraId.HasValue && dto.ImpresoraId.Value > 0;
-
-            if (tieneInventario == tieneImpresora) // ambos true o ambos false
-            {
-                return Json(new { result = "error", message = "Scope inválido: envía InventarioId o ImpresoraId (solo uno)." });
-            }
-
             if (string.IsNullOrWhiteSpace(dto.TarifaConceptoCodigo))
                 return Json(new { result = "error", message = "Falta TarifaConceptoCodigo." });
+
+            var codigo = dto.TarifaConceptoCodigo.Trim().ToUpperInvariant();
+            var esGlobal = codigo.EndsWith("_GLOBAL", StringComparison.OrdinalIgnoreCase);
+
+            // ✅ Si es GLOBAL, forzamos ambos scopes a NULL (permitido)
+            if (esGlobal)
+            {
+                dto.InventarioId = null;
+                dto.ImpresoraId = null;
+            }
+            else
+            {
+                // Validación mínima para evitar basura:
+                var tieneInventario = dto.InventarioId.HasValue && dto.InventarioId.Value > 0;
+                var tieneImpresora = dto.ImpresoraId.HasValue && dto.ImpresoraId.Value > 0;
+
+                if (tieneInventario == tieneImpresora) // ambos true o ambos false
+                {
+                    return Json(new
+                    {
+                        result = "error",
+                        message = "Scope inválido: envía InventarioId o ImpresoraId (solo uno)."
+                    });
+                }
+            }
 
             if (dto.Monto < 0)
                 return Json(new { result = "error", message = "Monto inválido (>= 0)." });
