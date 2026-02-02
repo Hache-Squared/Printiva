@@ -12,12 +12,3 @@ CREATE TABLE [dbo].[TblRecetas] (
 );
 GO
 
-ALTER TABLE [dbo].[TblRecetas]
-    ADD CONSTRAINT [CK_TblRecetas_TiempoImpresionMin_Positive] CHECK ([TiempoImpresionMin] IS NULL OR [TiempoImpresionMin]>=(0));
-GO
-
-
-ALTER TABLE [dbo].[TblRecetas]
-    ADD CONSTRAINT [CK_TblRecetas_TiempoPostMin_Positive] CHECK ([TiempoPostMin] IS NULL OR [TiempoPostMin]>=(0));
-GO
-

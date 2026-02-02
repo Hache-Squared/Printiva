@@ -1,9 +1,9 @@
 
-
 /* =========================================================
-   3) SP: LISTAR TARIFAS ACTIVAS DEL USUARIO
+   6) SP: OBTENER TARIFAS POR INVENTARIO (UI sección Inventario)
    ========================================================= */
-CREATE   PROCEDURE dbo.procTarifasObtenerPorUsuario
+CREATE   PROCEDURE dbo.procTarifasObtenerPorInventario
+    @InventarioId INT,
     @loginId INT
 AS
 BEGIN
@@ -13,18 +13,10 @@ BEGIN
         t.TarifaId,
         t.Nombre AS TarifaNombre,
         t.Orden  AS TarifaOrden,
-
         c.Codigo AS ConceptoCodigo,
         c.Nombre AS ConceptoNombre,
         c.Unidad,
-
-        t.ImpresoraId,
         t.InventarioId,
-
-        /* legacy (por si existen en la tabla; no los usamos para UI nueva) */
-        t.InventarioTipoId,
-        t.InventarioNombreId,
-
         t.Monto,
         t.Moneda,
         COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio
@@ -33,12 +25,8 @@ BEGIN
         ON c.TarifaConceptoId = t.TarifaConceptoId
     WHERE t.UsuarioId = @loginId
       AND t.EstaActivo = 1
-    ORDER BY
-        c.Orden ASC,
-        t.ImpresoraId ASC,
-        t.InventarioId ASC,
-        t.Orden ASC,
-        t.TarifaId DESC;
+      AND t.InventarioId = @InventarioId
+    ORDER BY c.Orden ASC, t.Orden ASC, t.TarifaId DESC;
 END
 GO
 

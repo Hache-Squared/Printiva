@@ -156,11 +156,15 @@
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidoDetalle.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidos.sql" />
     <Build Include="dbo\StoredProcedures\procReportesProduccionDashboard.sql" />
+    <Build Include="dbo\StoredProcedures\procTarifasActualizar.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasDiagnostico.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasEliminar.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasObtener.sql" />
+    <Build Include="dbo\StoredProcedures\procTarifasObtenerAplicables.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasObtenerConceptos.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasObtenerHistoricoPorTarifaId.sql" />
+    <Build Include="dbo\StoredProcedures\procTarifasObtenerPorImpresora.sql" />
+    <Build Include="dbo\StoredProcedures\procTarifasObtenerPorInventario.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasObtenerPorUsuario.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasSet.sql" />
     <Build Include="dbo\Tables\Categorias.sql">

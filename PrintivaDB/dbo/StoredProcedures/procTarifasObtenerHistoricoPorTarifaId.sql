@@ -10,11 +10,19 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT TOP(100)
+    SELECT TOP(200)
         l.TarifaLogId,
         l.Accion,
+
+        l.ImpresoraId,
+        l.InventarioId,
+
+        l.NombreAntes, l.NombreDespues,
+        l.OrdenAntes,  l.OrdenDespues,
+
         l.MontoAntes, l.MonedaAntes,
         l.MontoDespues, l.MonedaDespues,
+
         l.EstaActivoAntes, l.EstaActivoDespues,
         l.FechaAccion
     FROM dbo.TblTarifasLog l WITH (NOLOCK)

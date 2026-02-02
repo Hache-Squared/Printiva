@@ -21,8 +21,7 @@ BEGIN
         WHERE UsuarioId = @loginId
           AND EstaActivo = 1
           AND ImpresoraId IS NULL
-          AND InventarioTipoId IS NULL
-          AND InventarioNombreId IS NULL
+          AND InventarioId IS NULL
     )
     SELECT
         c.Codigo,
