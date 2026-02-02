@@ -577,3 +577,678 @@ BEGIN
     ORDER BY c.Codigo;
 END
 GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo = 'MATERIAL_UNIT')
+    INSERT dbo.TblTarifaConceptos(Codigo, Nombre, Unidad, Orden)
+    VALUES ('MATERIAL_UNIT', N'Costo de material por unidad', N'unidad', 31);
+
+
+/* 1) QUITAR EL ÍNDICE ÚNICO (estorba para acumular tarifas) */
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'UX_TblTarifas_Activo_Scope'
+      AND object_id = OBJECT_ID('dbo.TblTarifas')
+)
+    DROP INDEX UX_TblTarifas_Activo_Scope ON dbo.TblTarifas;
+GO
+
+/* 2) columnas para poder tener "varias tarifas" y mostrarlas bonito */
+IF COL_LENGTH('dbo.TblTarifas','Nombre') IS NULL
+    ALTER TABLE dbo.TblTarifas ADD Nombre NVARCHAR(80) NOT NULL
+        CONSTRAINT DF_TblTarifas_Nombre DEFAULT(N'');
+
+IF COL_LENGTH('dbo.TblTarifas','Orden') IS NULL
+    ALTER TABLE dbo.TblTarifas ADD Orden INT NOT NULL
+        CONSTRAINT DF_TblTarifas_Orden DEFAULT(100);
+
+/* 3) (Opcional pero útil) Scope directo por InventarioId (lo usas en recetas: TblRecetasInventarios usa InventarioId) */
+IF COL_LENGTH('dbo.TblTarifas','InventarioId') IS NULL
+    ALTER TABLE dbo.TblTarifas ADD InventarioId INT NULL;
+GO
+
+/* 4) índice NO-único para lecturas rápidas */
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TblTarifas_Lookup'
+      AND object_id = OBJECT_ID('dbo.TblTarifas')
+)
+BEGIN
+    CREATE INDEX IX_TblTarifas_Lookup
+    ON dbo.TblTarifas(UsuarioId, TarifaConceptoId, EstaActivo, ImpresoraId, InventarioId)
+    INCLUDE (Monto, Moneda, Nombre, Orden, FechaCreacion, FechaActualizacion);
+END
+GO
+
+
+/* =========================================================
+   TARIFAS (ACUMULABLES) — POR InventarioId / ImpresoraId
+   - Mantiene TblTarifaConceptos
+   - TblTarifas: permite múltiples filas por scope
+   - TblTarifasLog: guarda histórico
+   ========================================================= */
+
+SET NOCOUNT ON;
+GO
+
+/* =========================================================
+   0) ASEGURAR CONCEPTO MATERIAL_UNIT
+   ========================================================= */
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo = 'MATERIAL_UNIT')
+BEGIN
+    INSERT dbo.TblTarifaConceptos(Codigo, Nombre, Unidad, Orden)
+    VALUES ('MATERIAL_UNIT', N'Costo de material por unidad', N'unidad', 31);
+END
+GO
+
+/* =========================================================
+   1) MIGRACIÓN MÍNIMA: TblTarifas (InventarioId + Nombre + Orden)
+   ========================================================= */
+IF COL_LENGTH('dbo.TblTarifas', 'InventarioId') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifas ADD InventarioId INT NULL;
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifas', 'Nombre') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifas
+    ADD Nombre NVARCHAR(80) NOT NULL
+        CONSTRAINT DF_TblTarifas_Nombre DEFAULT(N'');
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifas', 'Orden') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifas
+    ADD Orden INT NOT NULL
+        CONSTRAINT DF_TblTarifas_Orden DEFAULT(100);
+END
+GO
+
+/* =========================================================
+   2) QUITAR ÍNDICE ÚNICO QUE IMPIDE ACUMULAR
+   ========================================================= */
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'UX_TblTarifas_Activo_Scope'
+      AND object_id = OBJECT_ID('dbo.TblTarifas')
+)
+BEGIN
+    DROP INDEX UX_TblTarifas_Activo_Scope ON dbo.TblTarifas;
+END
+GO
+
+/* Índice NO-único para lectura rápida */
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TblTarifas_Lookup'
+      AND object_id = OBJECT_ID('dbo.TblTarifas')
+)
+BEGIN
+    CREATE INDEX IX_TblTarifas_Lookup
+    ON dbo.TblTarifas(UsuarioId, TarifaConceptoId, EstaActivo, ImpresoraId, InventarioId)
+    INCLUDE (Monto, Moneda, Nombre, Orden, FechaCreacion, FechaActualizacion);
+END
+GO
+
+/* =========================================================
+   3) MIGRACIÓN MÍNIMA: TblTarifasLog (InventarioId + Nombre/Orden antes/después)
+   ========================================================= */
+IF COL_LENGTH('dbo.TblTarifasLog', 'InventarioId') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifasLog ADD InventarioId INT NULL;
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifasLog', 'NombreAntes') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifasLog ADD NombreAntes NVARCHAR(80) NULL;
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifasLog', 'NombreDespues') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifasLog ADD NombreDespues NVARCHAR(80) NULL;
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifasLog', 'OrdenAntes') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifasLog ADD OrdenAntes INT NULL;
+END
+GO
+
+IF COL_LENGTH('dbo.TblTarifasLog', 'OrdenDespues') IS NULL
+BEGIN
+    ALTER TABLE dbo.TblTarifasLog ADD OrdenDespues INT NULL;
+END
+GO
+
+/* =========================================================
+   4) SP: LISTAR CONCEPTOS (igual que tenías)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerConceptos
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TarifaConceptoId, Codigo, Nombre, Unidad, Orden
+    FROM dbo.TblTarifaConceptos WITH (NOLOCK)
+    WHERE EstaActivo = 1
+    ORDER BY Orden ASC, Nombre ASC;
+END
+GO
+
+/* =========================================================
+   5) SP: LISTAR TARIFAS ACTIVAS DEL USUARIO (ya incluye InventarioId + Nombre + Orden)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerPorUsuario
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        t.TarifaId,
+        t.Nombre AS TarifaNombre,
+        t.Orden  AS TarifaOrden,
+
+        c.Codigo AS ConceptoCodigo,
+        c.Nombre AS ConceptoNombre,
+        c.Unidad,
+
+        t.ImpresoraId,
+        t.InventarioId,
+
+        /* legacy (por si existen en la tabla; no los usamos para UI nueva) */
+        t.InventarioTipoId,
+        t.InventarioNombreId,
+
+        t.Monto,
+        t.Moneda,
+        COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio
+    FROM dbo.TblTarifas t WITH (NOLOCK)
+    INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
+        ON c.TarifaConceptoId = t.TarifaConceptoId
+    WHERE t.UsuarioId = @loginId
+      AND t.EstaActivo = 1
+    ORDER BY
+        c.Orden ASC,
+        t.ImpresoraId ASC,
+        t.InventarioId ASC,
+        t.Orden ASC,
+        t.TarifaId DESC;
+END
+GO
+
+/* =========================================================
+   6) SP: OBTENER TARIFAS POR INVENTARIO (UI sección Inventario)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerPorInventario
+    @InventarioId INT,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        t.TarifaId,
+        t.Nombre AS TarifaNombre,
+        t.Orden  AS TarifaOrden,
+        c.Codigo AS ConceptoCodigo,
+        c.Nombre AS ConceptoNombre,
+        c.Unidad,
+        t.InventarioId,
+        t.Monto,
+        t.Moneda,
+        COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio
+    FROM dbo.TblTarifas t WITH (NOLOCK)
+    INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
+        ON c.TarifaConceptoId = t.TarifaConceptoId
+    WHERE t.UsuarioId = @loginId
+      AND t.EstaActivo = 1
+      AND t.InventarioId = @InventarioId
+    ORDER BY c.Orden ASC, t.Orden ASC, t.TarifaId DESC;
+END
+GO
+
+/* =========================================================
+   7) SP: OBTENER TARIFAS POR IMPRESORA (UI sección Impresoras)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerPorImpresora
+    @ImpresoraId INT,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        t.TarifaId,
+        t.Nombre AS TarifaNombre,
+        t.Orden  AS TarifaOrden,
+        c.Codigo AS ConceptoCodigo,
+        c.Nombre AS ConceptoNombre,
+        c.Unidad,
+        t.ImpresoraId,
+        t.Monto,
+        t.Moneda,
+        COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio
+    FROM dbo.TblTarifas t WITH (NOLOCK)
+    INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
+        ON c.TarifaConceptoId = t.TarifaConceptoId
+    WHERE t.UsuarioId = @loginId
+      AND t.EstaActivo = 1
+      AND t.ImpresoraId = @ImpresoraId
+    ORDER BY c.Orden ASC, t.Orden ASC, t.TarifaId DESC;
+END
+GO
+
+/* =========================================================
+   8) SP: CREAR TARIFA (ANTES era UPSERT, ahora ES INSERT SIEMPRE)
+   - nombre/orden para listar bonito
+   - scope: ImpresoraId o InventarioId o global (ambos NULL)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasSet
+    @TarifaConceptoCodigo VARCHAR(40),
+    @Monto DECIMAL(18,4),
+    @Moneda CHAR(3) = 'MXN',
+    @Nombre NVARCHAR(80) = N'',
+    @Orden INT = 100,
+    @ImpresoraId INT = NULL,
+    @InventarioId INT = NULL,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TarifaConceptoId INT;
+    DECLARE @TarifaId INT;
+
+    BEGIN TRY
+        SELECT @TarifaConceptoId = TarifaConceptoId
+        FROM dbo.TblTarifaConceptos WITH (NOLOCK)
+        WHERE Codigo = @TarifaConceptoCodigo AND EstaActivo = 1;
+
+        IF @TarifaConceptoId IS NULL
+            RAISERROR('Concepto de tarifa inválido o inactivo.',16,1);
+
+        IF @Monto IS NULL OR @Monto < 0
+            RAISERROR('Monto inválido (debe ser >= 0).',16,1);
+
+        SET @Moneda = ISNULL(NULLIF(LTRIM(RTRIM(@Moneda)), ''), 'MXN');
+        SET @Nombre = ISNULL(@Nombre, N'');
+        SET @Orden  = ISNULL(@Orden, 100);
+
+        INSERT dbo.TblTarifas(
+            UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            /* legacy */
+            InventarioTipoId, InventarioNombreId,
+            Nombre, Orden,
+            Monto, Moneda,
+            EstaActivo
+        )
+        VALUES(
+            @loginId, @TarifaConceptoId,
+            @ImpresoraId, @InventarioId,
+            NULL, NULL,
+            @Nombre, @Orden,
+            @Monto, @Moneda,
+            1
+        );
+
+        SET @TarifaId = SCOPE_IDENTITY();
+
+        INSERT dbo.TblTarifasLog(
+            TarifaId, UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            /* legacy */
+            InventarioTipoId, InventarioNombreId,
+            Accion,
+            NombreAntes, NombreDespues,
+            OrdenAntes, OrdenDespues,
+            MontoAntes, MonedaAntes,
+            MontoDespues, MonedaDespues,
+            EstaActivoAntes, EstaActivoDespues
+        )
+        VALUES(
+            @TarifaId, @loginId, @TarifaConceptoId,
+            @ImpresoraId, @InventarioId,
+            NULL, NULL,
+            'INSERT',
+            NULL, @Nombre,
+            NULL, @Orden,
+            NULL, NULL,
+            @Monto, @Moneda,
+            NULL, 1
+        );
+
+        SELECT 'success' AS result, 'Tarifa creada.' AS message, @TarifaId AS TarifaId;
+    END TRY
+    BEGIN CATCH
+        SELECT 'error' AS result, CONCAT('Error: ', ERROR_MESSAGE()) AS message, NULL AS TarifaId;
+    END CATCH
+END
+GO
+
+/* =========================================================
+   9) SP: ACTUALIZAR TARIFA (por TarifaId)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasActualizar
+    @TarifaId INT,
+    @Monto DECIMAL(18,4),
+    @Moneda CHAR(3) = 'MXN',
+    @Nombre NVARCHAR(80) = NULL,
+    @Orden INT = NULL,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        IF @Monto IS NULL OR @Monto < 0
+            RAISERROR('Monto inválido (debe ser >= 0).',16,1);
+
+        SET @Moneda = ISNULL(NULLIF(LTRIM(RTRIM(@Moneda)), ''), 'MXN');
+
+        DECLARE @chg TABLE(
+            TarifaId INT,
+            UsuarioId INT,
+            TarifaConceptoId INT,
+            ImpresoraId INT NULL,
+            InventarioId INT NULL,
+            NombreAntes NVARCHAR(80) NULL,
+            NombreDespues NVARCHAR(80) NULL,
+            OrdenAntes INT NULL,
+            OrdenDespues INT NULL,
+            MontoAntes DECIMAL(18,4) NULL,
+            MonedaAntes CHAR(3) NULL,
+            MontoDespues DECIMAL(18,4) NULL,
+            MonedaDespues CHAR(3) NULL,
+            EstaActivoAntes BIT NULL,
+            EstaActivoDespues BIT NULL
+        );
+
+        UPDATE t
+        SET
+            Monto = @Monto,
+            Moneda = @Moneda,
+            Nombre = COALESCE(@Nombre, t.Nombre),
+            Orden  = COALESCE(@Orden, t.Orden),
+            FechaActualizacion = SYSDATETIME()
+        OUTPUT
+            inserted.TarifaId,
+            inserted.UsuarioId,
+            inserted.TarifaConceptoId,
+            inserted.ImpresoraId,
+            inserted.InventarioId,
+            deleted.Nombre,
+            inserted.Nombre,
+            deleted.Orden,
+            inserted.Orden,
+            deleted.Monto,
+            deleted.Moneda,
+            inserted.Monto,
+            inserted.Moneda,
+            deleted.EstaActivo,
+            inserted.EstaActivo
+        INTO @chg
+        FROM dbo.TblTarifas t
+        WHERE t.TarifaId = @TarifaId
+          AND t.UsuarioId = @loginId
+          AND t.EstaActivo = 1;
+
+        IF NOT EXISTS (SELECT 1 FROM @chg)
+        BEGIN
+            SELECT 'error' AS result, 'No se encontró la tarifa o no pertenece al usuario.' AS message;
+            RETURN;
+        END
+
+        INSERT dbo.TblTarifasLog(
+            TarifaId, UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            Accion,
+            NombreAntes, NombreDespues,
+            OrdenAntes, OrdenDespues,
+            MontoAntes, MonedaAntes,
+            MontoDespues, MonedaDespues,
+            EstaActivoAntes, EstaActivoDespues
+        )
+        SELECT
+            TarifaId, UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            'UPDATE',
+            NombreAntes, NombreDespues,
+            OrdenAntes, OrdenDespues,
+            MontoAntes, MonedaAntes,
+            MontoDespues, MonedaDespues,
+            EstaActivoAntes, EstaActivoDespues
+        FROM @chg;
+
+        SELECT 'success' AS result, 'Tarifa actualizada.' AS message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'error' AS result, CONCAT('Error: ', ERROR_MESSAGE()) AS message;
+    END CATCH
+END
+GO
+
+/* =========================================================
+   10) SP: ELIMINACIÓN LÓGICA + LOG (corregida para InventarioId + Nombre/Orden)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasEliminar
+    @TarifaId INT,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        DECLARE @del TABLE(
+            TarifaId INT,
+            UsuarioId INT,
+            TarifaConceptoId INT,
+            ImpresoraId INT NULL,
+            InventarioId INT NULL,
+            NombreAntes NVARCHAR(80) NULL,
+            OrdenAntes INT NULL,
+            MontoAntes DECIMAL(18,4) NULL,
+            MonedaAntes CHAR(3) NULL,
+            EstaActivoAntes BIT NULL,
+            NombreDespues NVARCHAR(80) NULL,
+            OrdenDespues INT NULL,
+            MontoDespues DECIMAL(18,4) NULL,
+            MonedaDespues CHAR(3) NULL,
+            EstaActivoDespues BIT NULL
+        );
+
+        UPDATE t
+        SET EstaActivo = 0,
+            FechaActualizacion = SYSDATETIME()
+        OUTPUT
+            inserted.TarifaId,
+            inserted.UsuarioId,
+            inserted.TarifaConceptoId,
+            inserted.ImpresoraId,
+            inserted.InventarioId,
+            deleted.Nombre,
+            deleted.Orden,
+            deleted.Monto,
+            deleted.Moneda,
+            deleted.EstaActivo,
+            inserted.Nombre,
+            inserted.Orden,
+            inserted.Monto,
+            inserted.Moneda,
+            inserted.EstaActivo
+        INTO @del
+        FROM dbo.TblTarifas t
+        WHERE t.TarifaId = @TarifaId
+          AND t.UsuarioId = @loginId
+          AND t.EstaActivo = 1;
+
+        IF NOT EXISTS (SELECT 1 FROM @del)
+        BEGIN
+            SELECT 'error' AS result, 'No se encontró la tarifa o no pertenece al usuario.' AS message;
+            RETURN;
+        END
+
+        INSERT dbo.TblTarifasLog(
+            TarifaId, UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            Accion,
+            NombreAntes, NombreDespues,
+            OrdenAntes, OrdenDespues,
+            MontoAntes, MonedaAntes,
+            MontoDespues, MonedaDespues,
+            EstaActivoAntes, EstaActivoDespues
+        )
+        SELECT
+            TarifaId, UsuarioId, TarifaConceptoId,
+            ImpresoraId, InventarioId,
+            'DELETE_LOGICO',
+            NombreAntes, NombreDespues,
+            OrdenAntes, OrdenDespues,
+            MontoAntes, MonedaAntes,
+            MontoDespues, MonedaDespues,
+            EstaActivoAntes, EstaActivoDespues
+        FROM @del;
+
+        SELECT 'success' AS result, 'Tarifa eliminada (lógica).' AS message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'error' AS result, CONCAT('Error: ', ERROR_MESSAGE()) AS message;
+    END CATCH
+END
+GO
+
+/* =========================================================
+   11) SP: HISTÓRICO POR TARIFA (ya muestra inventario/nombre/orden)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerHistoricoPorTarifaId
+    @TarifaId INT,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP(200)
+        l.TarifaLogId,
+        l.Accion,
+
+        l.ImpresoraId,
+        l.InventarioId,
+
+        l.NombreAntes, l.NombreDespues,
+        l.OrdenAntes,  l.OrdenDespues,
+
+        l.MontoAntes, l.MonedaAntes,
+        l.MontoDespues, l.MonedaDespues,
+
+        l.EstaActivoAntes, l.EstaActivoDespues,
+        l.FechaAccion
+    FROM dbo.TblTarifasLog l WITH (NOLOCK)
+    WHERE l.TarifaId = @TarifaId
+      AND l.UsuarioId = @loginId
+    ORDER BY l.FechaAccion DESC, l.TarifaLogId DESC;
+END
+GO
+
+/* =========================================================
+   12) SP: DIAGNÓSTICO (global = sin impresora y sin inventario)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasDiagnostico
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH conceptos AS (
+        SELECT TarifaConceptoId, Codigo, Nombre
+        FROM dbo.TblTarifaConceptos WITH (NOLOCK)
+        WHERE EstaActivo = 1
+    ),
+    existentes_global AS (
+        SELECT TarifaConceptoId
+        FROM dbo.TblTarifas WITH (NOLOCK)
+        WHERE UsuarioId = @loginId
+          AND EstaActivo = 1
+          AND ImpresoraId IS NULL
+          AND InventarioId IS NULL
+    )
+    SELECT
+        c.Codigo,
+        c.Nombre,
+        CASE WHEN eg.TarifaConceptoId IS NULL THEN 1 ELSE 0 END AS FaltaTarifaGlobal
+    FROM conceptos c
+    LEFT JOIN existentes_global eg
+        ON eg.TarifaConceptoId = c.TarifaConceptoId
+    WHERE eg.TarifaConceptoId IS NULL
+    ORDER BY c.Codigo;
+END
+GO
+
+/* =========================================================
+   13) SP: OBTENER TARIFAS APLICABLES (para cálculo + desglose)
+   - Regresa TODAS las tarifas activas que aplican al scope pedido
+   - Si mandas InventarioId, traerá:
+        (InventarioId exacto) + (globales InventarioId NULL)
+     Si mandas ImpresoraId, traerá:
+        (ImpresoraId exacto) + (globales ImpresoraId NULL)
+   ========================================================= */
+CREATE OR ALTER PROCEDURE dbo.procTarifasObtenerAplicables
+    @TarifaConceptoCodigo VARCHAR(40),
+    @ImpresoraId INT = NULL,
+    @InventarioId INT = NULL,
+    @loginId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TarifaConceptoId INT;
+
+    SELECT @TarifaConceptoId = TarifaConceptoId
+    FROM dbo.TblTarifaConceptos WITH (NOLOCK)
+    WHERE Codigo = @TarifaConceptoCodigo AND EstaActivo = 1;
+
+    IF @TarifaConceptoId IS NULL
+    BEGIN
+        SELECT 'error' AS result, 'Concepto de tarifa inválido o inactivo.' AS message;
+        RETURN;
+    END
+
+    SELECT
+        'success' AS result,
+        'OK' AS message,
+        t.TarifaId,
+        t.Nombre AS TarifaNombre,
+        t.Orden  AS TarifaOrden,
+        t.ImpresoraId,
+        t.InventarioId,
+        t.Monto,
+        t.Moneda
+    FROM dbo.TblTarifas t WITH (NOLOCK)
+    WHERE t.UsuarioId = @loginId
+      AND t.TarifaConceptoId = @TarifaConceptoId
+      AND t.EstaActivo = 1
+      AND (
+            /* si viene inventario, aplica inventario específico + global */
+            (@InventarioId IS NOT NULL AND (t.InventarioId = @InventarioId OR t.InventarioId IS NULL) AND t.ImpresoraId IS NULL)
+            OR
+            /* si viene impresora, aplica impresora específica + global */
+            (@ImpresoraId IS NOT NULL AND (t.ImpresoraId = @ImpresoraId OR t.ImpresoraId IS NULL) AND t.InventarioId IS NULL)
+            OR
+            /* si no viene scope, solo global puro */
+            (@InventarioId IS NULL AND @ImpresoraId IS NULL AND t.InventarioId IS NULL AND t.ImpresoraId IS NULL)
+      )
+    ORDER BY
+        /* primero específicos, luego globales */
+        CASE WHEN @InventarioId IS NOT NULL AND t.InventarioId = @InventarioId THEN 2
+             WHEN @ImpresoraId IS NOT NULL AND t.ImpresoraId = @ImpresoraId THEN 2
+             ELSE 1 END DESC,
+        t.Orden ASC,
+        t.TarifaId DESC;
+END
+GO

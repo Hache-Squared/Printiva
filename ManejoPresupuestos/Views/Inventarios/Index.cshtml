@@ -29,6 +29,12 @@
                 <td>
                     <a class="btn btn-primary" asp-action="Editar" asp-route-id="@inventario.InventarioId">Editar</a>
                     <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@inventario.InventarioId">Borrar</a>
+                    <a class="btn btn-outline-secondary btn-sm"
+                    asp-controller="Tarifas"
+                    asp-action="Inventario"
+                    asp-route-inventarioId="@inventario.InventarioId">
+                    Tarifas
+                    </a>
                 </td>
                 <td>
                     @inventario.FechaCreacion.ToString("dd/MM/yyyy")

@@ -1,0 +1,403 @@
+@using System.Globalization
+@model ManejoPresupuestos.Models.TarifaScopeViewModel
+
+@{
+    ViewData["Title"] = "Tarifas";
+    var scopeType = Model.ScopeType; // Inventario / Impresora
+    var scopeId = Model.ScopeId;
+
+    var isInventario = scopeType == ManejoPresupuestos.Models.TarifaScopeType.Inventario;
+    var scopeLabel = isInventario ? "InventarioId" : "ImpresoraId";
+}
+
+<h1>@Model.ScopeTitulo</h1>
+<p class="text-muted">
+    Tarifas acumulables: puedes tener múltiples tarifas por @scopeLabel y se suman en tu cálculo.
+</p>
+
+<div class="d-flex gap-2 mb-3">
+    <button class="btn btn-primary" onclick="abrirModalCrear()">+ Nueva tarifa</button>
+    <a class="btn btn-outline-secondary" href="javascript:history.back()">Regresar</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Concepto</th>
+            <th>Unidad</th>
+            <th>Nombre</th>
+            <th class="text-end">Monto</th>
+            <th>Moneda</th>
+            <th class="text-end">Orden</th>
+            <th>Último cambio</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (Model.Tarifas == null || Model.Tarifas.Count == 0)
+        {
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    No hay tarifas registradas para este @scopeLabel.
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var t in Model.Tarifas)
+            {
+                var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
+                <tr
+                    data-tarifa-id="@t.TarifaId"
+                    data-concepto-codigo="@t.ConceptoCodigo"
+                    data-concepto-nombre="@t.ConceptoNombre"
+                    data-unidad="@t.Unidad"
+                    data-tarifa-nombre="@t.TarifaNombre"
+                    data-monto="@montoInvariant"
+                    data-moneda="@t.Moneda"
+                    data-orden="@t.TarifaOrden"
+                >
+                    <td>
+                        <div class="fw-semibold">@t.ConceptoNombre</div>
+                        <div class="text-muted small">@t.ConceptoCodigo</div>
+                    </td>
+                    <td>@t.Unidad</td>
+                    <td>@t.TarifaNombre</td>
+                    <td class="text-end">@t.Monto.ToString("0.####")</td>
+                    <td>@t.Moneda</td>
+                    <td class="text-end">@t.TarifaOrden</td>
+                    <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- =======================
+     MODAL CREAR / EDITAR
+======================= -->
+<div class="modal fade" id="modalTarifa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="modalTarifaTitulo" class="modal-title">Nueva tarifa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input id="tarifa-id" type="hidden" value="0" />
+                <input id="scope-type" type="hidden" value="@(isInventario ? "inventario" : "impresora")" />
+                <input id="scope-id" type="hidden" value="@scopeId" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Concepto</label>
+                        <select id="concepto-codigo" class="form-select">
+                            <option value="">-- Selecciona --</option>
+                            @foreach (var c in Model.Conceptos.OrderBy(x => x.Orden).ThenBy(x => x.Nombre))
+                            {
+                                <option value="@c.Codigo" data-unidad="@c.Unidad">@c.Nombre (@c.Codigo)</option>
+                            }
+                        </select>
+                        <div class="form-text">Unidad: <span id="concepto-unidad" class="fw-semibold">-</span></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre (para identificar la tarifa)</label>
+                        <input id="tarifa-nombre" class="form-control" type="text" placeholder="Ej: Extra por colgante / Ajuste por desperdicio..." />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Monto</label>
+                        <input id="monto" class="form-control" type="number" step="0.0001" min="0" placeholder="0.00" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Moneda</label>
+                        <input id="moneda" class="form-control" type="text" value="MXN" maxlength="3" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Orden</label>
+                        <input id="orden" class="form-control" type="number" step="1" min="1" value="100" />
+                    </div>
+                </div>
+
+                <div id="tarifa-error" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btn-guardar" class="btn btn-primary" onclick="guardarTarifa()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =======================
+     MODAL HISTORIAL
+======================= -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Historial de cambios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="text-muted mb-2" id="historial-contexto"></div>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Acción</th>
+                            <th>Nombre</th>
+                            <th class="text-end">Monto</th>
+                            <th>Moneda</th>
+                            <th class="text-end">Orden</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historial-body">
+                        <tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const urlCrear = '@Url.Action("Crear", "Tarifas")';
+    const urlActualizar = '@Url.Action("Actualizar", "Tarifas")';
+    const urlEliminar = '@Url.Action("Eliminar", "Tarifas")';
+    const urlHistorico = '@Url.Action("Historico", "Tarifas")';
+
+    const modalTarifa = new bootstrap.Modal(document.getElementById('modalTarifa'));
+    const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
+
+    // Mostrar unidad al cambiar concepto
+    document.getElementById("concepto-codigo").addEventListener("change", function () {
+        const opt = this.options[this.selectedIndex];
+        const unidad = opt?.getAttribute("data-unidad") || "-";
+        document.getElementById("concepto-unidad").innerText = unidad;
+    });
+
+    function limpiarErrores() {
+        const el = document.getElementById("tarifa-error");
+        el.classList.add("d-none");
+        el.innerText = "";
+    }
+
+    function mostrarError(msg) {
+        const el = document.getElementById("tarifa-error");
+        el.classList.remove("d-none");
+        el.innerText = msg || "Error";
+    }
+
+    function abrirModalCrear() {
+        limpiarErrores();
+        document.getElementById("modalTarifaTitulo").innerText = "Nueva tarifa";
+        document.getElementById("btn-guardar").innerText = "Guardar";
+
+        document.getElementById("tarifa-id").value = 0;
+        document.getElementById("concepto-codigo").value = "";
+        document.getElementById("concepto-unidad").innerText = "-";
+        document.getElementById("tarifa-nombre").value = "";
+        document.getElementById("monto").value = "";
+        document.getElementById("moneda").value = "MXN";
+        document.getElementById("orden").value = 100;
+
+        modalTarifa.show();
+    }
+
+    function abrirModalEditar(btn) {
+        limpiarErrores();
+        const tr = btn.closest("tr");
+
+        document.getElementById("modalTarifaTitulo").innerText = "Editar tarifa";
+        document.getElementById("btn-guardar").innerText = "Actualizar";
+
+        document.getElementById("tarifa-id").value = tr.dataset.tarifaId;
+        document.getElementById("concepto-codigo").value = tr.dataset.conceptoCodigo;
+        document.getElementById("concepto-unidad").innerText = tr.dataset.unidad || "-";
+        document.getElementById("tarifa-nombre").value = tr.dataset.tarifaNombre || "";
+        document.getElementById("monto").value = tr.dataset.monto || "0";
+        document.getElementById("moneda").value = tr.dataset.moneda || "MXN";
+        document.getElementById("orden").value = tr.dataset.orden || "100";
+
+        modalTarifa.show();
+    }
+
+    async function guardarTarifa() {
+        limpiarErrores();
+
+        const tarifaId = parseInt(document.getElementById("tarifa-id").value || "0");
+        const conceptoCodigo = (document.getElementById("concepto-codigo").value || "").trim();
+        const nombre = (document.getElementById("tarifa-nombre").value || "").trim();
+        const montoStr = (document.getElementById("monto").value || "0").trim();
+        const moneda = (document.getElementById("moneda").value || "MXN").trim().toUpperCase();
+        const orden = parseInt(document.getElementById("orden").value || "100");
+
+        const monto = Number(montoStr);
+
+        if (tarifaId === 0 && !conceptoCodigo) return mostrarError("Selecciona un concepto.");
+        if (monto < 0 || Number.isNaN(monto)) return mostrarError("Monto inválido.");
+        if (!moneda || moneda.length !== 3) return mostrarError("Moneda inválida (3 letras, ej. MXN).");
+
+        const scopeType = document.getElementById("scope-type").value;
+        const scopeId = parseInt(document.getElementById("scope-id").value);
+
+        if (!scopeId || scopeId <= 0) return mostrarError("ScopeId inválido.");
+
+        let url = urlCrear;
+        let body = null;
+
+        if (tarifaId === 0) {
+            // CREAR
+            body = {
+                tarifaConceptoCodigo: conceptoCodigo,
+                monto: monto,
+                moneda: moneda,
+                nombre: nombre,
+                orden: orden,
+                inventarioId: scopeType === "inventario" ? scopeId : null,
+                impresoraId: scopeType === "impresora" ? scopeId : null
+            };
+        } else {
+            // ACTUALIZAR
+            url = urlActualizar;
+            body = {
+                tarifaId: tarifaId,
+                monto: monto,
+                moneda: moneda,
+                nombre: nombre,
+                orden: orden
+            };
+        }
+
+        try {
+            const resp = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            const json = await resp.json();
+
+            if (json.result === "success") {
+                modalTarifa.hide();
+                location.reload();
+            } else {
+                mostrarError(json.message || "No se pudo guardar.");
+            }
+        } catch (e) {
+            mostrarError("Error de red: " + (e?.message || e));
+        }
+    }
+
+    async function eliminarTarifa(btn) {
+        const tr = btn.closest("tr");
+        const tarifaId = parseInt(tr.dataset.tarifaId || "0");
+        if (!tarifaId) return;
+
+        const concepto = tr.dataset.conceptoNombre || tr.dataset.conceptoCodigo || "";
+        const nombre = tr.dataset.tarifaNombre || "";
+        if (!confirm(`¿Eliminar (lógico) esta tarifa?\n\n${concepto}\n${nombre}`)) return;
+
+        try {
+            const resp = await fetch(urlEliminar, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tarifaId })
+            });
+
+            const json = await resp.json();
+            if (json.result === "success") {
+                location.reload();
+            } else {
+                alert(json.message || "No se pudo eliminar.");
+            }
+        } catch (e) {
+            alert("Error de red: " + (e?.message || e));
+        }
+    }
+
+    function escapeHtml(text) {
+        return (text ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    async function abrirModalHistorial(btn) {
+        const tr = btn.closest("tr");
+        const tarifaId = parseInt(tr.dataset.tarifaId || "0");
+        if (!tarifaId) return;
+
+        const concepto = tr.dataset.conceptoNombre || tr.dataset.conceptoCodigo || "";
+        const nombre = tr.dataset.tarifaNombre || "";
+
+        document.getElementById("historial-contexto").innerHTML =
+            `<span class="fw-semibold">${escapeHtml(concepto)}</span> — ${escapeHtml(nombre)} (TarifaId: ${tarifaId})`;
+
+        document.getElementById("historial-body").innerHTML =
+            `<tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>`;
+
+        modalHistorial.show();
+
+        try {
+            const resp = await fetch(`${urlHistorico}?tarifaId=${tarifaId}`);
+            const lista = await resp.json();
+
+            if (!Array.isArray(lista) || lista.length === 0) {
+                document.getElementById("historial-body").innerHTML =
+                    `<tr><td colspan="6" class="text-center text-muted">Sin historial.</td></tr>`;
+                return;
+            }
+
+            const rows = lista.map(x => {
+                const fecha = (x.fechaAccion || "").toString().replace("T", " ").substring(0, 16);
+                const accion = escapeHtml(x.accion || "");
+                const nombreD = escapeHtml(x.nombreDespues ?? x.nombreAntes ?? "");
+                const montoD = (x.montoDespues ?? x.montoAntes ?? 0);
+                const monedaD = escapeHtml(x.monedaDespues ?? x.monedaAntes ?? "MXN");
+                const ordenD = (x.ordenDespues ?? x.ordenAntes ?? "");
+
+                return `
+                    <tr>
+                        <td>${escapeHtml(fecha)}</td>
+                        <td>${accion}</td>
+                        <td>${nombreD}</td>
+                        <td class="text-end">${montoD}</td>
+                        <td>${monedaD}</td>
+                        <td class="text-end">${ordenD}</td>
+                    </tr>
+                `;
+            }).join("");
+
+            document.getElementById("historial-body").innerHTML = rows;
+
+        } catch (e) {
+            document.getElementById("historial-body").innerHTML =
+                `<tr><td colspan="6" class="text-center text-danger">Error cargando historial.</td></tr>`;
+        }
+    }
+</script>
+}

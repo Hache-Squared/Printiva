@@ -1,0 +1,136 @@
+@model ManejoPresupuestos.Models.TarifasIndexViewModel
+@{
+    ViewData["Title"] = "Tarifas";
+}
+
+<h1>Tarifas</h1>
+<p class="text-muted">
+    Selecciona una impresora o un elemento de inventario para administrar sus tarifas acumulables.
+</p>
+
+<ul class="nav nav-tabs" id="tabTarifas" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-inv" data-bs-toggle="tab" data-bs-target="#panel-inv" type="button" role="tab">
+            Inventarios
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-imp" data-bs-toggle="tab" data-bs-target="#panel-imp" type="button" role="tab">
+            Impresoras
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3" id="tabTarifasContent">
+    <!-- ========== Inventarios ========== -->
+    <div class="tab-pane fade show active" id="panel-inv" role="tabpanel">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input id="buscarInv" class="form-control" placeholder="Buscar inventario por texto o ID..." />
+            </div>
+        </div>
+
+        <table class="table table-striped align-middle" id="tablaInv">
+            <thead>
+                <tr>
+                    <th>Inventario</th>
+                    <th class="text-end">Cantidad</th>
+                    <th>Unidad</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Inventarios == null || Model.Inventarios.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-center text-muted">Sin inventarios.</td></tr>
+                }
+                else
+                {
+                    foreach (var x in Model.Inventarios)
+                    {
+                        <tr data-text="@($"{x.InventarioId} {x.Display}".ToLower())">
+                            <td>
+                                <div class="fw-semibold">@x.Display</div>
+                            </td>
+                            <td class="text-end">@((x.Cantidad ?? 0).ToString("0.####"))</td>
+                            <td>@(x.Unidad ?? "-")</td>
+                            <td class="text-center">
+                                <a class="btn btn-outline-primary btn-sm"
+                                   asp-controller="Tarifas"
+                                   asp-action="Inventario"
+                                   asp-route-inventarioId="@x.InventarioId">
+                                    Abrir tarifas
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========== Impresoras ========== -->
+    <div class="tab-pane fade" id="panel-imp" role="tabpanel">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input id="buscarImp" class="form-control" placeholder="Buscar impresora por texto o ID..." />
+            </div>
+        </div>
+
+        <table class="table table-striped align-middle" id="tablaImp">
+            <thead>
+                <tr>
+                    <th>Impresora</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Impresoras == null || Model.Impresoras.Count == 0)
+                {
+                    <tr><td colspan="2" class="text-center text-muted">Sin impresoras.</td></tr>
+                }
+                else
+                {
+                    foreach (var x in Model.Impresoras)
+                    {
+                        <tr data-text="@($"{x.ImpresoraId} {x.Display}".ToLower())">
+                            <td>
+                                <div class="fw-semibold">@x.Display</div>
+                            </td>
+                            <td class="text-center">
+                                <a class="btn btn-outline-primary btn-sm"
+                                   asp-controller="Tarifas"
+                                   asp-action="Impresora"
+                                   asp-route-impresoraId="@x.ImpresoraId">
+                                    Abrir tarifas
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function wireSearch(inputId, tableId) {
+        const input = document.getElementById(inputId);
+        const table = document.getElementById(tableId);
+        if (!input || !table) return;
+
+        input.addEventListener("input", function () {
+            const q = (input.value || "").toLowerCase().trim();
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(r => {
+                const text = r.getAttribute("data-text") || "";
+                r.style.display = (q === "" || text.includes(q)) ? "" : "none";
+            });
+        });
+    }
+
+    wireSearch("buscarInv", "tablaInv");
+    wireSearch("buscarImp", "tablaImp");
+</script>
+}
