@@ -23,19 +23,11 @@ CREATE TABLE [dbo].[TblTarifasLog] (
 );
 GO
 
-ALTER TABLE [dbo].[TblTarifasLog]
-    ADD CONSTRAINT [PK_TblTarifasLog] PRIMARY KEY CLUSTERED ([TarifaLogId] ASC);
-GO
-
 CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_Usuario_Fecha]
     ON [dbo].[TblTarifasLog]([UsuarioId] ASC, [FechaAccion] DESC);
 GO
 
 CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_TarifaId_Fecha]
     ON [dbo].[TblTarifasLog]([TarifaId] ASC, [FechaAccion] DESC);
-GO
-
-ALTER TABLE [dbo].[TblTarifasLog]
-    ADD CONSTRAINT [DF_TblTarifasLog_FechaAccion] DEFAULT (sysdatetime()) FOR [FechaAccion];
 GO
 

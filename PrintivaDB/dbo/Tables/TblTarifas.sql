@@ -21,41 +21,10 @@ CREATE TABLE [dbo].[TblTarifas] (
 );
 GO
 
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [DF_TblTarifas_Moneda] DEFAULT ('MXN') FOR [Moneda];
-GO
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [DF_TblTarifas_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [DF_TblTarifas_FechaCreacion] DEFAULT (sysdatetime()) FOR [FechaCreacion];
-GO
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [FK_TblTarifas_TarifaConceptos] FOREIGN KEY ([TarifaConceptoId]) REFERENCES [dbo].[TblTarifaConceptos] ([TarifaConceptoId]);
-GO
-
 CREATE NONCLUSTERED INDEX [IX_TblTarifas_Usuario_Concepto]
     ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC)
     INCLUDE([Monto], [Moneda], [ImpresoraId], [InventarioTipoId], [InventarioNombreId], [FechaCreacion], [FechaActualizacion]);
 GO
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [PK_TblTarifas] PRIMARY KEY CLUSTERED ([TarifaId] ASC);
-GO
-
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [DF_TblTarifas_Nombre] DEFAULT (N'') FOR [Nombre];
-GO
-
-
-ALTER TABLE [dbo].[TblTarifas]
-    ADD CONSTRAINT [DF_TblTarifas_Orden] DEFAULT ((100)) FOR [Orden];
-GO
-
 
 CREATE NONCLUSTERED INDEX [IX_TblTarifas_Lookup]
     ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC, [ImpresoraId] ASC, [InventarioId] ASC)

@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procProduccionCambiarEstatusItem
+CREATE   PROCEDURE dbo.procProduccionCambiarEstatusItem
     @ProduccionItemId INT,
     @HaciaEstatusId INT,
     @Notas NVARCHAR(500) = NULL,
@@ -324,3 +324,4 @@ BEGIN
     END CATCH
 END
 GO
+
