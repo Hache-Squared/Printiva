@@ -17,6 +17,7 @@ namespace ManejoPresupuestos.Servicios
         Task<ResultProcedureGeneric> AsignarRecetaItem(int usuarioId, int produccionItemId, int recetaId);
         Task<IEnumerable<ConsumoInventarioDto>> ObtenerConsumosAplicadosPorItem(int usuarioId, int produccionItemId);
         Task<ResultProcedureGeneric> GuardarCosteoMaterial(int usuarioId, int produccionItemId, CosteoResumenDto resumen);
+        Task<int?> ObtenerImpresoraIdPorItem(int loginId, int produccionItemId);
     }
 
         public class RepositorioProduccion : IRepositorioProduccion
@@ -150,6 +151,20 @@ namespace ManejoPresupuestos.Servicios
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );
+        }
+
+        public async Task<int?> ObtenerImpresoraIdPorItem(int loginId, int produccionItemId)
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            // Si no existe o no está asignada la impresora => regresa null
+            var impresoraId = await connection.QueryFirstOrDefaultAsync<int?>(
+                "dbo.procProduccionObtenerImpresoraIdPorItem",
+                new { ProduccionItemId = produccionItemId, loginId },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+
+            return impresoraId;
         }
     }
 }

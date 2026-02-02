@@ -1277,3 +1277,56 @@ SET EstaActivo = 0,
 WHERE Codigo='MATERIAL_GR';
 
 COMMIT;
+
+
+
+
+
+BEGIN TRAN;
+
+-- A) MATERIAL_GENERAL (scoped: inventario o impresora)
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo='MATERIAL_GENERAL')
+BEGIN
+    INSERT INTO dbo.TblTarifaConceptos (Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
+    VALUES ('MATERIAL_GENERAL', N'Cargo fijo (por inventario/impresora)', 'flat', 32, 1, SYSDATETIME());
+END
+ELSE
+BEGIN
+    UPDATE dbo.TblTarifaConceptos
+    SET Nombre = N'Cargo fijo (por inventario/impresora)',
+        Unidad = 'flat',
+        Orden = 32,
+        EstaActivo = 1,
+        FechaActualizacion = SYSDATETIME()
+    WHERE Codigo='MATERIAL_GENERAL';
+END
+
+-- B) Global solo inventarios
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo='MATERIAL_GENERAL_INV_GLOBAL')
+BEGIN
+    INSERT INTO dbo.TblTarifaConceptos (Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
+    VALUES ('MATERIAL_GENERAL_INV_GLOBAL', N'Cargo fijo global (inventarios)', 'flat', 33, 1, SYSDATETIME());
+END
+
+-- C) Global solo impresoras
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo='MATERIAL_GENERAL_PRN_GLOBAL')
+BEGIN
+    INSERT INTO dbo.TblTarifaConceptos (Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
+    VALUES ('MATERIAL_GENERAL_PRN_GLOBAL', N'Cargo fijo global (impresoras)', 'flat', 34, 1, SYSDATETIME());
+END
+
+-- (Opcional) deja MATERIAL_UNIT como lo traías
+UPDATE dbo.TblTarifaConceptos
+SET Nombre = N'Costo de material por unidad de inventario',
+    Unidad = 'unidad inv.',
+    FechaActualizacion = SYSDATETIME()
+WHERE Codigo='MATERIAL_UNIT';
+
+-- (Opcional) apaga MATERIAL_GR
+UPDATE dbo.TblTarifaConceptos
+SET EstaActivo = 0,
+    FechaActualizacion = SYSDATETIME()
+WHERE Codigo='MATERIAL_GR';
+
+COMMIT;
+GO

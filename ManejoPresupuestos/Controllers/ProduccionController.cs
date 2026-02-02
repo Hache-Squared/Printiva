@@ -92,8 +92,11 @@ namespace ManejoPresupuestos.Controllers
                     // 1) Lee consumos REALES ya aplicados (snapshot)
                     var consumos = await repositorioProduccion.ObtenerConsumosAplicadosPorItem(usuarioId, modelo.ProduccionItemId);
 
-                    // 2) Calcula por tarifas
-                    var costeo = await servicioCosteoTarifas.CalcularMaterialPorInventario(consumos, usuarioId);
+                    // 1.1) Obtén la impresora asignada al item (puede ser null)
+                    var impresoraId = await repositorioProduccion.ObtenerImpresoraIdPorItem(usuarioId, modelo.ProduccionItemId);
+
+                    // 2) Calcula por tarifas (material + generales + impresora si aplica)
+                    var costeo = await servicioCosteoTarifas.CalcularMaterialPorInventario(consumos, usuarioId, impresoraId);
 
                     // 3) Guarda snapshot de costeo (header+detalle)
                     var r2 = await repositorioProduccion.GuardarCosteoMaterial(usuarioId, modelo.ProduccionItemId, costeo);

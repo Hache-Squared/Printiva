@@ -1,9 +1,4 @@
-/* =========================================================
-   4) SP: UPSERT TARIFA ACTIVA + LOG (SIN VIGENCIAS)
-   - Se agregó soporte para:
-     * MATERIAL_GENERAL => siempre GLOBAL (InventarioId/ImpresoraId = NULL)
-   ========================================================= */
-CREATE OR ALTER PROCEDURE dbo.procTarifasSet
+CREATE   PROCEDURE dbo.procTarifasSet
     @TarifaConceptoCodigo VARCHAR(40),
     @Monto DECIMAL(18,4),
     @Moneda CHAR(3) = 'MXN',
@@ -40,41 +35,47 @@ BEGIN
         IF @TarifaConceptoId IS NULL
             RAISERROR('Concepto de tarifa inválido o inactivo.',16,1);
 
+        -- No permitas ambos scopes a la vez
+        IF (@InventarioId IS NOT NULL AND @ImpresoraId IS NOT NULL)
+            RAISERROR('Scope inválido: no se permite ImpresoraId e InventarioId a la vez.',16,1);
+
         /* =========================================================
-           REGLAS DE SCOPE POR CONCEPTO
+           REGLAS POR CONCEPTO
            ========================================================= */
 
-        -- ✅ MATERIAL_GENERAL: SIEMPRE global (flat)
+        -- 1) MATERIAL_UNIT: requiere InventarioId (si quieres forzarlo)
+        IF (@TarifaConceptoCodigo = 'MATERIAL_UNIT' AND @InventarioId IS NULL)
+            RAISERROR('MATERIAL_UNIT requiere InventarioId.',16,1);
+
+        -- 2) MATERIAL_GENERAL: flat scoped (InventarioId XOR ImpresoraId)
         IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL')
+        BEGIN
+            IF (@InventarioId IS NULL AND @ImpresoraId IS NULL)
+                RAISERROR('MATERIAL_GENERAL requiere InventarioId o ImpresoraId (uno).',16,1);
+            -- aquí ya está validado que no pueden venir los dos
+        END
+
+        -- 3) Global inventarios: siempre sin scope
+        IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL_INV_GLOBAL')
         BEGIN
             SET @InventarioId = NULL;
             SET @ImpresoraId = NULL;
         END
 
-        -- (Opcional pero recomendado) evita que manden ambos scopes a la vez
-        IF (@InventarioId IS NOT NULL AND @ImpresoraId IS NOT NULL)
-            RAISERROR('Scope inválido: no se permite ImpresoraId e InventarioId a la vez.',16,1);
-
-        -- (Opcional) si quieres que MATERIAL_UNIT solo aplique a inventario, descomenta:
-        /*
-        IF (@TarifaConceptoCodigo = 'MATERIAL_UNIT' AND @InventarioId IS NULL)
-            RAISERROR('MATERIAL_UNIT requiere InventarioId.',16,1);
-        */
-
-        -- (Opcional) si quieres que PRINT_HOUR / POST_HOUR solo a impresora, descomenta:
-        /*
-        IF (@TarifaConceptoCodigo IN ('PRINT_HOUR','POST_HOUR') AND @ImpresoraId IS NULL)
-            RAISERROR('Este concepto requiere ImpresoraId.',16,1);
-        */
+        -- 4) Global impresoras: siempre sin scope
+        IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL_PRN_GLOBAL')
+        BEGIN
+            SET @InventarioId = NULL;
+            SET @ImpresoraId = NULL;
+        END
 
         /* =========================================================
-           INSERT Tarifa + LOG (como lo traías)
+           INSERT Tarifa + LOG
            ========================================================= */
 
         INSERT dbo.TblTarifas(
             UsuarioId, TarifaConceptoId,
             ImpresoraId, InventarioId,
-            /* legacy */
             InventarioTipoId, InventarioNombreId,
             Nombre, Orden,
             Monto, Moneda,
@@ -94,7 +95,6 @@ BEGIN
         INSERT dbo.TblTarifasLog(
             TarifaId, UsuarioId, TarifaConceptoId,
             ImpresoraId, InventarioId,
-            /* legacy */
             InventarioTipoId, InventarioNombreId,
             Accion,
             NombreAntes, NombreDespues,
@@ -122,3 +122,4 @@ BEGIN
     END CATCH
 END
 GO
+

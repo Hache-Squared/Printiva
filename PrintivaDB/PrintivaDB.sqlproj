@@ -149,6 +149,7 @@
     <Build Include="dbo\StoredProcedures\procProduccionCosteoMaterialUpsert.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionInitPorPedido.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionObtenerConsumosAplicadosPorItem.sql" />
+    <Build Include="dbo\StoredProcedures\procProduccionObtenerImpresoraIdPorItem.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionObtenerPorPedido.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionRecetasDisponiblesPorItem.sql" />
     <Build Include="dbo\StoredProcedures\procRecetasCalcularCostoEstimado.sql" />
