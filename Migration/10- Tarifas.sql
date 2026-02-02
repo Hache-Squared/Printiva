@@ -1252,3 +1252,28 @@ BEGIN
         t.TarifaId DESC;
 END
 GO
+
+
+BEGIN TRAN;
+
+-- 1) Agrega concepto general (flat)
+IF NOT EXISTS (SELECT 1 FROM dbo.TblTarifaConceptos WHERE Codigo='MATERIAL_GENERAL')
+BEGIN
+    INSERT INTO dbo.TblTarifaConceptos (Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
+    VALUES ('MATERIAL_GENERAL', 'Cargo fijo (general)', 'flat', 32, 1, SYSDATETIME());
+END
+
+-- 2) Opcional: renombra el display de MATERIAL_UNIT (código se queda igual)
+UPDATE dbo.TblTarifaConceptos
+SET Nombre = 'Costo de material por unidad de inventario',
+    Unidad = 'unidad inv.',
+    FechaActualizacion = SYSDATETIME()
+WHERE Codigo='MATERIAL_UNIT';
+
+-- 3) Desactiva MATERIAL_GR para que ya no salga en UI
+UPDATE dbo.TblTarifaConceptos
+SET EstaActivo = 0,
+    FechaActualizacion = SYSDATETIME()
+WHERE Codigo='MATERIAL_GR';
+
+COMMIT;
