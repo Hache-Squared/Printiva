@@ -13,7 +13,3 @@ CREATE TABLE [dbo].[TblClientes] (
     PRIMARY KEY CLUSTERED ([ClienteId] ASC)
 );
 GO
-ALTER TABLE [dbo].[TblClientes]
-    ADD CONSTRAINT [DF_TblClientes_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
