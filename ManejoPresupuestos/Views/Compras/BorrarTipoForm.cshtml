@@ -1,0 +1,15 @@
+@model ManejoPresupuestos.Models.CompraTipoV2
+@{
+    ViewData["Title"] = "Borrar Tipo de Compra";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Tipos" />
+
+<h3>¿Seguro que quieres desactivar el tipo: <strong>@Model.Nombre</strong>?</h3>
+<p>Esto NO lo elimina físicamente. Solo lo marca como inactivo.</p>
+
+<form asp-action="BorrarTipo">
+    <input type="hidden" asp-for="CompraTipoId" />
+    <button class="btn btn-danger" type="submit">Desactivar</button>
+    <a asp-action="Tipos" class="btn btn-secondary">Cancelar</a>
+</form>

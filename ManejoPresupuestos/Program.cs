@@ -55,7 +55,15 @@ builder.Services.AddTransient<IRepositorioTarifas, RepositorioTarifas>();
 builder.Services.AddTransient<IServicioCosteoTarifas, ServicioCosteoTarifas>();
 builder.Services.AddTransient<IServicioCotizacionTarifas, ServicioCotizacionTarifas>();
 
+// Program.cs / Startup.cs
+builder.Services.AddTransient<IRepositorioComprasV2, RepositorioComprasV2>();
+builder.Services.AddTransient<IRepositorioCompraTiposV2, RepositorioCompraTiposV2>();
+builder.Services.AddTransient<IRepositorioCompraCategoriasV2, RepositorioCompraCategoriasV2>();
 
+// ya los tienes:
+builder.Services.AddTransient<IRepositorioFilamentoTipos, RepositorioFilamentoTipos>();
+builder.Services.AddTransient<IRepositorioInventarios, RepositorioInventarios>();
+builder.Services.AddTransient<IRepositorioCompraTiposV2, RepositorioCompraTiposV2>();
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();

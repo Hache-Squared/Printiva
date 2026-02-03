@@ -1,0 +1,53 @@
+@model IEnumerable<ManejoPresupuestos.Models.CompraV2>
+@{
+    ViewData["Title"] = "Compras";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Compras" />
+
+<h1>Compras</h1>
+<h5>Compras 2.0 (borrado lógico + integración con inventarios).</h5>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Acciones</th>
+            <th>Fecha</th>
+            <th>Categoría</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Inventario</th>
+            <th>Cantidad</th>
+            <th>Costo Unit.</th>
+            <th>Total</th>
+            <th>Activo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary btn-sm" asp-action="Editar" asp-route-id="@c.CompraId">Editar</a>
+                    <a class="btn btn-danger btn-sm" asp-action="Borrar" asp-route-id="@c.CompraId">Borrar</a>
+                </td>
+                <td>@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                <td>@c.CompraCategoria</td>
+                <td>@c.CompraTipo</td>
+                <td>@c.Descripcion</td>
+                <td>
+                    @if (c.InventarioId.HasValue)
+                    {
+                        <span>@c.InventarioNombre (@c.InventarioColor)</span>
+                    }
+                </td>
+                <td>@(c.Cantidad > 0 ? c.Cantidad.ToString("0.##") : "")</td>
+                <td>@(c.CostoUnitario > 0 ? c.CostoUnitario.ToString("0.00") : "")</td>
+                <td>@c.CostoTotal.ToString("0.00")</td>
+                <td>@(c.EstaActivo ? "Sí" : "No")</td>
+            </tr>
+        }
+    </tbody>
+</table>

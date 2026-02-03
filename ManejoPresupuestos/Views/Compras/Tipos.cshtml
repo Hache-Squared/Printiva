@@ -1,0 +1,36 @@
+@model IEnumerable<ManejoPresupuestos.Models.CompraTipoV2>
+@{
+    ViewData["Title"] = "Tipos de Compra";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Tipos" />
+
+<h1>Tipos de compra</h1>
+<h5>Un tipo de compra define si la compra afecta inventario o no.</h5>
+
+<a asp-action="CrearTipo" class="btn btn-primary mb-3">Crear nuevo</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Acciones</th>
+            <th>Nombre</th>
+            <th>Afecta inventario</th>
+            <th>Activo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tipo in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary btn-sm" asp-action="EditarTipo" asp-route-id="@tipo.CompraTipoId">Editar</a>
+                    <a class="btn btn-danger btn-sm" asp-action="BorrarTipoForm" asp-route-id="@tipo.CompraTipoId">Borrar</a>
+                </td>
+                <td>@tipo.Nombre</td>
+                <td>@(tipo.EsInventario ? "Sí" : "No")</td>
+                <td>@(tipo.EstaActivo ? "Sí" : "No")</td>
+            </tr>
+        }
+    </tbody>
+</table>

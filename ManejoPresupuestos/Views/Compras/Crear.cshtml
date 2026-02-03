@@ -1,0 +1,79 @@
+@model ManejoPresupuestos.Models.CompraV2FormViewModel
+@{
+    ViewData["Title"] = "Crear Compra";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Compras" />
+
+<h1>Crear compra</h1>
+<h5>
+    Si el tipo de compra afecta inventario (Filamento/Herramienta), selecciona inventario + cantidad + costo unitario.
+</h5>
+
+<form asp-action="Crear">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label"></label>
+        <textarea asp-for="Descripcion" class="form-control"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CompraCategoriaId" class="form-label"></label>
+        <select asp-for="CompraCategoriaId" asp-items="@Model.Categorias" class="form-select"></select>
+        <span asp-validation-for="CompraCategoriaId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CompraTipoId" class="form-label"></label>
+        <select asp-for="CompraTipoId" asp-items="@Model.Tipos" class="form-select"></select>
+        <span asp-validation-for="CompraTipoId" class="text-danger"></span>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <label asp-for="InventarioId" class="form-label"></label>
+        <select asp-for="InventarioId" asp-items="@Model.Inventarios" class="form-select">
+            <option value="">(Opcional / según tipo)</option>
+        </select>
+        <span asp-validation-for="InventarioId" class="text-danger"></span>
+        <small class="text-muted">Si no existe el inventario, créalo en el módulo Inventarios y vuelve aquí.</small>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CostoUnitario" class="form-label"></label>
+        <input asp-for="CostoUnitario" class="form-control" />
+        <span asp-validation-for="CostoUnitario" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CostoTotal" class="form-label"></label>
+        <input asp-for="CostoTotal" class="form-control" />
+        <span asp-validation-for="CostoTotal" class="text-danger"></span>
+        <small class="text-muted">
+            Si el tipo afecta inventario, el total se recalcula con Cantidad * CostoUnitario.
+            Si NO afecta inventario, captura aquí el total.
+        </small>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaCreacion" class="form-label"></label>
+        <input asp-for="FechaCreacion" class="form-control" />
+        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

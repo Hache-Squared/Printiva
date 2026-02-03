@@ -1,0 +1,37 @@
+@model ManejoPresupuestos.Models.CompraTipoV2
+@{
+    ViewData["Title"] = "Editar Tipo de Compra";
+}
+
+<partial name="_Submenu" model="SubMenuCompras.Tipos" />
+
+<h1>Editar tipo de compra</h1>
+
+<form asp-action="EditarTipo">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input type="hidden" asp-for="CompraTipoId" />
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" asp-for="EsInventario" />
+        <label class="form-check-label" asp-for="EsInventario">Afecta inventario</label>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" asp-for="EstaActivo" />
+        <label class="form-check-label" asp-for="EstaActivo">Activo</label>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Enviar</button>
+    <a asp-action="Tipos" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

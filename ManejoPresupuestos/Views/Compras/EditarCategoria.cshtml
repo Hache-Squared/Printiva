@@ -1,0 +1,23 @@
+@model ManejoPresupuestos.Models.CompraCategoriaV2
+@{
+    ViewData["Title"] = "Editar Categoría";
+}
+<partial name="_Submenu" model="SubMenuCompras.Categorias" />
+
+<h1>Editar categoría</h1>
+
+<form asp-action="EditarCategoria">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="CompraCategoriaId" />
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <a asp-action="Categorias" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

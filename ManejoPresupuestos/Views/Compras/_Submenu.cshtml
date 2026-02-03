@@ -1,0 +1,18 @@
+@model SubMenuCompras
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuCompras.Compras ? "active" : "")"
+           asp-controller="Compras" asp-action="Index">Compras</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuCompras.Categorias ? "active" : "")"
+           asp-controller="Compras" asp-action="Categorias">Categorías</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link @(Model == SubMenuCompras.Tipos ? "active" : "")"
+           asp-controller="Compras" asp-action="Tipos">Tipos</a>
+    </li>
+</ul>

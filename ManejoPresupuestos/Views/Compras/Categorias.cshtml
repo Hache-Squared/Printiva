@@ -1,0 +1,31 @@
+@model IEnumerable<ManejoPresupuestos.Models.CompraCategoriaV2>
+@{
+    ViewData["Title"] = "Categorías de Compra";
+}
+<partial name="_Submenu" model="SubMenuCompras.Categorias" />
+
+<h1>Categorías</h1>
+<a asp-action="CrearCategoria" class="btn btn-primary mb-3">Crear Nueva</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Acciones</th>
+            <th>Nombre</th>
+            <th>Activo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>
+                    <a class="btn btn-primary btn-sm" asp-action="EditarCategoria" asp-route-id="@c.CompraCategoriaId">Editar</a>
+                    <a class="btn btn-danger btn-sm" asp-action="BorrarCategoriaForm" asp-route-id="@c.CompraCategoriaId">Borrar</a>
+                </td>
+                <td>@c.Nombre</td>
+                <td>@(c.EstaActivo ? "Sí" : "No")</td>
+            </tr>
+        }
+    </tbody>
+</table>

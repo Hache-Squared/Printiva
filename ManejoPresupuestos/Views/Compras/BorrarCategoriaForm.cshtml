@@ -1,0 +1,13 @@
+@model ManejoPresupuestos.Models.CompraCategoriaV2
+@{
+    ViewData["Title"] = "Borrar Categoría";
+}
+<partial name="_Submenu" model="SubMenuCompras.Categorias" />
+
+<h3>¿Seguro que quieres borrar (lógico) la categoría @Model.Nombre?</h3>
+
+<form asp-action="BorrarCategoria">
+    <input type="hidden" name="compraCategoriaId" value="@Model.CompraCategoriaId" />
+    <button class="btn btn-danger" type="submit">Borrar</button>
+    <a asp-action="Categorias" class="btn btn-secondary">Cancelar</a>
+</form>
