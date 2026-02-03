@@ -120,19 +120,7 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     elementoAlterarId = id,
-                    descripcion = "Compra eliminada",
-                    compraTipoId = 0,
-                    filamentoTipoId = (int?)null,
-                    compraCategoriaId = 0,
-
-                    inventarioId = (int?)null,
-                    cantidad = 0m,
-                    costoUnitario = 0m,
-                    costoTotal = 0m,
-
-                    fechaCreacion = (DateTime?)null,
                     loginId = usuarioId,
-                    actualizar = 0,
                     borrar = 1
                 },
                 commandType: System.Data.CommandType.StoredProcedure

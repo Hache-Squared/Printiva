@@ -41,6 +41,7 @@ namespace ManejoPresupuestos.Servicios
             return await connection.QueryAsync<CompraCategoriaV2>(
                 @"SELECT CompraCategoriaId, Nombre, EstaActivo
                   FROM dbo.TblComprasCategorias
+                  WHERE EstaActivo = 1
                   ORDER BY EstaActivo DESC, Nombre;"
             );
         }

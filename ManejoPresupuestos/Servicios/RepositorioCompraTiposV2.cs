@@ -45,6 +45,7 @@ namespace ManejoPresupuestos.Servicios
                 @"
                 SELECT CompraTipoId, Nombre, EsInventario, EstaActivo
                 FROM dbo.TblComprasTipos
+                WHERE EstaActivo = 1
                 ORDER BY EstaActivo DESC, Nombre;
                 "
             );
