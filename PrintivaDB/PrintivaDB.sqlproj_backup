@@ -210,7 +210,6 @@
     <Build Include="dbo\Tables\TblInventariosNombres.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraInventariosNombres.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerInventarios.sql" />
-    <Build Include="dbo\StoredProcedures\procInsertarMovimientoInventario.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerMovimientosInventarios.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraProductos.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerProductos.sql" />
