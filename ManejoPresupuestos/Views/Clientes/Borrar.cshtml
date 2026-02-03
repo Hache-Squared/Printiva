@@ -1,0 +1,27 @@
+@model ManejoPresupuestos.Models.Cliente
+
+@{
+    ViewData["Title"] = "Borrar cliente";
+}
+
+<h1>Borrar cliente</h1>
+
+@if (!Model.EstaActivo)
+{
+    <div class="alert alert-warning">
+        Este cliente ya está inactivo.
+    </div>
+}
+
+<div class="alert alert-danger">
+    ¿Seguro que quieres desactivar a <strong>@Model.Nombre</strong>?
+    <div class="small text-muted">Esto es borrado lógico: no se elimina de la base.</div>
+</div>
+
+<form asp-action="BorrarCliente" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="clienteId" value="@Model.ClienteId" />
+
+    <button class="btn btn-danger" type="submit">Desactivar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

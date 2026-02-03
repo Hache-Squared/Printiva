@@ -7,25 +7,31 @@ namespace ManejoPresupuestos.Models
         public int ClienteId { get; set; }
         public int UsuarioId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "El campo {0} es obligatorio")]
         [StringLength(150)]
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
 
         [StringLength(30)]
-        public string Telefono { get; set; }
+        public string? Telefono { get; set; }
 
         [StringLength(80)]
-        public string Instagram { get; set; }
+        public string? Instagram { get; set; }
 
         [StringLength(30)]
-        public string WhatsApp { get; set; }
+        public string? WhatsApp { get; set; }
 
         [StringLength(120)]
-        public string Email { get; set; }
+        [EmailAddress(ErrorMessage = "Email inválido")]
+        public string? Email { get; set; }
 
         [StringLength(250)]
-        public string Direccion { get; set; }
+        public string? Direccion { get; set; }
 
         public DateTime FechaCreacion { get; set; }
+
+        // NUEVO: borrado lógico
+        public bool EstaActivo { get; set; } = true;
+
+        public DateTime? FechaActualizacion { get; set; }
     }
 }

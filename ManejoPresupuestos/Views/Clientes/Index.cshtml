@@ -1,0 +1,86 @@
+@model IEnumerable<ManejoPresupuestos.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-1">Clientes</h1>
+        <p class="text-muted mb-0">Administra tu base de clientes y sus datos de contacto.</p>
+    </div>
+    <a asp-action="Crear" class="btn btn-primary">Nuevo cliente</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th>Redes</th>
+            <th>Dirección</th>
+            <th>Activo</th>
+            <th class="text-end">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>
+                    <div class="fw-semibold">@c.Nombre</div>
+                    <div class="text-muted small">ID: @c.ClienteId</div>
+                </td>
+                <td>
+                    <div>@(string.IsNullOrWhiteSpace(c.Telefono) ? "-" : c.Telefono)</div>
+                    <div class="text-muted small">@(string.IsNullOrWhiteSpace(c.Email) ? "-" : c.Email)</div>
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (!string.IsNullOrWhiteSpace(c.Instagram))
+                        {
+                            <span class="badge bg-light text-dark border">Instagram: @c.Instagram</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(c.WhatsApp))
+                        {
+                            <span class="badge bg-light text-dark border">WhatsApp: @c.WhatsApp</span>
+                        }
+                        @if (string.IsNullOrWhiteSpace(c.Instagram) && string.IsNullOrWhiteSpace(c.WhatsApp))
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </div>
+                </td>
+                <td>
+                    @(string.IsNullOrWhiteSpace(c.Direccion) ? "-" : c.Direccion)
+                </td>
+                <td>
+                    @if (c.EstaActivo)
+                    {
+                        <span class="badge bg-success">Sí</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Editar" asp-route-id="@c.ClienteId" class="btn btn-sm btn-outline-primary">Editar</a>
+
+                    @if (c.EstaActivo)
+                    {
+                        <a asp-action="Borrar" asp-route-id="@c.ClienteId" class="btn btn-sm btn-outline-danger">Borrar</a>
+                    }
+                    else
+                    {
+                        <form asp-action="ReactivarCliente" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="clienteId" value="@c.ClienteId" />
+                            <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
