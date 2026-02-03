@@ -223,11 +223,7 @@
     <Build Include="dbo\Tables\TblFilamentosTipos.sql" />
     <Build Include="dbo\Tables\TblComprasRecurrentes.sql" />
     <Build Include="dbo\Tables\TblComprasCategorias.sql" />
-    <Build Include="dbo\StoredProcedures\procObtenerCompras.sql" />
-    <Build Include="dbo\StoredProcedures\procAlteraComprasCategorias.sql" />
-    <Build Include="dbo\StoredProcedures\procAlteraComprasTipos.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraFilamentosTipos.sql" />
-    <Build Include="dbo\StoredProcedures\procAlteraCompras.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerClientes.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraClientes.sql" />
   </ItemGroup>
