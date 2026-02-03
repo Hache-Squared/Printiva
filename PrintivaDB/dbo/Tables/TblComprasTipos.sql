@@ -8,17 +8,3 @@ CREATE TABLE [dbo].[TblComprasTipos] (
 );
 
 GO
-ALTER TABLE [dbo].[TblComprasTipos]
-    ADD CONSTRAINT [DF_TblComprasTipos_EsInventario] DEFAULT ((0)) FOR [EsInventario];
-GO
-
-
-ALTER TABLE [dbo].[TblComprasTipos]
-    ADD CONSTRAINT [DF_TblComprasTipos_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
-
-ALTER TABLE [dbo].[TblComprasTipos]
-    ADD CONSTRAINT [DF_TblComprasTipos_RequiereFilamento] DEFAULT ((0)) FOR [RequiereFilamentoTipo];
-GO
-

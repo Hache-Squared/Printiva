@@ -6,7 +6,3 @@ CREATE TABLE [dbo].[TblComprasCategorias] (
 );
 
 GO
-ALTER TABLE [dbo].[TblComprasCategorias]
-    ADD CONSTRAINT [DF_TblComprasCategorias_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-

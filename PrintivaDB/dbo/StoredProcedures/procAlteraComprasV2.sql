@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.procAlteraComprasV2
+CREATE   PROCEDURE dbo.procAlteraComprasV2
     @ElementoAlterarId INT = 0,
     @Descripcion VARCHAR(MAX) = '',
     @CompraTipoId INT = 0,
@@ -326,3 +326,4 @@ BEGIN
     END CATCH
 END
 GO
+

@@ -20,27 +20,3 @@ CREATE TABLE [dbo].[TblCompras] (
 );
 
 GO
-ALTER TABLE [dbo].[TblCompras]
-    ADD CONSTRAINT [DF_TblCompras_Cantidad] DEFAULT ((0)) FOR [Cantidad];
-GO
-
-
-ALTER TABLE [dbo].[TblCompras]
-    ADD CONSTRAINT [DF_TblCompras_CostoUnitario] DEFAULT ((0)) FOR [CostoUnitario];
-GO
-
-
-ALTER TABLE [dbo].[TblCompras]
-    ADD CONSTRAINT [DF_TblCompras_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
-
-ALTER TABLE [dbo].[TblCompras]
-    ADD CONSTRAINT [FK_TblCompras_TblInventarios] FOREIGN KEY ([InventarioId]) REFERENCES [dbo].[TblInventarios] ([InventarioId]);
-GO
-
-
-ALTER TABLE [dbo].[TblCompras]
-    ADD CONSTRAINT [FK_TblCompras_Usuarios] FOREIGN KEY ([UsuarioId]) REFERENCES [dbo].[Usuarios] ([Id]);
-GO
-
