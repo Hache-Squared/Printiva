@@ -13,7 +13,9 @@ BEGIN
         c.Nombre AS ConceptoNombre,
         c.Unidad,
         t.InventarioId,
-        t.ImpresoraId, -- 👈 agrega para poder detectar globales en UI
+        t.ImpresoraId,
+        invNom.Nombre AS InventarioNombre,   -- ✅ nombre inventario
+        prn.Nombre AS ImpresoraNombre,    -- (opcional)
         t.Monto,
         t.Moneda,
         COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio,
@@ -21,6 +23,15 @@ BEGIN
     FROM dbo.TblTarifas t WITH (NOLOCK)
     INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
         ON c.TarifaConceptoId = t.TarifaConceptoId
+
+    LEFT JOIN dbo.TblInventarios inv WITH (NOLOCK)
+        ON inv.InventarioId = t.InventarioId
+    LEFT JOIN dbo.TblInventariosNombres invNom
+        ON invNom.InventarioNombreId = inv.InventarioNombreId
+
+    LEFT JOIN dbo.TblImpresoras prn WITH (NOLOCK)
+        ON prn.ImpresoraId = t.ImpresoraId
+
     WHERE t.UsuarioId = @loginId
       AND t.EstaActivo = 1
       AND c.EstaActivo = 1

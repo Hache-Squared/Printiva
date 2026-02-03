@@ -1330,3 +1330,19 @@ WHERE Codigo='MATERIAL_GR';
 
 COMMIT;
 GO
+
+
+BEGIN TRAN;
+
+UPDATE dbo.TblTarifaConceptos
+SET
+    EstaActivo = 0,
+    FechaActualizacion = SYSDATETIME()
+WHERE Codigo IN (
+    'PRINT_HOUR',
+    'POST_HOUR',
+    'MATERIAL_GR',
+    'MARGIN_PCT'
+);
+
+COMMIT;

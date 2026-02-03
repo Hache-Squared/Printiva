@@ -1,3 +1,4 @@
+@* Crear.cshtml *@
 @model ManejoPresupuestos.Models.CotizacionEdicionViewModel
 @{
     ViewData["Title"] = "Crear cotización";
@@ -92,6 +93,49 @@
                     <div class="text-muted">
                         Modelado y Producción se capturan como items separados para cobrar y medir pagos por etapa.
                     </div>
+
+                    @* ✅ Panel movido: abajo de los conceptos *@
+                    <div class="card shadow-sm border-0 mt-3" id="cardTarifas">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Estimación basada en recetas y tarifas configuradas; úsalo como referencia para tu cotización.</h6>
+                                <small class="text-muted" id="tarifasStatus">—</small>
+                            </div>
+
+                            <div id="tarifasWarn" class="alert alert-warning py-2 px-3 mt-2 d-none"></div>
+
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm align-middle mb-0" id="tblTarifas">
+                                    <thead>
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Nombre</th>
+                                            <th class="text-end">Monto</th>
+                                            <th class="text-end">Cant</th>
+                                            <th class="text-end">Subtotal</th>
+                                            <th>Aplica a</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tarifasBody">
+                                        <tr>
+                                            <td colspan="6" class="text-muted">Selecciona un producto para ver el desglose.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="border-top pt-2 mt-2 d-flex justify-content-between">
+                                <div class="fw-semibold">Total costos extra</div>
+                                <div class="fw-bold" id="lblTotalTarifas">0.00</div>
+                            </div>
+
+                            <div class="text-muted small mt-1">
+                                Se calcula desde recetas y tarifas. No modifica el precio de tus items.
+                            </div>
+                        </div>
+                    </div>
+                    @* /Panel *@
+
                 </div>
             </div>
         </div>
@@ -132,10 +176,157 @@
         let currentRow = null;
 
         const mdlProductos = new bootstrap.Modal(document.getElementById('mdlProductos'));
+        const urlPreviewTarifas = '@Url.Action("PreviewTarifas","Cotizaciones")';
+
+        let previewTimer = null;
+
+        function getAntiForgeryToken() {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
 
         function money(n) {
             const v = Number(n || 0);
             return v.toFixed(2);
+        }
+
+        function setTarifasStatus(txt) {
+            const el = document.getElementById('tarifasStatus');
+            if (!el) return;
+            el.textContent = txt || '—';
+        }
+
+        function showTarifasWarn(msg) {
+            const el = document.getElementById('tarifasWarn');
+            if (!el) return;
+
+            if (!msg) {
+                el.classList.add('d-none');
+                el.innerHTML = '';
+                return;
+            }
+
+            el.classList.remove('d-none');
+            el.innerHTML = msg;
+        }
+
+        function renderTarifasEmpty() {
+            const tbody = document.getElementById('tarifasBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Selecciona un producto para ver el desglose.</td></tr>`;
+            document.getElementById('lblTotalTarifas').textContent = money(0);
+            setTarifasStatus('—');
+            showTarifasWarn('');
+        }
+
+        function schedulePreviewTarifas() {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(previewTarifas, 250);
+        }
+
+        // ✅ AHORA: recoge Modelado(1) y Producción(2) mientras tenga producto + qty
+        function collectPreviewItems() {
+            const items = [];
+            document.querySelectorAll('#tblItems tbody tr').forEach(tr => {
+                const tipo = Number(tr.querySelector('.js-tipo')?.value || 0);
+                const productoId = Number(tr.querySelector('.js-producto-id')?.value || 0);
+                const productoNombre = (tr.querySelector('.js-producto-nombre')?.value || '').trim();
+                const qty = Number(tr.querySelector('.js-cantidad')?.value || 0);
+
+                if ((tipo === 1 || tipo === 2) && productoId > 0 && qty > 0) {
+                    items.push({
+                        conceptoTipoId: tipo,
+                        productoId: productoId,
+                        productoNombre: productoNombre,
+                        cantidad: qty
+                    });
+                }
+            });
+            return items;
+        }
+
+        function addHeaderRow(t) {
+            return `<tr class="table-light"><td colspan="6" class="fw-semibold">${t}</td></tr>`;
+        }
+
+        function addMutedRow(t) {
+            return `<tr><td colspan="6" class="text-muted">${t}</td></tr>`;
+        }
+
+        function rowHtml(x) {
+            const badge = x.esGlobal ? ' <span class="badge text-bg-secondary ms-2">GLOBAL</span>' : '';
+            return `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${x.conceptoNombre || ''}</div>
+                        <div class="text-muted small">${x.conceptoCodigo || ''}</div>
+                    </td>
+                    <td>${(x.tarifaNombre || '')}${badge}</td>
+                    <td class="text-end">${money(x.monto || 0)}</td>
+                    <td class="text-end">${money(x.cantidad || 0)}</td>
+                    <td class="text-end fw-semibold">${money(x.subtotal || 0)}</td>
+                    <td>${x.aplicaA || ''}</td>
+                </tr>
+            `;
+        }
+
+        async function previewTarifas() {
+            const items = collectPreviewItems();
+            if (items.length === 0) {
+                renderTarifasEmpty();
+                return;
+            }
+
+            setTarifasStatus('Calculando...');
+            showTarifasWarn('');
+
+            try {
+                const token = getAntiForgeryToken();
+                const resp = await fetch(urlPreviewTarifas, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ items: items })
+                });
+
+                const json = await resp.json();
+
+                if (json.result !== 'success') {
+                    setTarifasStatus('Error');
+                    showTarifasWarn(json.message || 'No se pudo calcular tarifas.');
+                    return;
+                }
+
+                const detalle = json.detalle || [];
+                const locales = detalle.filter(x => !x.esGlobal);
+                const globales = detalle.filter(x => x.esGlobal);
+
+                const tbody = document.getElementById('tarifasBody');
+                let html = '';
+
+                html += addHeaderRow('Específicas');
+                html += locales.length === 0 ? addMutedRow('Sin tarifas específicas.') : locales.map(rowHtml).join('');
+
+                html += addHeaderRow('Globales');
+                html += globales.length === 0 ? addMutedRow('Sin tarifas globales.') : globales.map(rowHtml).join('');
+
+                tbody.innerHTML = html;
+
+                document.getElementById('lblTotalTarifas').textContent = money(json.totalTarifas || 0);
+                setTarifasStatus('OK');
+
+                const sinReceta = json.productosSinReceta || [];
+                if (sinReceta.length > 0) {
+                    showTarifasWarn(`Productos sin receta (no se pudieron costear):<br><b>${sinReceta.join(', ')}</b>`);
+                }
+            } catch (e) {
+                setTarifasStatus('Error');
+                showTarifasWarn('Error de red: ' + (e?.message || e));
+            }
         }
 
         function recalcTotals() {
@@ -209,16 +400,18 @@
             tbody.appendChild(tr);
             reindexRows();
             recalcTotals();
+            schedulePreviewTarifas();
 
             tr.querySelectorAll('.js-tipo,.js-cantidad,.js-precio').forEach(el => {
-                el.addEventListener('input', recalcTotals);
-                el.addEventListener('change', recalcTotals);
+                el.addEventListener('input', () => { recalcTotals(); schedulePreviewTarifas(); });
+                el.addEventListener('change', () => { recalcTotals(); schedulePreviewTarifas(); });
             });
 
             tr.querySelector('.js-remove').addEventListener('click', () => {
                 tr.remove();
                 reindexRows();
                 recalcTotals();
+                schedulePreviewTarifas();
             });
 
             tr.querySelector('.js-buscar').addEventListener('click', async () => {
@@ -232,6 +425,8 @@
             tr.querySelector('.js-limpiar').addEventListener('click', () => {
                 tr.querySelector('.js-producto-id').value = '';
                 tr.querySelector('.js-producto-nombre').value = '';
+                recalcTotals();
+                schedulePreviewTarifas();
             });
         }
 
@@ -273,6 +468,7 @@
                         if (!precioInput.value && p.precioSugerido != null) precioInput.value = p.precioSugerido;
 
                         recalcTotals();
+                        schedulePreviewTarifas(); // ✅ aquí se dispara al seleccionar producto
                         mdlProductos.hide();
                     });
                     tbody.appendChild(tr);
@@ -283,5 +479,7 @@
         document.getElementById('txtBuscarProducto').addEventListener('input', e => renderProductos(e.target.value));
 
         addRow(null);
+        renderTarifasEmpty();
+        schedulePreviewTarifas();
     </script>
 }

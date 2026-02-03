@@ -90,6 +90,8 @@
                     <div class="text-muted small" id="kbModalHint"></div>
                     <div class="d-flex gap-2">
                         <a id="kbVerDetalles" class="btn btn-outline-secondary">Ver</a>
+                        
+                        <a id="kbVerProd" class="btn btn-outline-secondary">Producción</a>
 
                         <a id="kbVerCot" class="btn btn-outline-secondary d-none">Cotización</a>
 
@@ -245,6 +247,7 @@
         document.getElementById('kbNotas').value = '';
 
         document.getElementById('kbVerDetalles').href = `/Pedidos/Detalles/${c.pedidoId}`;
+        document.getElementById('kbVerProd').href = `/Produccion/Pedido/${c.pedidoId}`;
         const cotBtn = document.getElementById('kbVerCot');
         const crearCotBtn = document.getElementById('kbCrearCot');
 

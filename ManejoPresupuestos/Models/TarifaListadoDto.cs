@@ -16,8 +16,14 @@ namespace ManejoPresupuestos.Models
         public int? ImpresoraId { get; set; }
         public int? InventarioId { get; set; }
 
+        // ✅ nuevos campos (los llena el SP)
+        public string? InventarioNombre { get; set; }
+        public string? ImpresoraNombre { get; set; }
+
         public decimal Monto { get; set; }
         public string Moneda { get; set; } = "MXN";
+
+        public bool EsGlobal { get; set; }
 
         public DateTime FechaUltimoCambio { get; set; }
     }

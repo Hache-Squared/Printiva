@@ -11,18 +11,29 @@ namespace ManejoPresupuestos.Controllers
         private readonly IRepositorioCotizaciones repositorioCotizaciones;
         private readonly IRepositorioPagos repositorioPagos;
         private readonly IRepositorioProductos repositorioProductos;
+        private readonly IServicioCotizacionTarifas servicioCotizacionTarifas; 
 
         public CotizacionesController(
             IServicioUsuarios servicioUsuarios,
             IRepositorioCotizaciones repositorioCotizaciones,
             IRepositorioPagos repositorioPagos,
-            IRepositorioProductos repositorioProductos
+            IRepositorioProductos repositorioProductos,
+            IServicioCotizacionTarifas servicioCotizacionTarifas
         )
         {
             this.servicioUsuarios = servicioUsuarios;
             this.repositorioCotizaciones = repositorioCotizaciones;
             this.repositorioPagos = repositorioPagos;
             this.repositorioProductos = repositorioProductos;
+            this.servicioCotizacionTarifas = servicioCotizacionTarifas;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PreviewTarifas([FromBody] CotizacionTarifaPreviewRequestDto dto)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var res = await servicioCotizacionTarifas.PreviewAsync(usuarioId, dto);
+            return Json(res);
         }
 
         [HttpGet]
