@@ -1,0 +1,191 @@
+@model ManejoPresupuestos.Models.ReporteCxcViewModel
+@{
+    ViewData["Title"] = "Pagos y CxC (Aging)";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Pagos y CxC (Aging)</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Cliente</label>
+                <select class="form-select" name="clienteId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var c in Model.Clientes)
+                    {
+                        <option value="@c.Id" selected="@(Model.ClienteId == c.Id)">
+                            @c.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">PedidoId</label>
+                <input class="form-control" name="pedidoId" value="@(Model.PedidoId?.ToString() ?? "")" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Método / Ref / Tipo (texto)</label>
+                <input class="form-control" name="metodo" placeholder="Ej: efectivo, transferencia, BBVA..."
+                       value="@(Model.Metodo ?? "")" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Min saldo</label>
+                <input class="form-control" name="minSaldo" value="@(Model.MinSaldo?.ToString("0.##") ?? "")" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Bucket</label>
+                <select class="form-select" name="bucketId">
+                    <option value="">-- Todos --</option>
+                    <option value="0" selected="@(Model.BucketId == 0)">No vencido</option>
+                    <option value="1" selected="@(Model.BucketId == 1)">1-7</option>
+                    <option value="2" selected="@(Model.BucketId == 2)">8-14</option>
+                    <option value="3" selected="@(Model.BucketId == 3)">15-30</option>
+                    <option value="4" selected="@(Model.BucketId == 4)">31-60</option>
+                    <option value="5" selected="@(Model.BucketId == 5)">61+</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" name="soloVencidos" value="true"
+                           checked="@(Model.SoloVencidos)" id="soloVencidos" />
+                    <label class="form-check-label" for="soloVencidos">Solo vencidos</label>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="/Reportes/Cxc">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Pedidos con saldo</div>
+                <div class="fs-4">@Model.Totales.PedidosConSaldo</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Saldo total</div>
+                <div class="fs-4">@((Model.Totales.SaldoTotal ?? 0).ToString("N2"))</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Pedidos vencidos</div>
+                <div class="fs-4">@Model.Totales.PedidosVencidos</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Saldo vencido</div>
+                <div class="fs-4">@((Model.Totales.SaldoVencido ?? 0).ToString("N2"))</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Aging buckets</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Bucket</th>
+                        <th class="text-end">Pedidos</th>
+                        <th class="text-end">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var b in Model.Buckets)
+                {
+                    <tr>
+                        <td>@b.BucketNombre</td>
+                        <td class="text-end">@b.Pedidos</td>
+                        <td class="text-end">@((b.Saldo ?? 0).ToString("N2"))</td>
+                    </tr>
+                }
+                @if (!Model.Buckets.Any())
+                {
+                    <tr><td colspan="3" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header fw-semibold">Detalle (pedidos con saldo)</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Estatus</th>
+                        <th>Fecha base</th>
+                        <th class="text-end">Días</th>
+                        <th>Bucket</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Pagado</th>
+                        <th class="text-end">Saldo</th>
+                        <th class="text-end">Pagado %</th>
+                        <th>Último pago</th>
+                        <th>Método</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Reportes/Pedido360?pedidoId=@r.PedidoId">@r.PedidoId</a>
+                        </td>
+                        <td>@r.ClienteNombre</td>
+                        <td>@r.PedidoEstatusNombre</td>
+                        <td>@r.FechaBase.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">@r.DiasVencidos</td>
+                        <td>@r.BucketNombre</td>
+                        <td class="text-end">@r.TotalCobro.ToString("N2")</td>
+                        <td class="text-end">@r.TotalPagado.ToString("N2")</td>
+                        <td class="text-end fw-semibold">@r.Saldo.ToString("N2")</td>
+                        <td class="text-end">@r.PagadoPct.ToString("N2")%</td>
+                        <td>@(r.UltimoPagoFecha?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>@(r.UltimoPagoMetodo ?? r.UltimoPagoTipoNombre ?? "-")</td>
+                    </tr>
+                }
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="12" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-muted small mt-3">
+        * Fecha base = Vigencia cotización &gt; Fecha creación cotización &gt; Fecha creación pedido.
+    </div>
+</div>

@@ -39,6 +39,19 @@ namespace ManejoPresupuestos.Servicios
             int? produccionEstatusId,
             string? canal
         );
+
+
+        Task<ReporteCxcViewModel> CxcAging(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            bool soloVencidos,
+            int? bucketId,
+            string? metodo,
+            decimal? minSaldo
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -259,6 +272,66 @@ namespace ManejoPresupuestos.Servicios
             vm.EstatusPedido = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
             vm.EstatusProduccion = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
             vm.Clientes = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
+
+            return vm;
+        }
+
+        public async Task<ReporteCxcViewModel> CxcAging(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            bool soloVencidos,
+            int? bucketId,
+            string? metodo,
+            decimal? minSaldo
+        )
+        {
+            var vm = new ReporteCxcViewModel
+            {
+                Desde = (desde ?? DateTime.Today.AddDays(-30)).Date,
+                Hasta = (hasta ?? DateTime.Today).Date,
+                ClienteId = clienteId,
+                PedidoId = pedidoId,
+                SoloVencidos = soloVencidos,
+                BucketId = bucketId,
+                Metodo = metodo,
+                MinSaldo = minSaldo
+            };
+
+            using var connection = new SqlConnection(connectionString);
+
+            // Lookup clientes (para dropdown)
+            var clientes = await connection.QueryAsync<LookupItem>(
+                @"SELECT ClienteId AS Id, Nombre
+                FROM dbo.TblClientes
+                WHERE UsuarioId = @usuarioId AND EstaActivo = 1
+                ORDER BY Nombre;",
+                new { usuarioId }
+            );
+            vm.Clientes = clientes.ToList();
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesPagosCxcAging",
+                new
+                {
+                    loginId = usuarioId,
+                    desde = vm.Desde,
+                    hasta = vm.Hasta,
+                    clienteId = (int?)vm.ClienteId,
+                    pedidoId = (int?)vm.PedidoId,
+                    soloVencidos = vm.SoloVencidos,
+                    bucketId = (int?)vm.BucketId,
+                    metodo = vm.Metodo,
+                    minSaldo = (decimal?)vm.MinSaldo
+                },
+                commandType: CommandType.StoredProcedure
+            );
+
+            vm.Totales = (await multi.ReadAsync<ReporteCxcTotales>()).FirstOrDefault() ?? new ReporteCxcTotales();
+            vm.Buckets = (await multi.ReadAsync<ReporteCxcBucketRow>()).ToList();
+            vm.Rows = (await multi.ReadAsync<ReporteCxcRow>()).ToList();
 
             return vm;
         }

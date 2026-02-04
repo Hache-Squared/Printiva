@@ -100,5 +100,34 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Cxc(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            bool? soloVencidos,
+            int? bucketId,
+            string? metodo,
+            decimal? minSaldo
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.CxcAging(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                pedidoId,
+                soloVencidos ?? false,
+                bucketId,
+                metodo,
+                minSaldo
+            );
+
+            return View(vm);
+        }
     }
 }
