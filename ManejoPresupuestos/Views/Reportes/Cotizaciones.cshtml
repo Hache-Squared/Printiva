@@ -1,0 +1,182 @@
+@model ReporteCotizacionesSeguimientoViewModel
+
+@{
+    ViewData["Title"] = "Cotizaciones - Seguimiento";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Cotizaciones: conversión y seguimiento</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Cliente</label>
+                <select class="form-select" name="clienteId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var c in Model.Clientes)
+                    {
+                        <option value="@c.Id" selected="@(Model.ClienteId == c.Id)">
+                            @c.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Estatus cotización</label>
+                <select class="form-select" name="cotizacionEstatusId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var e in Model.Estatus)
+                    {
+                        <option value="@e.Id" selected="@(Model.CotizacionEstatusId == e.Id)">
+                            @e.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Min monto</label>
+                <input class="form-control" name="minMonto" value="@(Model.MinMonto?.ToString() ?? "")" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Buscar</label>
+                <input class="form-control" name="q" value="@(Model.Q ?? "")" placeholder="Cliente, notas, PedidoId, CotizacionId..." />
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="soloConvertidas" value="true" @(Model.SoloConvertidas ? "checked" : "") />
+                    <label class="form-check-label">Solo convertidas</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="soloUltimaPorPedido" value="true" @(Model.SoloUltimaPorPedido ? "checked" : "") />
+                    <label class="form-check-label">Solo última por pedido</label>
+                </div>
+
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Filtrar</button>
+                    <a class="btn btn-outline-secondary" href="/Reportes/Cotizaciones">Limpiar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-2"><div class="card card-body"><div class="text-muted small">Cotizaciones</div><div class="fs-4">@Model.Totales.Cotizaciones</div></div></div>
+        <div class="col-md-2"><div class="card card-body"><div class="text-muted small">Convertidas</div><div class="fs-4">@Model.Totales.Convertidas</div></div></div>
+        <div class="col-md-2"><div class="card card-body"><div class="text-muted small">Conversión %</div><div class="fs-4">@((Model.Totales.ConversionPct ?? 0).ToString("N2"))%</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Monto total</div><div class="fs-4">@((Model.Totales.MontoTotal ?? 0).ToString("N2"))</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Avg días a conversión</div><div class="fs-4">@((Model.Totales.AvgDiasAConversion ?? 0).ToString("N1"))</div></div></div>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Aceptadas</div><div class="fs-4">@Model.Totales.Aceptadas</div></div></div>
+        <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Pendientes</div><div class="fs-4">@Model.Totales.Pendientes</div></div></div>
+        <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Rechazadas</div><div class="fs-4">@Model.Totales.Rechazadas</div></div></div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Resumen por estatus</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Estatus</th>
+                        <th class="text-end">Cotizaciones</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-end">Convertidas</th>
+                        <th class="text-end">Conversión %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.PorEstatus)
+                {
+                    <tr>
+                        <td>@r.CotizacionEstatusNombre</td>
+                        <td class="text-end">@r.Cotizaciones</td>
+                        <td class="text-end">@((r.Monto ?? 0).ToString("N2"))</td>
+                        <td class="text-end">@r.Convertidas</td>
+                        <td class="text-end">@((r.ConversionPct ?? 0).ToString("N2"))%</td>
+                    </tr>
+                }
+                @if (!Model.PorEstatus.Any())
+                {
+                    <tr><td colspan="5" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header fw-semibold">Detalle</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Cotización</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Estatus</th>
+                        <th>Categoría</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-end">Pagado</th>
+                        <th class="text-end">Saldo</th>
+                        <th>Último pago</th>
+                        <th>Conv</th>
+                        <th class="text-end">Días</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr>
+                        <td>@r.CotizacionId</td>
+                        <td>
+                            @r.PedidoId
+                            <div class="small">
+                                <a href="/Reportes/Pedido360?pedidoId=@r.PedidoId">Pedido 360</a>
+                            </div>
+                        </td>
+                        <td>@r.ClienteNombre</td>
+                        <td>@r.CotizacionEstatusNombre</td>
+                        <td>@r.Categoria</td>
+                        <td>@r.CotizacionFechaCreacion.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">@r.MontoCotizacion.ToString("N2")</td>
+                        <td class="text-end">@r.TotalPagado.ToString("N2")</td>
+                        <td class="text-end">@r.Saldo.ToString("N2")</td>
+                        <td>
+                            @(r.UltimoPagoFecha?.ToString("yyyy-MM-dd") ?? "-")
+                            <div class="small text-muted">
+                                @(r.UltimoPagoTipoNombre ?? r.UltimoPagoMetodo ?? "-")
+                            </div>
+                        </td>
+                        <td>@(r.Convertida ? "Sí" : "No")</td>
+                        <td class="text-end">@(r.DiasAConversion?.ToString() ?? "-")</td>
+                    </tr>
+                }
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="12" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

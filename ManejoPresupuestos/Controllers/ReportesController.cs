@@ -129,5 +129,34 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Cotizaciones(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? cotizacionEstatusId,
+            bool? soloConvertidas,
+            bool? soloUltimaPorPedido,
+            decimal? minMonto,
+            string? q
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.CotizacionesSeguimiento(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                cotizacionEstatusId,
+                soloConvertidas ?? false,
+                soloUltimaPorPedido ?? false,
+                minMonto,
+                q
+            );
+
+            return View(vm);
+        }
     }
 }

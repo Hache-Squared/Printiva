@@ -52,6 +52,18 @@ namespace ManejoPresupuestos.Servicios
             string? metodo,
             decimal? minSaldo
         );
+
+        Task<ReporteCotizacionesSeguimientoViewModel> CotizacionesSeguimiento(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? cotizacionEstatusId,
+            bool soloConvertidas,
+            bool soloUltimaPorPedido,
+            decimal? minMonto,
+            string? q
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -332,6 +344,61 @@ namespace ManejoPresupuestos.Servicios
             vm.Totales = (await multi.ReadAsync<ReporteCxcTotales>()).FirstOrDefault() ?? new ReporteCxcTotales();
             vm.Buckets = (await multi.ReadAsync<ReporteCxcBucketRow>()).ToList();
             vm.Rows = (await multi.ReadAsync<ReporteCxcRow>()).ToList();
+
+            return vm;
+        }
+
+        public async Task<ReporteCotizacionesSeguimientoViewModel> CotizacionesSeguimiento(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? cotizacionEstatusId,
+            bool soloConvertidas,
+            bool soloUltimaPorPedido,
+            decimal? minMonto,
+            string? q
+        )
+        {
+            var vm = new ReporteCotizacionesSeguimientoViewModel
+            {
+                Desde = (desde ?? DateTime.Today.AddDays(-30)).Date,
+                Hasta = (hasta ?? DateTime.Today).Date,
+                ClienteId = clienteId,
+                CotizacionEstatusId = cotizacionEstatusId,
+                SoloConvertidas = soloConvertidas,
+                SoloUltimaPorPedido = soloUltimaPorPedido,
+                MinMonto = minMonto,
+                Q = q
+            };
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesCotizacionesSeguimiento",
+                new
+                {
+                    loginId = usuarioId,
+                    desde = vm.Desde,
+                    hasta = vm.Hasta,
+                    clienteId = (int?)vm.ClienteId,
+                    cotizacionEstatusId = (int?)vm.CotizacionEstatusId,
+                    soloConvertidas = vm.SoloConvertidas,
+                    soloUltimaPorPedido = vm.SoloUltimaPorPedido,
+                    minMonto = (decimal?)vm.MinMonto,
+                    q = vm.Q
+                },
+                commandType: CommandType.StoredProcedure
+            );
+
+            vm.Totales = (await multi.ReadAsync<ReporteCotizacionesTotales>()).FirstOrDefault()
+                        ?? new ReporteCotizacionesTotales();
+
+            vm.PorEstatus = (await multi.ReadAsync<ReporteCotizacionEstatusResumenRow>()).ToList();
+            vm.Rows = (await multi.ReadAsync<ReporteCotizacionSeguimientoRow>()).ToList();
+
+            vm.Clientes = (await multi.ReadAsync<SimpleOption>()).ToList();
+            vm.Estatus = (await multi.ReadAsync<SimpleOption>()).ToList();
 
             return vm;
         }
