@@ -93,6 +93,19 @@ namespace ManejoPresupuestos.Servicios
             bool incluirSinImpresora,
             string? q
         );
+
+        Task<ReporteInventarioConsumoMejoradoViewModel> InventarioConsumoMejorado(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoId,
+            int? productoId,
+            int? recetaId,
+            int? inventarioId,
+            string periodo,
+            int topN,
+            string? q
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -622,6 +635,75 @@ namespace ManejoPresupuestos.Servicios
             };
         }
 
+         public async Task<ReporteInventarioConsumoMejoradoViewModel> InventarioConsumoMejorado(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoId,
+            int? productoId,
+            int? recetaId,
+            int? inventarioId,
+            string periodo,
+            int topN,
+            string? q
+        )
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            var p = new
+            {
+                loginId,
+                desde = (DateTime?)desde,
+                hasta = (DateTime?)hasta,
+                pedidoId,
+                productoId,
+                recetaId,
+                inventarioId,
+                periodo = periodo ?? "month",
+                topN,
+                q = q ?? ""
+            };
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesInventarioConsumoMejorado",
+                p,
+                commandType: CommandType.StoredProcedure
+            );
+
+            var vm = new ReporteInventarioConsumoMejoradoViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                PedidoId = pedidoId,
+                ProductoId = productoId,
+                RecetaId = recetaId,
+                InventarioId = inventarioId,
+                Periodo = string.IsNullOrWhiteSpace(periodo) ? "month" : periodo,
+                TopN = topN <= 0 ? 10 : topN,
+                Q = q
+            };
+
+            vm.Totales = await multi.ReadSingleAsync<ReporteInventarioConsumoKpiDto>();
+            vm.TopInsumos = (await multi.ReadAsync<ReporteInventarioConsumoTopInsumoDto>()).ToList();
+            vm.PorProducto = (await multi.ReadAsync<ReporteInventarioConsumoPorProductoDto>()).ToList();
+            vm.PorPedido = (await multi.ReadAsync<ReporteInventarioConsumoPorPedidoDto>()).ToList();
+            vm.PorReceta = (await multi.ReadAsync<ReporteInventarioConsumoPorRecetaDto>()).ToList();
+            vm.TopPorPeriodo = (await multi.ReadAsync<ReporteInventarioConsumoTopPeriodoDto>()).ToList();
+            vm.Detalle = (await multi.ReadAsync<ReporteInventarioConsumoDetalleDto>()).ToList();
+
+            vm.TarifasDetalle = (await multi.ReadAsync<ReporteInventarioConsumoTarifaDetalleDto>()).ToList();
+
+            vm.CatProductos = (await multi.ReadAsync<CatalogoSimpleDto>()).ToList();
+            vm.CatRecetas = (await multi.ReadAsync<CatalogoRecetaDto>()).ToList();
+            vm.CatInsumos = (await multi.ReadAsync<CatalogoInsumoDto>()).ToList();
+
+            // index para vista: "{ProduccionItemId}|{InventarioId}"
+            vm.TarifasPorKey = vm.TarifasDetalle
+                .GroupBy(x => $"{x.ProduccionItemId}|{x.InventarioId}")
+                .ToDictionary(g => g.Key, g => g.OrderBy(t => t.TarifaOrden).ThenBy(t => t.TarifaId).ToList());
+
+            return vm;
+        }
         
 
     }

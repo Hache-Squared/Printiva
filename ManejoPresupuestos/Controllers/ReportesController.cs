@@ -210,5 +210,32 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm); // Views/Reportes/ProduccionUtilizacion.cshtml
         }
+
+        [HttpGet]
+        public async Task<IActionResult> InventarioConsumoMejorado(
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoId,
+            int? productoId,
+            int? recetaId,
+            int? inventarioId,
+            string periodo = "month",
+            int topN = 10,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.InventarioConsumoMejorado(
+                loginId,
+                desde, hasta,
+                pedidoId, productoId, recetaId, inventarioId,
+                periodo,
+                topN,
+                q
+            );
+
+            return View(vm);
+        }
     }
 }
