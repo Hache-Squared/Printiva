@@ -35,6 +35,10 @@ BEGIN
     DECLARE @TipoMov_AJUSTE   INT = (SELECT TOP 1 TipoMovimientoId FROM dbo.TblInventariosMovimientoTipos WHERE Nombre='AJUSTE_COMPRA');
     DECLARE @TipoMov_REVERSA  INT = (SELECT TOP 1 TipoMovimientoId FROM dbo.TblInventariosMovimientoTipos WHERE Nombre='REVERSA_COMPRA');
 
+    -- ✅ NUEVO: snapshots
+    DECLARE @InvAntes   DECIMAL(18,4) = NULL;
+    DECLARE @InvDespues DECIMAL(18,4) = NULL;
+
     BEGIN TRY
         BEGIN TRAN;
 
@@ -93,14 +97,22 @@ BEGIN
                     RAISERROR(@message, 16, 1);
                 END
 
+                -- ✅ snapshot ANTES/DESPUÉS con lock
+                SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
+                FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
+                WHERE i.InventarioId = @PrevInventarioId;
+
+                SET @InvDespues = @InvAntes - CAST(@PrevCantidad AS DECIMAL(18,4));
+
                 UPDATE dbo.TblInventarios
                     SET Cantidad = Cantidad - @PrevCantidad
                 WHERE InventarioId = @PrevInventarioId;
 
                 INSERT INTO dbo.TblInventariosMovimientos
-                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId)
+                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId, CompraId, DisponibleAntes, DisponibleDespues)
                 VALUES
-                    (@PrevInventarioId, @TipoMov_REVERSA, -@PrevCantidad, -@PrevCostoTotal, GETUTCDATE(), @loginId);
+                    (@PrevInventarioId, @TipoMov_REVERSA, -@PrevCantidad, -@PrevCostoTotal, GETUTCDATE(), @loginId,
+                     @ElementoAlterarId, @InvAntes, @InvDespues);
             END
 
             UPDATE dbo.TblCompras
@@ -222,19 +234,34 @@ BEGIN
                     RAISERROR(@message, 16, 1);
                 END
 
+                -- ✅ snapshot reversa
+                SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
+                FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
+                WHERE i.InventarioId = @PrevInventarioId;
+
+                SET @InvDespues = @InvAntes - CAST(@PrevCantidad AS DECIMAL(18,4));
+
                 UPDATE dbo.TblInventarios
                     SET Cantidad = Cantidad - @PrevCantidad
                 WHERE InventarioId = @PrevInventarioId;
 
                 INSERT INTO dbo.TblInventariosMovimientos
-                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId)
+                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId, CompraId, DisponibleAntes, DisponibleDespues)
                 VALUES
-                    (@PrevInventarioId, @TipoMov_AJUSTE, -@PrevCantidad, -@PrevCostoTotal, GETUTCDATE(), @loginId);
+                    (@PrevInventarioId, @TipoMov_AJUSTE, -@PrevCantidad, -@PrevCostoTotal, GETUTCDATE(), @loginId,
+                     @ElementoAlterarId, @InvAntes, @InvDespues);
             END
 
             /* Aplica nuevo efecto si ahora es inventario */
             IF (@EsInventario = 1 AND @InventarioId IS NOT NULL)
             BEGIN
+                -- ✅ snapshot apply
+                SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
+                FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
+                WHERE i.InventarioId = @InventarioId;
+
+                SET @InvDespues = @InvAntes + CAST(@Cantidad AS DECIMAL(18,4));
+
                 UPDATE dbo.TblInventarios
                     SET Cantidad = Cantidad + @Cantidad,
                         CostoUnitario = CASE
@@ -246,15 +273,16 @@ BEGIN
                 WHERE InventarioId = @InventarioId;
 
                 INSERT INTO dbo.TblInventariosMovimientos
-                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId)
+                    (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId, CompraId, DisponibleAntes, DisponibleDespues)
                 VALUES
-                    (@InventarioId, @TipoMov_AJUSTE, @Cantidad, @CostoTotal, GETUTCDATE(), @loginId);
+                    (@InventarioId, @TipoMov_AJUSTE, @Cantidad, @CostoTotal, GETUTCDATE(), @loginId,
+                     @ElementoAlterarId, @InvAntes, @InvDespues);
             END
 
             UPDATE dbo.TblCompras
                 SET Descripcion = @Descripcion,
                     CompraTipoId = @CompraTipoId,
-                    FilamentoTipoId = NULL,       -- sin filamentos
+                    FilamentoTipoId = NULL,
                     CompraCategoriaId = @CompraCategoriaId,
                     InventarioId = @InventarioId,
                     Cantidad = @Cantidad,
@@ -291,6 +319,13 @@ BEGIN
 
         IF (@EsInventario = 1 AND @InventarioId IS NOT NULL)
         BEGIN
+            -- ✅ snapshot create
+            SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
+            FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
+            WHERE i.InventarioId = @InventarioId;
+
+            SET @InvDespues = @InvAntes + CAST(@Cantidad AS DECIMAL(18,4));
+
             UPDATE dbo.TblInventarios
                 SET Cantidad = Cantidad + @Cantidad,
                     CostoUnitario = CASE
@@ -302,9 +337,10 @@ BEGIN
             WHERE InventarioId = @InventarioId;
 
             INSERT INTO dbo.TblInventariosMovimientos
-                (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId)
+                (InventarioId, TipoMovimientoId, Cantidad, Costo, FechaCreacion, UsuarioId, CompraId, DisponibleAntes, DisponibleDespues)
             VALUES
-                (@InventarioId, @TipoMov_COMPRA, @Cantidad, @CostoTotal, GETUTCDATE(), @loginId);
+                (@InventarioId, @TipoMov_COMPRA, @Cantidad, @CostoTotal, GETUTCDATE(), @loginId,
+                 @elementoId, @InvAntes, @InvDespues);
         END
 
         COMMIT TRAN;

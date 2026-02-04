@@ -106,6 +106,21 @@ namespace ManejoPresupuestos.Servicios
             int topN,
             string? q
         );
+
+        Task<ReporteComprasHistoricoVm> ComprasHistorico(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? compraId,
+            int? categoriaId,
+            int? tipoId,
+            int? inventarioId,
+            bool? soloActivos,
+            bool? soloInventario,
+            int topN,
+            string? q
+        );
+
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -704,6 +719,71 @@ namespace ManejoPresupuestos.Servicios
 
             return vm;
         }
+
+        public async Task<ReporteComprasHistoricoVm> ComprasHistorico(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? compraId,
+            int? categoriaId,
+            int? tipoId,
+            int? inventarioId,
+            bool? soloActivos,
+            bool? soloInventario,
+            int topN,
+            string? q
+        )
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            var p = new
+            {
+                loginId,
+                desde = (DateTime?)desde?.Date,
+                hasta = (DateTime?)hasta?.Date,
+                compraId,
+                categoriaId,
+                tipoId,
+                inventarioId,
+                soloActivos,
+                soloInventario,
+                topN = topN <= 0 ? 10 : topN,
+                q = string.IsNullOrWhiteSpace(q) ? null : q.Trim()
+            };
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesComprasHistorico",
+                p,
+                commandType: CommandType.StoredProcedure
+            );
+
+            var vm = new ReporteComprasHistoricoVm
+            {
+                Desde = desde,
+                Hasta = hasta,
+                CompraId = compraId,
+                CategoriaId = categoriaId,
+                TipoId = tipoId,
+                InventarioId = inventarioId,
+                SoloActivos = soloActivos,
+                SoloInventario = soloInventario,
+                TopN = topN <= 0 ? 10 : topN,
+                Q = q
+            };
+
+            vm.Kpis = (await multi.ReadAsync<ReporteComprasHistoricoKpiDto>()).FirstOrDefault() ?? new();
+            vm.TopCategorias = (await multi.ReadAsync<ReporteComprasTopCategoriaDto>()).ToList();
+            vm.TopTipos = (await multi.ReadAsync<ReporteComprasTopTipoDto>()).ToList();
+            vm.TopInventarios = (await multi.ReadAsync<ReporteComprasTopInventarioDto>()).ToList();
+            vm.Detalle = (await multi.ReadAsync<ReporteComprasHistoricoDetalleDto>()).ToList();
+
+            vm.Categorias = (await multi.ReadAsync<CatalogoDto>()).ToList();
+            vm.Tipos = (await multi.ReadAsync<CatalogoDto>()).ToList();
+            vm.Inventarios = (await multi.ReadAsync<CatalogoDto>()).ToList();
+
+            return vm;
+        }
+
         
 
     }

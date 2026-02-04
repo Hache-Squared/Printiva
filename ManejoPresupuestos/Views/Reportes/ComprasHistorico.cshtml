@@ -1,0 +1,252 @@
+@model ManejoPresupuestos.Models.ReporteComprasHistoricoVm
+
+@functions {
+    string money(decimal v) => v.ToString("C2");
+    string qty(decimal v) => v.ToString("#,0.####");
+    string qtyN(decimal? v) => v.HasValue ? v.Value.ToString("#,0.####") : "—";
+}
+
+<div class="container-fluid py-3">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h3 class="mb-0 text-primary"><i class="bi bi-graph-up"></i> Reporte: Compras (Histórico)</h3>
+            <div class="text-muted">Histórico de compras, afectación a inventario y estimaciones.</div>
+        </div>
+    </div>
+
+    <form method="get" class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label fw-bold">Desde</label>
+                    <input type="date" name="desde" class="form-control"
+                           value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <input type="date" name="hasta" class="form-control"
+                           value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Categoría</label>
+                    <select class="form-select" name="categoriaId">
+                        <option value="">(Todas)</option>
+                        @foreach (var c in Model.Categorias)
+                        {
+                            if (Model.CategoriaId == c.Id)
+                            {
+                                <option value="@c.Id" selected="selected">@c.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Id">@c.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Tipo</label>
+                    <select class="form-select" name="tipoId">
+                        <option value="">(Todos)</option>
+                        @foreach (var t in Model.Tipos)
+                        {
+                            if (Model.TipoId == t.Id)
+                            {
+                                <option value="@t.Id" selected="selected">@t.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@t.Id">@t.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Afectó inventario</label>
+                    <select class="form-select" name="soloInventario">
+                        @if (Model.SoloInventario == null)
+                        {
+                            <option value="" selected="selected">(Todos)</option>
+                            <option value="true">Sí (entró a stock)</option>
+                            <option value="false">No (gasto general)</option>
+                        }
+                        else if (Model.SoloInventario == true)
+                        {
+                            <option value="">(Todos)</option>
+                            <option value="true" selected="selected">Sí (entró a stock)</option>
+                            <option value="false">No (gasto general)</option>
+                        }
+                        else
+                        {
+                            <option value="">(Todos)</option>
+                            <option value="true">Sí (entró a stock)</option>
+                            <option value="false" selected="selected">No (gasto general)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Estatus</label>
+                    <select class="form-select" name="soloActivos">
+                        @if (Model.SoloActivos == null)
+                        {
+                            <option value="" selected="selected">(Todos)</option>
+                            <option value="true">Activos</option>
+                            <option value="false">Anulados</option>
+                        }
+                        else if (Model.SoloActivos == true)
+                        {
+                            <option value="">(Todos)</option>
+                            <option value="true" selected="selected">Activos</option>
+                            <option value="false">Anulados</option>
+                        }
+                        else
+                        {
+                            <option value="">(Todos)</option>
+                            <option value="true">Activos</option>
+                            <option value="false" selected="selected">Anulados</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Inventario (opcional)</label>
+                    <select class="form-select" name="inventarioId">
+                        <option value="">(Todos)</option>
+                        @foreach (var inv in Model.Inventarios)
+                        {
+                            if (Model.InventarioId == inv.Id)
+                            {
+                                <option value="@inv.Id" selected="selected">@inv.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@inv.Id">@inv.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscar</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control"
+                               value="@Model.Q"
+                               placeholder="Descripción, categoría, tipo..." />
+                    </div>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label fw-bold">Top</label>
+                    <input type="number" name="topN" class="form-control" value="@Model.TopN" min="1" />
+                </div>
+
+                <div class="col-md-12 text-end">
+                    <a href="@Url.Action("ComprasHistorico")" class="btn btn-outline-secondary">Limpiar</a>
+                    <button class="btn btn-primary px-4" type="submit">
+                        <i class="bi bi-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-start border-info border-4">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold">Total Compras</div>
+                    <div class="fs-4 fw-bold">@Model.Kpis.Compras</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-success border-4">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold">Gasto Total</div>
+                    <div class="fs-4 fw-bold text-success">@money(Model.Kpis.GastoTotal)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold">Compras a Inventario</div>
+                    <div class="fs-4 fw-bold">@Model.Kpis.ComprasInventario</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-secondary border-4">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold">Cantidad total a stock</div>
+                    <div class="fs-4 fw-bold">@qty(Model.Kpis.CantidadTotalInventario)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-bold">Detalle de Transacciones</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>#</th>
+                            <th>Categoría</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th class="text-end">Cant.</th>
+                            <th class="text-end">Costo U.</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Inv.</th>
+                            <th class="text-end text-info">Antes</th>
+                            <th class="text-end text-primary">Después</th>
+                            <th class="text-center">Estatus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var x in Model.Detalle)
+                        {
+                            <tr class="@(!x.EstaActivo ? "table-danger opacity-75" : "")">
+                                <td>@x.FechaCompraFinal.ToString("dd/MM/yy")</td>
+                                <td><span class="badge bg-secondary">@x.CompraId</span></td>
+                                <td><small>@x.CategoriaNombre</small></td>
+                                <td><small>@x.TipoNombre</small></td>
+                                <td>@x.CompraDescripcion</td>
+                                <td class="text-end fw-bold">@qty(x.CantidadFinal)</td>
+                                <td class="text-end">@money(x.CostoUnitarioFinal)</td>
+                                <td class="text-end fw-bold">@money(x.CostoTotalFinal)</td>
+                                <td class="text-center">
+                                    <i class="bi @(x.AfectoInventario ? "bi-check-circle-fill text-success" : "bi-x-circle text-muted")"></i>
+                                </td>
+                                <td class="text-end text-info">@qtyN(x.InventarioAntes)</td>
+                                <td class="text-end text-primary">@qtyN(x.InventarioDespues)</td>
+                                <td class="text-center">
+                                    @if (x.EstaActivo)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Anulado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

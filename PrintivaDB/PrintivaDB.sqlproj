@@ -158,6 +158,7 @@
     <Build Include="dbo\StoredProcedures\procProduccionRecetasDisponiblesPorItem.sql" />
     <Build Include="dbo\StoredProcedures\procRecetasCalcularCostoEstimado.sql" />
     <Build Include="dbo\StoredProcedures\procReemplazarPedidoItems.sql" />
+    <Build Include="dbo\StoredProcedures\procReportesComprasHistorico.sql" />
     <Build Include="dbo\StoredProcedures\procReportesConsumoInventarioDetalle.sql" />
     <Build Include="dbo\StoredProcedures\procReportesConsumoInventarioResumen.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidoDetalle.sql" />

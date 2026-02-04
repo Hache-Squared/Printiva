@@ -237,5 +237,39 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        
+        [HttpGet]
+        public async Task<IActionResult> ComprasHistorico(
+            DateTime? desde,
+            DateTime? hasta,
+            int? compraId,
+            int? categoriaId,
+            int? tipoId,
+            int? inventarioId,
+            bool? soloActivos,
+            bool? soloInventario,
+            int topN = 10,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.ComprasHistorico(
+                loginId,
+                desde,
+                hasta,
+                compraId,
+                categoriaId,
+                tipoId,
+                inventarioId,
+                soloActivos,
+                soloInventario,
+                topN,
+                q
+            );
+
+            return View(vm);
+        }
     }
 }
