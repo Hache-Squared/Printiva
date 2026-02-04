@@ -28,6 +28,17 @@ namespace ManejoPresupuestos.Servicios
         );
 
         Task<ReportePedido360ViewModel> Pedido360(int usuarioId, int pedidoId);
+
+        Task<ReportePedidosOperativosViewModel> PedidosOperativos(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoEstatusId,
+            int? clienteId,
+            bool? soloAtrasados,
+            int? produccionEstatusId,
+            string? canal
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -203,6 +214,56 @@ namespace ManejoPresupuestos.Servicios
 
             return vm;
         }
+
+         public async Task<ReportePedidosOperativosViewModel> PedidosOperativos(
+            int usuarioId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoEstatusId,
+            int? clienteId,
+            bool? soloAtrasados,
+            int? produccionEstatusId,
+            string? canal
+        )
+        {
+            var vm = new ReportePedidosOperativosViewModel
+            {
+                Desde = (desde ?? DateTime.Today.AddDays(-14)).Date,
+                Hasta = (hasta ?? DateTime.Today).Date,
+                PedidoEstatusId = pedidoEstatusId,
+                ClienteId = clienteId,
+                SoloAtrasados = soloAtrasados ?? false,
+                ProduccionEstatusId = produccionEstatusId,
+                Canal = canal
+            };
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesPedidosOperativos",
+                new
+                {
+                    loginId = usuarioId,
+                    desde = vm.Desde,
+                    hasta = vm.Hasta,
+                    pedidoEstatusId = (int?)vm.PedidoEstatusId,
+                    clienteId = (int?)vm.ClienteId,
+                    soloAtrasados = vm.SoloAtrasados,
+                    produccionEstatusId = (int?)vm.ProduccionEstatusId,
+                    canal = vm.Canal
+                },
+                commandType: CommandType.StoredProcedure
+            );
+
+            vm.Rows = (await multi.ReadAsync<ReportePedidoOperativoRow>()).ToList();
+            vm.EstatusPedido = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
+            vm.EstatusProduccion = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
+            vm.Clientes = (await multi.ReadAsync<ReporteOpcionRow>()).ToList();
+
+            return vm;
+        }
+
+        
 
     }
 }

@@ -73,5 +73,32 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> PedidosOperativos(
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoEstatusId,
+            int? clienteId,
+            bool? atrasados,
+            int? produccionEstatusId,
+            string? canal
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.PedidosOperativos(
+                loginId,
+                desde,
+                hasta,
+                pedidoEstatusId,
+                clienteId,
+                atrasados,
+                produccionEstatusId,
+                canal
+            );
+
+            return View(vm);
+        }
     }
 }

@@ -1,0 +1,144 @@
+@model ManejoPresupuestos.Models.ReportePedidosOperativosViewModel
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Pedidos operativos";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Pedidos operativos</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label">Desde</label>
+                <input type="date" class="form-control" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" class="form-control" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Estatus pedido</label>
+                <select class="form-select" name="pedidoEstatusId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var e in Model.EstatusPedido)
+                    {
+                        <option value="@e.Id" selected="@(Model.PedidoEstatusId == e.Id)">
+                            @e.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Cliente</label>
+                <select class="form-select" name="clienteId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var c in Model.Clientes)
+                    {
+                        <option value="@c.Id" selected="@(Model.ClienteId == c.Id)">
+                            @c.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Estatus producción</label>
+                <select class="form-select" name="produccionEstatusId">
+                    <option value="">-- Todos --</option>
+                    @foreach (var e in Model.EstatusProduccion)
+                    {
+                        <option value="@e.Id" selected="@(Model.ProduccionEstatusId == e.Id)">
+                            @e.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Canal (texto)</label>
+                <input class="form-control" name="canal" value="@(Model.Canal ?? "")" placeholder="Ej: Owala, General, Instagram..." />
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="atrasados" value="true" id="chkAtrasados"
+                           checked="@(Model.SoloAtrasados)" />
+                    <label class="form-check-label" for="chkAtrasados">
+                        Solo atrasados
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex justify-content-end gap-2 align-items-end">
+                <button class="btn btn-primary" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="/Reportes/PedidosOperativos">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Pedidos</div><div class="fs-4">@Model.TotalPedidos</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Atrasados</div><div class="fs-4">@Model.TotalAtrasados</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Saldo total</div><div class="fs-4">@Model.TotalSaldo.ToString("N2")</div></div></div>
+        <div class="col-md-3"><div class="card card-body"><div class="text-muted small">Rango</div><div class="fs-6">@Model.Desde.ToString("yyyy-MM-dd") → @Model.Hasta.ToString("yyyy-MM-dd")</div></div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header fw-semibold">Tablero diario</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Prioridad</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Pagado %</th>
+                        <th class="text-end">Saldo</th>
+                        <th>Estatus pedido</th>
+                        <th>Estatus producción</th>
+                        <th>Fecha estimada</th>
+                        <th>Atraso</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr class="@(r.EsAtrasado ? "table-warning" : "")">
+                        <td class="fw-semibold">@r.Prioridad</td>
+                        <td>@r.PedidoId</td>
+                        <td>@r.ClienteNombre</td>
+                        <td class="text-end">@r.Total.ToString("N2")</td>
+                        <td class="text-end">@r.PagadoPorcentaje.ToString("N2")%</td>
+                        <td class="text-end">@r.Saldo.ToString("N2")</td>
+                        <td>@r.PedidoEstatusNombre</td>
+                        <td>@(r.ProduccionEstatusNombre ?? "Sin producción")</td>
+                        <td>@(r.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>
+                            @(r.EsAtrasado ? $"Sí ({r.DiasAtraso}d)" : "No")
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="/Reportes/Pedido360?pedidoId=@r.PedidoId">
+                                Ver 360
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="11" class="text-muted text-center py-3">Sin datos</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
