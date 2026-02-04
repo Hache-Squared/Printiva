@@ -1,0 +1,408 @@
+@model ManejoPresupuestos.Models.ReportePedido360ViewModel
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Pedido 360";
+    var header = Model.Header;
+
+    var cotHeader = Model.Cotizacion.FirstOrDefault(x => x.RowType == "HEADER");
+    var cotItems = Model.Cotizacion.Where(x => x.RowType == "ITEM").ToList();
+
+    var totalCot = cotItems.Sum(x => x.Subtotal ?? 0m);
+    var totalPagado = Model.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto);
+    var pendiente = totalCot - totalPagado;
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Pedido 360</h1>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">PedidoId</label>
+                <input class="form-control" name="pedidoId" value="@(Model.PedidoId == 0 ? "" : Model.PedidoId.ToString())" />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+                <a class="btn btn-outline-secondary" href="/Reportes/Pedido360">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+    {
+        <div class="alert alert-warning">@Model.Mensaje</div>
+    }
+
+    @if (header is not null)
+    {
+        <!-- HEADER -->
+        <div class="row g-2 mb-3">
+            <div class="col-md-8">
+                <div class="card card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-muted small">Cliente</div>
+                            <div class="fs-5 fw-semibold">@header.ClienteNombre</div>
+                            <div class="small text-muted">
+                                @(header.Telefono ?? "-") · @(header.WhatsApp ?? "-") · @(header.Instagram ?? "-")
+                            </div>
+                            <div class="small text-muted">
+                                @(header.Email ?? "-") · @(header.Direccion ?? "-")
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Estatus pedido</div>
+                            <div class="fw-semibold">@header.PedidoEstatusNombre</div>
+                            <div class="text-muted small mt-2">PedidoId</div>
+                            <div class="fw-semibold">@header.PedidoId</div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="text-muted small">Creación</div>
+                            <div class="fw-semibold">@header.FechaCreacion.ToString("yyyy-MM-dd HH:mm")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Entrega estimada</div>
+                            <div class="fw-semibold">@(header.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-")</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Notas</div>
+                            <div>@(string.IsNullOrWhiteSpace(header.Notas) ? "-" : header.Notas)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="row g-2">
+                    <div class="col-12">
+                        <div class="card card-body">
+                            <div class="text-muted small">Total estimado</div>
+                            <div class="fs-4">@((header.TotalEstimado ?? 0m).ToString("N2"))</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card card-body">
+                            <div class="text-muted small">Total cotización</div>
+                            <div class="fs-4">@totalCot.ToString("N2")</div>
+                            <div class="text-muted small mt-2">Pagado</div>
+                            <div class="fw-semibold">@totalPagado.ToString("N2")</div>
+                            <div class="text-muted small">Pendiente</div>
+                            <div class="fw-semibold">@pendiente.ToString("N2")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2) ITEMS DEL PEDIDO -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Items del pedido</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>PedidoItemId</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Precio Est.</th>
+                            <th class="text-end">ProdItems</th>
+                            <th class="text-end">Cant. Prod</th>
+                            <th class="text-end">Peso Est.</th>
+                            <th class="text-end">Peso Real</th>
+                            <th>Notas</th>
+                            <th>Activo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var i in Model.Items.OrderBy(x => x.PedidoItemId))
+                    {
+                        <tr>
+                            <td>@i.PedidoItemId</td>
+                            <td>@(i.ProductoNombre ?? i.ProductoId.ToString())</td>
+                            <td>@(i.ProductoCategoriaNombre ?? "-")</td>
+                            <td class="text-end">@i.Cantidad</td>
+                            <td class="text-end">@((i.PrecioUnitarioEstimado ?? 0m).ToString("N2"))</td>
+                            <td class="text-end">@i.ProduccionItems</td>
+                            <td class="text-end">@i.CantidadEnProduccion</td>
+                            <td class="text-end">@i.PesoEstimadoGrTotal.ToString("N2")</td>
+                            <td class="text-end">@i.PesoRealGrTotal.ToString("N2")</td>
+                            <td>@(i.Notas ?? "-")</td>
+                            <td>@(i.EstaActivo ? "Sí" : "No")</td>
+                        </tr>
+                    }
+                    @if (!Model.Items.Any())
+                    {
+                        <tr><td colspan="11" class="text-muted text-center py-3">Sin items</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3) COTIZACIÓN (HEADER + ITEMS) -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Cotización vinculada</div>
+
+            @if (cotHeader is null && !cotItems.Any())
+            {
+                <div class="card-body text-muted">Sin cotización vinculada.</div>
+            }
+            else
+            {
+                <div class="card-body">
+                    @if (cotHeader is not null)
+                    {
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="text-muted small">CotizaciónId</div>
+                                <div class="fw-semibold">@cotHeader.CotizacionId</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted small">Estatus</div>
+                                <div class="fw-semibold">@cotHeader.CotizacionEstatusNombre</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted small">Creación</div>
+                                <div class="fw-semibold">@cotHeader.FechaCreacion.ToString("yyyy-MM-dd")</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted small">Vigencia</div>
+                                <div class="fw-semibold">@(cotHeader.FechaVigencia?.ToString("yyyy-MM-dd") ?? "-")</div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="text-muted small">Notas</div>
+                                <div>@(string.IsNullOrWhiteSpace(cotHeader.Notas) ? "-" : cotHeader.Notas)</div>
+                            </div>
+                        </div>
+                        <hr />
+                    }
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ItemId</th>
+                                    <th>Tipo</th>
+                                    <th>Concepto</th>
+                                    <th>Producto</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">P.U.</th>
+                                    <th class="text-end">Subtotal</th>
+                                    <th>Notas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var ci in cotItems.OrderBy(x => x.CotizacionItemId))
+                            {
+                                <tr>
+                                    <td>@(ci.CotizacionItemId?.ToString() ?? "-")</td>
+                                    <td>@(ci.ConceptoTipoNombre ?? ci.ConceptoTipoId?.ToString() ?? "-")</td>
+                                    <td>@(ci.Concepto ?? "-")</td>
+                                    <td>@(ci.ProductoNombre ?? "-")</td>
+                                    <td class="text-end">@((ci.Cantidad ?? 0m).ToString("N2"))</td>
+                                    <td class="text-end">@((ci.PrecioUnitario ?? 0m).ToString("N2"))</td>
+                                    <td class="text-end">@((ci.Subtotal ?? 0m).ToString("N2"))</td>
+                                    <td>@(ci.ItemNotas ?? "-")</td>
+                                </tr>
+                            }
+                            @if (!cotItems.Any())
+                            {
+                                <tr><td colspan="8" class="text-muted text-center py-3">Sin items en cotización</td></tr>
+                            }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="text-end fw-semibold">Total</td>
+                                    <td class="text-end fw-semibold">@totalCot.ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- 4) PAGOS -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Pagos</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>PagoId</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Método</th>
+                            <th>Referencia</th>
+                            <th>Notas</th>
+                            <th class="text-end">Monto</th>
+                            <th>Activo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var p in Model.Pagos.OrderByDescending(x => x.FechaPago))
+                    {
+                        <tr>
+                            <td>@p.PagoId</td>
+                            <td>@(p.PagoTipoNombre ?? p.PagoTipoId.ToString())</td>
+                            <td>@p.FechaPago.ToString("yyyy-MM-dd")</td>
+                            <td>@(p.Metodo ?? "-")</td>
+                            <td>@(p.Referencia ?? "-")</td>
+                            <td>@(p.Notas ?? "-")</td>
+                            <td class="text-end">@p.Monto.ToString("N2")</td>
+                            <td>@(p.EstaActivo ? "Sí" : "No")</td>
+                        </tr>
+                    }
+                    @if (!Model.Pagos.Any())
+                    {
+                        <tr><td colspan="8" class="text-muted text-center py-3">Sin pagos</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5) PRODUCCIÓN -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Producción</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ProdItemId</th>
+                            <th>PedidoItemId</th>
+                            <th>Producto</th>
+                            <th class="text-end">Cantidad</th>
+                            <th>Estatus</th>
+                            <th>Impresora</th>
+                            <th>Receta</th>
+                            <th class="text-end">Peso Est.</th>
+                            <th class="text-end">Peso Real</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Inventario aplicado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var pr in Model.Produccion.OrderBy(x => x.ProduccionEstatusOrden).ThenBy(x => x.ProduccionItemId))
+                    {
+                        <tr>
+                            <td>@pr.ProduccionItemId</td>
+                            <td>@pr.PedidoItemId</td>
+                            <td>@pr.ProductoNombre</td>
+                            <td class="text-end">@pr.Cantidad</td>
+                            <td>@pr.ProduccionEstatusNombre</td>
+                            <td>@(pr.ImpresoraNombre ?? "-")</td>
+                            <td>@(pr.RecetaNombre ?? "-")</td>
+                            <td class="text-end">@((pr.PesoEstimadoGr ?? 0m).ToString("N2"))</td>
+                            <td class="text-end">@((pr.PesoRealGr ?? 0m).ToString("N2"))</td>
+                            <td>@(pr.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                            <td>@(pr.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                            <td>@(pr.InventarioAplicado ? "Sí" : "No")</td>
+                        </tr>
+                    }
+                    @if (!Model.Produccion.Any())
+                    {
+                        <tr><td colspan="12" class="text-muted text-center py-3">Sin producción</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 6) CONSUMO -->
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Consumo de inventario (por receta/insumo)</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>ProdItem</th>
+                            <th>PedidoItem</th>
+                            <th>Receta</th>
+                            <th>Inventario</th>
+                            <th>Unidad</th>
+                            <th class="text-end">Planeado</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Antes</th>
+                            <th class="text-end">Después</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var c in Model.Consumo.OrderByDescending(x => x.Fecha))
+                    {
+                        <tr>
+                            <td>@c.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@c.ProduccionItemId</td>
+                            <td>@(c.PedidoItemId?.ToString() ?? "-")</td>
+                            <td>@(c.RecetaNombre ?? c.RecetaId?.ToString() ?? "-")</td>
+                            <td>@(c.InsumoNombre ?? c.InventarioId.ToString())</td>
+                            <td>@(c.UnidadNombre ?? "-")</td>
+                            <td class="text-end">@((c.CantidadPlaneadaTotal ?? 0m).ToString("N2"))</td>
+                            <td class="text-end">@c.CantidadConsumida.ToString("N2")</td>
+                            <td class="text-end">@((c.DisponibleAntes ?? 0m).ToString("N2"))</td>
+                            <td class="text-end">@((c.DisponibleDespues ?? 0m).ToString("N2"))</td>
+                            <td>@(c.Notas ?? "-")</td>
+                        </tr>
+                    }
+                    @if (!Model.Consumo.Any())
+                    {
+                        <tr><td colspan="11" class="text-muted text-center py-3">Sin consumo</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 7) TIMELINE -->
+        <div class="card">
+            <div class="card-header fw-semibold">Timeline</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>PedidoItem</th>
+                            <th>ProdItem</th>
+                            <th>Desde</th>
+                            <th>Hacia</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var h in Model.Historia.OrderByDescending(x => x.Fecha))
+                    {
+                        <tr>
+                            <td>@h.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@h.Tipo</td>
+                            <td>@(h.PedidoItemId?.ToString() ?? "-")</td>
+                            <td>@(h.ProduccionItemId?.ToString() ?? "-")</td>
+                            <td>@(h.DesdeEstatusNombre ?? h.DesdeEstatusId.ToString())</td>
+                            <td>@(h.HaciaEstatusNombre ?? h.HaciaEstatusId.ToString())</td>
+                            <td>@(h.Notas ?? "-")</td>
+                        </tr>
+                    }
+                    @if (!Model.Historia.Any())
+                    {
+                        <tr><td colspan="7" class="text-muted text-center py-3">Sin movimientos</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

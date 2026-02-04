@@ -1,3 +1,4 @@
+using ManejoPresupuestos.Models;
 using ManejoPresupuestos.Servicios;
 using Microsoft.AspNetCore.Mvc;
 
@@ -55,6 +56,21 @@ namespace ManejoPresupuestos.Controllers
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
             var vm = await repositorioReportes.Costeo(loginId, desde, hasta, pedidoId);
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Pedido360(int? pedidoId)
+        {
+            // Para que puedas abrir la pantalla sin parámetros
+            if (!pedidoId.HasValue || pedidoId.Value <= 0)
+            {
+                return View(new ReportePedido360ViewModel { PedidoId = pedidoId ?? 0 });
+            }
+
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+            var vm = await repositorioReportes.Pedido360(loginId, pedidoId.Value);
+
             return View(vm);
         }
     }

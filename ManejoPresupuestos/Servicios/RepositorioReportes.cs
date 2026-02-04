@@ -26,6 +26,8 @@ namespace ManejoPresupuestos.Servicios
             DateTime? hasta,
             int? pedidoId
         );
+
+        Task<ReportePedido360ViewModel> Pedido360(int usuarioId, int pedidoId);
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -171,5 +173,36 @@ namespace ManejoPresupuestos.Servicios
 
             return vm;
         }
+
+        public async Task<ReportePedido360ViewModel> Pedido360(int usuarioId, int pedidoId)
+        {
+            var vm = new ReportePedido360ViewModel { PedidoId = pedidoId };
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesPedido360",
+                new { pedidoId = pedidoId, loginId = usuarioId },
+                commandType: CommandType.StoredProcedure
+            );
+
+            vm.Header = (await multi.ReadAsync<ReportePedido360Header>()).FirstOrDefault();
+
+            if (vm.Header is null)
+            {
+                vm.Mensaje = "No se encontró el pedido o no tienes acceso.";
+                return vm;
+            }
+
+            vm.Items = (await multi.ReadAsync<ReportePedido360ItemRow>()).ToList();
+            vm.Cotizacion = (await multi.ReadAsync<ReportePedido360CotizacionRow>()).ToList();
+            vm.Pagos = (await multi.ReadAsync<ReportePedido360PagoRow>()).ToList();
+            vm.Produccion = (await multi.ReadAsync<ReportePedido360ProduccionRow>()).ToList();
+            vm.Consumo = (await multi.ReadAsync<ReportePedido360ConsumoRow>()).ToList();
+            vm.Historia = (await multi.ReadAsync<ReportePedido360HistoriaRow>()).ToList();
+
+            return vm;
+        }
+
     }
 }

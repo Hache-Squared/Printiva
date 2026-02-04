@@ -162,6 +162,7 @@
     <Build Include="dbo\StoredProcedures\procReportesConsumoInventarioResumen.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidoDetalle.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidos.sql" />
+    <Build Include="dbo\StoredProcedures\procReportesPedido360.sql" />
     <Build Include="dbo\StoredProcedures\procReportesProduccionDashboard.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasActualizar.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasDiagnostico.sql" />
