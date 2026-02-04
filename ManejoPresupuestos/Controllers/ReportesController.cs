@@ -44,10 +44,37 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Produccion()
+        public async Task<IActionResult> Produccion(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            int? estatusId,
+            int? impresoraId,
+            bool? soloWip,
+            bool? soloAtrasados,
+            bool? sinImpresora,
+            int? minDiasCola,
+            string? q
+        )
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
-            var vm = await repositorioReportes.ProduccionDashboard(loginId);
+
+            var vm = await repositorioReportes.ProduccionWipDashboard(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                pedidoId,
+                estatusId,
+                impresoraId,
+                soloWip ?? true,          // default: tablero WIP
+                soloAtrasados ?? false,
+                sinImpresora ?? false,
+                minDiasCola,
+                q
+            );
+
             return View(vm);
         }
 

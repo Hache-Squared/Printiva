@@ -167,6 +167,7 @@
     <Build Include="dbo\StoredProcedures\procReportesPedido360.sql" />
     <Build Include="dbo\StoredProcedures\procReportesPedidosOperativos.sql" />
     <Build Include="dbo\StoredProcedures\procReportesProduccionDashboard.sql" />
+    <Build Include="dbo\StoredProcedures\procReportesProduccionWipDashboard.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasActualizar.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasDiagnostico.sql" />
     <Build Include="dbo\StoredProcedures\procTarifasEliminar.sql" />

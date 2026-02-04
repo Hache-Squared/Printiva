@@ -64,6 +64,26 @@ namespace ManejoPresupuestos.Servicios
             decimal? minMonto,
             string? q
         );
+
+        Task<ReporteProduccionWipViewModel> GetProduccionWipDashboardAsync(
+            int loginId,
+            ReporteProduccionWipViewModel vm
+        );
+
+        Task<ReporteProduccionWipViewModel> ProduccionWipDashboard(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            int? estatusId,
+            int? impresoraId,
+            bool soloWip,
+            bool soloAtrasados,
+            bool sinImpresora,
+            int? minDiasCola,
+            string? q
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -399,6 +419,146 @@ namespace ManejoPresupuestos.Servicios
 
             vm.Clientes = (await multi.ReadAsync<SimpleOption>()).ToList();
             vm.Estatus = (await multi.ReadAsync<SimpleOption>()).ToList();
+
+            return vm;
+        }
+
+        public async Task<ReporteProduccionWipViewModel> GetProduccionWipDashboardAsync(
+            int loginId,
+            ReporteProduccionWipViewModel vm
+        )
+        {
+            // defaults sanos para “tablero” (opcional)
+            vm.Desde ??= DateTime.Today.AddDays(-14);
+            vm.Hasta ??= DateTime.Today;
+
+            using var con = new SqlConnection(connectionString);
+            await con.OpenAsync();
+
+            var args = new
+            {
+                loginId = loginId,
+
+                desde = vm.Desde?.Date,
+                hasta = vm.Hasta?.Date,
+
+                clienteId = vm.ClienteId,
+                pedidoId = vm.PedidoId,
+                estatusId = vm.EstatusId,
+                impresoraId = vm.ImpresoraId,
+
+                soloWip = vm.SoloWip,
+                soloAtrasados = vm.SoloAtrasados,
+                sinImpresora = vm.SinImpresora,
+
+                minDiasCola = vm.MinDiasCola,
+                q = vm.Q
+            };
+
+            using var multi = await con.QueryMultipleAsync(
+                "dbo.procReportesProduccionWipDashboard",
+                args,
+                commandType: CommandType.StoredProcedure
+            );
+
+            // 1) Totales
+            vm.Totales = (await multi.ReadAsync<ReporteProduccionWipTotales>())
+                .FirstOrDefault() ?? new ReporteProduccionWipTotales();
+
+            // 2) WIP por estatus
+            vm.WipPorEstatus = (await multi.ReadAsync<ReporteProduccionWipEstatusAgg>()).ToList();
+
+            // 3) Items por impresora
+            vm.PorImpresora = (await multi.ReadAsync<ReporteProduccionWipImpresoraAgg>()).ToList();
+
+            // 4) Antigüedad (buckets)
+            vm.PorAntiguedad = (await multi.ReadAsync<ReporteProduccionWipColaBucketAgg>()).ToList();
+
+            // 5) Detalle
+            vm.Detalle = (await multi.ReadAsync<ReporteProduccionWipDetalleRow>()).ToList();
+
+            // 6) Dropdown estatus
+            vm.CatEstatus = (await multi.ReadAsync<ReporteCatalogEstatusRow>()).ToList();
+
+            // 7) Dropdown impresoras
+            vm.CatImpresoras = (await multi.ReadAsync<ReporteCatalogImpresoraRow>()).ToList();
+
+            // 8) Dropdown clientes
+            vm.CatClientes = (await multi.ReadAsync<ReporteCatalogClienteRow>()).ToList();
+
+            return vm;
+        }
+
+        public async Task<ReporteProduccionWipViewModel> ProduccionWipDashboard(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            int? estatusId,
+            int? impresoraId,
+            bool soloWip,
+            bool soloAtrasados,
+            bool sinImpresora,
+            int? minDiasCola,
+            string? q
+        )
+        {
+            var vm = new ReporteProduccionWipViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                ClienteId = clienteId,
+                PedidoId = pedidoId,
+                EstatusId = estatusId,
+                ImpresoraId = impresoraId,
+                SoloWip = soloWip,
+                SoloAtrasados = soloAtrasados,
+                SinImpresora = sinImpresora,
+                MinDiasCola = minDiasCola,
+                Q = q
+            };
+
+            // defaults “tablero”
+            vm.Desde ??= DateTime.Today.AddDays(-14);
+            vm.Hasta ??= DateTime.Today;
+
+            using var con = new SqlConnection(connectionString);
+            await con.OpenAsync();
+
+            var args = new
+            {
+                loginId,
+                desde = vm.Desde?.Date,
+                hasta = vm.Hasta?.Date,
+                clienteId = vm.ClienteId,
+                pedidoId = vm.PedidoId,
+                estatusId = vm.EstatusId,
+                impresoraId = vm.ImpresoraId,
+                soloWip = vm.SoloWip,
+                soloAtrasados = vm.SoloAtrasados,
+                sinImpresora = vm.SinImpresora,
+                minDiasCola = vm.MinDiasCola,
+                q = string.IsNullOrWhiteSpace(vm.Q) ? null : vm.Q.Trim()
+            };
+
+            using var multi = await con.QueryMultipleAsync(
+                "dbo.procReportesProduccionWipDashboard",
+                args,
+                commandType: CommandType.StoredProcedure
+            );
+
+            vm.Totales = (await multi.ReadAsync<ReporteProduccionWipTotales>()).FirstOrDefault()
+                        ?? new ReporteProduccionWipTotales();
+
+            vm.WipPorEstatus = (await multi.ReadAsync<ReporteProduccionWipEstatusAgg>()).ToList();
+            vm.PorImpresora = (await multi.ReadAsync<ReporteProduccionWipImpresoraAgg>()).ToList();
+            vm.PorAntiguedad = (await multi.ReadAsync<ReporteProduccionWipColaBucketAgg>()).ToList();
+            vm.Detalle = (await multi.ReadAsync<ReporteProduccionWipDetalleRow>()).ToList();
+
+            vm.CatEstatus = (await multi.ReadAsync<ReporteCatalogEstatusRow>()).ToList();
+            vm.CatImpresoras = (await multi.ReadAsync<ReporteCatalogImpresoraRow>()).ToList();
+            vm.CatClientes = (await multi.ReadAsync<ReporteCatalogClienteRow>()).ToList();
 
             return vm;
         }
