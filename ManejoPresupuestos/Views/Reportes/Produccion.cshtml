@@ -82,15 +82,21 @@
 
                 <div class="col-md-6 d-flex gap-3 align-items-center">
                     <div class="form-check">
+                        <!-- CHECKBOX + hidden false para que SIEMPRE se mande el valor -->
                         <input class="form-check-input" type="checkbox" name="soloWip" value="true" @(Model.SoloWip ? "checked" : "") />
+                        <input type="hidden" name="soloWip" value="false" />
                         <label class="form-check-label">Solo WIP</label>
                     </div>
+
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="soloAtrasados" value="true" @(Model.SoloAtrasados ? "checked" : "") />
+                        <input type="hidden" name="soloAtrasados" value="false" />
                         <label class="form-check-label">Solo atrasados</label>
                     </div>
+
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="sinImpresora" value="true" @(Model.SinImpresora ? "checked" : "") />
+                        <input type="hidden" name="sinImpresora" value="false" />
                         <label class="form-check-label">Sin impresora</label>
                     </div>
                 </div>

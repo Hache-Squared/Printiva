@@ -153,8 +153,11 @@ BEGIN
     AND (@estatusId IS NULL OR pi.ProduccionEstatusId = @estatusId)
     AND (@impresoraId IS NULL OR pi.ImpresoraId = @impresoraId)
     AND (@sinImpresora = 0 OR pi.ImpresoraId IS NULL)
-    AND (@desde IS NULL OR CAST(pi.FechaCreacion AS DATE) >= @desde)
-    AND (@hasta IS NULL OR CAST(pi.FechaCreacion AS DATE) <= @hasta)
+
+    -- ✅ CAMBIO CLAVE: filtrar por FechaEnEstatus (último movimiento / estatus)
+    AND (@desde IS NULL OR CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE) >= @desde)
+    AND (@hasta IS NULL OR CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE) <= @hasta)
+
     AND (@q IS NULL
          OR cl.Nombre LIKE '%' + @q + '%'
          OR pr.Nombre LIKE '%' + @q + '%'
