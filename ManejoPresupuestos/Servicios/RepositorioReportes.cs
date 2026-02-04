@@ -84,6 +84,15 @@ namespace ManejoPresupuestos.Servicios
             int? minDiasCola,
             string? q
         );
+        Task<ReporteProduccionUtilizacionViewModel> ProduccionUtilizacionImpresoras(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? impresoraId,
+            bool incluirEnCurso,
+            bool incluirSinImpresora,
+            string? q
+        );
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -561,6 +570,56 @@ namespace ManejoPresupuestos.Servicios
             vm.CatClientes = (await multi.ReadAsync<ReporteCatalogClienteRow>()).ToList();
 
             return vm;
+        }
+
+        public async Task<ReporteProduccionUtilizacionViewModel> ProduccionUtilizacionImpresoras(
+            int loginId,
+            DateTime? desde,
+            DateTime? hasta,
+            int? impresoraId,
+            bool incluirEnCurso,
+            bool incluirSinImpresora,
+            string? q
+        )
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            var p = new DynamicParameters();
+            p.Add("@loginId", loginId, DbType.Int32);
+            p.Add("@desde", desde?.Date, DbType.Date);
+            p.Add("@hasta", hasta?.Date, DbType.Date);
+            p.Add("@impresoraId", impresoraId, DbType.Int32);
+            p.Add("@incluirEnCurso", incluirEnCurso, DbType.Boolean);
+            p.Add("@incluirSinImpresora", incluirSinImpresora, DbType.Boolean);
+            p.Add("@q", q, DbType.String);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesProduccionUtilizacionImpresoras",
+                p,
+                commandType: CommandType.StoredProcedure
+            );
+
+            var totales = await multi.ReadFirstOrDefaultAsync<ReporteProduccionUtilizacionTotalesDto>()
+                        ?? new ReporteProduccionUtilizacionTotalesDto();
+
+            var porImpresora = (await multi.ReadAsync<ReporteProduccionUtilizacionPorImpresoraDto>()).ToList();
+            var detalle = (await multi.ReadAsync<ReporteProduccionUtilizacionDetalleDto>()).ToList();
+            var catImpresoras = (await multi.ReadAsync<CatalogoImpresoraDto>()).ToList();
+
+            return new ReporteProduccionUtilizacionViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                ImpresoraId = impresoraId,
+                IncluirEnCurso = incluirEnCurso,
+                IncluirSinImpresora = incluirSinImpresora,
+                Q = q,
+
+                Totales = totales,
+                PorImpresora = porImpresora,
+                Detalle = detalle,
+                CatImpresoras = catImpresoras
+            };
         }
 
         

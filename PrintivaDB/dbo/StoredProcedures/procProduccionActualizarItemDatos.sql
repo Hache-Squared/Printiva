@@ -19,7 +19,6 @@ BEGIN
         IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios u (NOLOCK) WHERE u.Id = @loginId)
             RAISERROR('Usuario no encontrado.', 16, 1);
 
-        -- El item debe pertenecer a un pedido del usuario
         IF NOT EXISTS(
             SELECT 1
             FROM dbo.TblProduccionItems pr (NOLOCK)
@@ -30,7 +29,6 @@ BEGIN
         )
             RAISERROR('Item de producción no encontrado.', 16, 1);
 
-        -- Si mandan impresora, valida que exista, sea del usuario y esté activa
         IF @ImpresoraId IS NOT NULL
         BEGIN
             IF NOT EXISTS(
@@ -43,15 +41,55 @@ BEGIN
                 RAISERROR('Impresora inválida o inactiva.', 16, 1);
         END
 
-        UPDATE dbo.TblProduccionItems
+        DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+
+        DECLARE @EnProdId INT =
+        (
+            SELECT TOP 1 ProduccionEstatusId
+            FROM dbo.TblProduccionEstatus (NOLOCK)
+            WHERE EstaActivo=1 AND Nombre=N'En producción'
+            ORDER BY Orden ASC
+        );
+
+        DECLARE @PostId INT =
+        (
+            SELECT TOP 1 ProduccionEstatusId
+            FROM dbo.TblProduccionEstatus WITH (NOLOCK)
+            WHERE EstaActivo=1 AND (
+                   Nombre = N'Post-procesado'
+                OR Nombre = N'Post-proceso'
+                OR Nombre = N'Post Procesado'
+                OR Nombre LIKE N'Post%'
+            )
+            ORDER BY Orden ASC
+        );
+
+        UPDATE pi
            SET ImpresoraId     = @ImpresoraId,
                NotasOperativas = NULLIF(@NotasOperativas,''),
                PesoEstimadoGr  = @PesoEstimadoGr,
                PesoRealGr      = @PesoRealGr,
-               FechaInicio     = @FechaInicio,
-               FechaFin        = @FechaFin,
+
+               -- ✅ FECHAS: NO borres si vienen NULL
+               -- ✅ y si está En producción y aún no hay inicio, arráncalo
+               FechaInicio = CASE
+                                WHEN @FechaInicio IS NOT NULL THEN @FechaInicio
+                                WHEN pi.FechaInicio IS NULL AND @EnProdId IS NOT NULL AND pi.ProduccionEstatusId = @EnProdId THEN @Now
+                                ELSE pi.FechaInicio
+                            END,
+
+               -- ✅ FECHA FIN: solo se setea si la mandan; o si está Post y no hay fin (fallback)
+               FechaFin = CASE
+                            WHEN @FechaFin IS NOT NULL THEN @FechaFin
+                            WHEN pi.FechaFin IS NULL AND @PostId IS NOT NULL AND pi.ProduccionEstatusId = @PostId THEN @Now
+                            ELSE pi.FechaFin
+                         END,
+
                FechaActualizacion = SYSDATETIME()
-        WHERE ProduccionItemId = @ProduccionItemId;
+        FROM dbo.TblProduccionItems pi
+        WHERE pi.ProduccionItemId = @ProduccionItemId
+          AND pi.UsuarioId = @loginId
+          AND pi.EstaActivo = 1;
 
         SET @message = 'Datos de producción guardados.';
         SELECT @result [result], @message [message], @elementoId [elementoId];

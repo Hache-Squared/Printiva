@@ -1,0 +1,221 @@
+@model ManejoPresupuestos.Models.ReporteProduccionUtilizacionViewModel
+@{
+    ViewData["Title"] = "Producción - Utilización por impresora";
+    string fmtDate(DateTime? d) => d.HasValue ? d.Value.ToString("yyyy-MM-dd") : "";
+    string fmtHours(decimal h) => h.ToString("0.00");
+    string fmtMin(decimal m) => m.ToString("0.0");
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-0">Producción (Utilización por impresora)</h1>
+            <div class="text-muted small">Horas impresas por impresora (periodo), items, duración promedio y señales de fallas/reimpresiones</div>
+        </div>
+        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="card mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="desde" class="form-control" value="@fmtDate(Model.Desde)" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="hasta" class="form-control" value="@fmtDate(Model.Hasta)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Impresora</label>
+                    <select class="form-select" name="impresoraId">
+                        <option value="">-- Todas --</option>
+                        @foreach (var i in Model.CatImpresoras.OrderBy(x => x.Nombre))
+                        {
+                            <option value="@i.Id" selected="@(Model.ImpresoraId == i.Id)">
+                                @i.Nombre @(!string.IsNullOrWhiteSpace(i.Modelo) ? $"({i.Modelo})" : "")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Buscar (cliente/producto/nota)</label>
+                    <input type="text" name="q" class="form-control" value="@(Model.Q ?? "")" placeholder="Ej: goku, llavero, ana..." />
+                </div>
+
+                <div class="col-md-6 d-flex gap-3 align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="incluirEnCurso" value="true" @(Model.IncluirEnCurso ? "checked" : "") />
+                        <input type="hidden" name="incluirEnCurso" value="false" />
+                        <label class="form-check-label">Incluir en curso</label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="incluirSinImpresora" value="true" @(Model.IncluirSinImpresora ? "checked" : "") />
+                        <input type="hidden" name="incluirSinImpresora" value="false" />
+                        <label class="form-check-label">Incluir sin impresora</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6 d-flex gap-2 justify-content-end">
+                    <button class="btn btn-primary" type="submit">Filtrar</button>
+                    <a class="btn btn-outline-secondary" href="/Reportes/ProduccionUtilizacion">Limpiar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- KPIs -->
+    <div class="row g-2 mb-3">
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Horas completadas</div>
+                <div class="fs-4">@fmtHours(Model.Totales.HorasCompletadas)</div>
+                <div class="text-muted small">Items completados: @Model.Totales.ItemsCompletados</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Horas en curso</div>
+                <div class="fs-4">@fmtHours(Model.Totales.HorasEnCurso)</div>
+                <div class="text-muted small">Items en curso: @Model.Totales.ItemsEnCurso</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Items (total)</div>
+                <div class="fs-4">@Model.Totales.Items</div>
+                <div class="text-muted small">Sin tiempos: @Model.Totales.ItemsSinTiempos</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-body">
+                <div class="text-muted small">Duración prom (completados)</div>
+                <div class="fs-4">@fmtMin(Model.Totales.AvgDuracionMin) min</div>
+                <div class="text-muted small">Fallas: @Model.Totales.Fallas • Reimp: @Model.Totales.Reimpresiones</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen por impresora -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Utilización por impresora</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Impresora</th>
+                        <th class="text-end">Horas (total)</th>
+                        <th class="text-end">Horas compl.</th>
+                        <th class="text-end">Horas curso</th>
+                        <th class="text-end">Items</th>
+                        <th class="text-end">Compl.</th>
+                        <th class="text-end">Curso</th>
+                        <th class="text-end">Avg min</th>
+                        <th class="text-end">Fallas</th>
+                        <th class="text-end">Reimp</th>
+                        <th class="text-end">Sin tiempos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.PorImpresora.Count == 0)
+                {
+                    <tr><td colspan="11" class="text-center text-muted py-3">Sin datos</td></tr>
+                }
+                else
+                {
+                    foreach (var x in Model.PorImpresora)
+                    {
+                        <tr>
+                            <td>
+                                @if (x.ImpresoraId.HasValue)
+                                {
+                                    <span>@x.ImpresoraNombre @(!string.IsNullOrWhiteSpace(x.ImpresoraModelo) ? $"({x.ImpresoraModelo})" : "")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">(Sin impresora)</span>
+                                }
+                            </td>
+                            <td class="text-end">@fmtHours(x.HorasTotales)</td>
+                            <td class="text-end">@fmtHours(x.HorasCompletadas)</td>
+                            <td class="text-end">@fmtHours(x.HorasEnCurso)</td>
+                            <td class="text-end">@x.Items</td>
+                            <td class="text-end">@x.ItemsCompletados</td>
+                            <td class="text-end">@x.ItemsEnCurso</td>
+                            <td class="text-end">@fmtMin(x.AvgDuracionMin)</td>
+                            <td class="text-end">@x.Fallas</td>
+                            <td class="text-end">@x.Reimpresiones</td>
+                            <td class="text-end">@x.ItemsSinTiempos</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detalle -->
+    <div class="card">
+        <div class="card-header fw-semibold">Detalle</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>ProdItem</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Impresora</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th class="text-end">Min</th>
+                        <th>Estatus</th>
+                        <th class="text-center">Falla</th>
+                        <th class="text-center">Reimp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Detalle.Count == 0)
+                {
+                    <tr><td colspan="11" class="text-center text-muted py-4">Sin datos</td></tr>
+                }
+                else
+                {
+                    foreach (var x in Model.Detalle)
+                    {
+                        <tr class="@(x.MarcadaFalla ? "table-warning" : "")">
+                            <td>@x.ProduccionItemId</td>
+                            <td><a href="/Reportes/Pedido360?pedidoId=@x.PedidoId">#@x.PedidoId</a></td>
+                            <td>@x.ClienteNombre</td>
+                            <td>@x.ProductoNombre</td>
+                            <td>@(x.ImpresoraNombre ?? "(Sin impresora)")</td>
+                            <td>@(x.FechaInicio.HasValue ? x.FechaInicio.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                            <td>@(x.FechaFin.HasValue ? x.FechaFin.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                            <td class="text-end">@x.DuracionMin.ToString("0")</td>
+                            <td>
+                                <span class="badge @(string.IsNullOrWhiteSpace(x.BadgeClass) ? "bg-secondary" : x.BadgeClass)">
+                                    @x.ProduccionEstatusNombre
+                                </span>
+                            </td>
+                            <td class="text-center">@(x.MarcadaFalla ? "Sí" : "No")</td>
+                            <td class="text-center">@(x.EsReimpresion ? "Sí" : "No")</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-2 text-muted small">
+            Nota: “Falla/Reimp” se infiere por estatus o palabras clave en notas (falla/fallo/error/reimp/reprint). Si luego agregas un campo formal, lo cambiamos.
+        </div>
+    </div>
+</div>

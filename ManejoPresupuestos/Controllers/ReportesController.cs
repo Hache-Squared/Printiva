@@ -185,5 +185,30 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ProduccionUtilizacion(
+            DateTime? desde,
+            DateTime? hasta,
+            int? impresoraId,
+            bool incluirEnCurso = true,
+            bool incluirSinImpresora = true,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.ProduccionUtilizacionImpresoras(
+                loginId,
+                desde,
+                hasta,
+                impresoraId,
+                incluirEnCurso,
+                incluirSinImpresora,
+                q
+            );
+
+            return View(vm); // Views/Reportes/ProduccionUtilizacion.cshtml
+        }
     }
 }

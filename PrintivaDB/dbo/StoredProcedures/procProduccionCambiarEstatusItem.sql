@@ -11,7 +11,6 @@ BEGIN
     DECLARE @message VARCHAR(MAX) = 'Estatus actualizado.';
     DECLARE @elementoId INT = @ProduccionItemId;
 
-    -- ✅ NUEVO: bandera para que C# sepa si en ESTA transición se aplicó inventario
     DECLARE @InventarioAplicadoAhora BIT = 0;
 
     BEGIN TRY
@@ -29,7 +28,6 @@ BEGIN
 
         BEGIN TRAN;
 
-        -- Lock item para evitar doble consumo
         DECLARE @DesdeId INT;
         DECLARE @PedidoId INT;
         DECLARE @PedidoItemId INT;
@@ -61,6 +59,17 @@ BEGIN
             THROW 50000, @MensajeError, 1;
         END
 
+        DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+
+        -- ✅ IDs por proceso (tu tabla real)
+        DECLARE @EnProdId INT =
+        (
+            SELECT TOP 1 ProduccionEstatusId
+            FROM dbo.TblProduccionEstatus WITH (NOLOCK)
+            WHERE EstaActivo=1 AND Nombre=N'En producción'
+            ORDER BY Orden ASC
+        );
+
         DECLARE @PostId INT =
         (
             SELECT TOP 1 ProduccionEstatusId
@@ -74,7 +83,7 @@ BEGIN
             ORDER BY Orden ASC
         );
 
-        -- Si va a Post y aún no se aplicó inventario: validar receta + inventario y descontar
+        -- Si va a Post y aún no se aplicó inventario: (tu bloque igual)
         IF (@PostId IS NOT NULL AND @HaciaEstatusId=@PostId AND ISNULL(@InventarioAplicado,0)=0)
         BEGIN
             IF @RecetaId IS NULL
@@ -102,7 +111,6 @@ BEGIN
             IF NOT EXISTS (SELECT 1 FROM @Req)
                 THROW 50000, 'La receta seleccionada no tiene insumos (TblRecetasInventarios).', 1;
 
-            -- FIX: tabla variable para faltantes (evita CTE + IF)
             DECLARE @Faltantes TABLE
             (
                 InventarioId INT NOT NULL,
@@ -181,14 +189,12 @@ BEGIN
             LEFT JOIN dbo.TblInventariosUnidades u WITH (NOLOCK)
                    ON u.InventarioUnidadId = i.InventarioUnidadId;
 
-            -- Descontar inventario
             UPDATE i
                SET i.Cantidad = i.Cantidad - r.Requiere
             FROM dbo.TblInventarios i
             INNER JOIN @Req r ON r.InventarioId = i.InventarioId
             WHERE i.EstaActivo=1;
 
-            -- INSERT log
             INSERT INTO dbo.TblProduccionInventarioConsumo
             (
                 ProduccionItemId,
@@ -198,7 +204,6 @@ BEGIN
                 InventarioUnidadId,
                 UsuarioId,
                 Fecha,
-
                 PedidoId,
                 PedidoItemId,
                 ProductoId,
@@ -220,7 +225,6 @@ BEGIN
                 d.InventarioUnidadId,
                 @loginId,
                 SYSDATETIME(),
-
                 @PedidoId,
                 @PedidoItemId,
                 @ProductoId,
@@ -235,21 +239,38 @@ BEGIN
                 d.DisponibleDespues
             FROM @ConsumoDet d;
 
-            -- Marca aplicado (candado de receta + idempotencia)
             UPDATE dbo.TblProduccionItems
                SET InventarioAplicado = 1,
                    FechaActualizacion = SYSDATETIME()
             WHERE ProduccionItemId=@ProduccionItemId;
 
-            -- ✅ NUEVO: “en esta transición sí aplicó inventario”
             SET @InventarioAplicadoAhora = 1;
         END
 
-        -- Cambio de estatus + bitácora
+        -- ✅ Cambio de estatus + bitácora + FECHAS por proceso
         UPDATE dbo.TblProduccionItems
            SET ProduccionEstatusId = @HaciaEstatusId,
                Notas = NULLIF(@Notas,''),
-               FechaActualizacion = SYSDATETIME()
+               FechaActualizacion = SYSDATETIME(),
+
+               -- ✅ si entra a En producción y no hay inicio → arranca
+               FechaInicio = CASE
+                                WHEN @EnProdId IS NOT NULL
+                                     AND @HaciaEstatusId = @EnProdId
+                                     AND FechaInicio IS NULL
+                                THEN @Now
+                                ELSE FechaInicio
+                            END,
+
+               -- ✅ si sale de En producción hacia Post (fin de impresión) y no hay fin → cierra
+               FechaFin = CASE
+                            WHEN @EnProdId IS NOT NULL AND @PostId IS NOT NULL
+                                 AND @DesdeId = @EnProdId
+                                 AND @HaciaEstatusId = @PostId
+                                 AND FechaFin IS NULL
+                            THEN @Now
+                            ELSE FechaFin
+                         END
         WHERE ProduccionItemId=@ProduccionItemId;
 
         INSERT INTO dbo.TblProduccionBitacora
@@ -257,30 +278,25 @@ BEGIN
         VALUES
             (@ProduccionItemId, @PedidoId, @PedidoItemId, @loginId, @DesdeId, @HaciaEstatusId, NULLIF(@Notas,''));
 
-        /* =========================================================
-        AUTO-AVANCE DEL ESTATUS DEL PEDIDO
-        ========================================================= */
+        /* AUTO-AVANCE PEDIDO (igual) */
         DECLARE @MinOrdenProd INT;
         DECLARE @NombreEstatusProd NVARCHAR(100);
         DECLARE @NuevoPedidoEstatusId INT;
 
-        SELECT
-            @MinOrdenProd = MIN(es.Orden)
+        SELECT @MinOrdenProd = MIN(es.Orden)
         FROM dbo.TblProduccionItems pi WITH (NOLOCK)
         INNER JOIN dbo.TblProduccionEstatus es WITH (NOLOCK)
             ON es.ProduccionEstatusId = pi.ProduccionEstatusId
         AND es.EstaActivo = 1
         WHERE pi.PedidoId = @PedidoId
-        AND pi.EstaActivo = 1;
+          AND pi.EstaActivo = 1;
 
-        SELECT TOP 1
-            @NombreEstatusProd = es.Nombre
+        SELECT TOP 1 @NombreEstatusProd = es.Nombre
         FROM dbo.TblProduccionEstatus es WITH (NOLOCK)
         WHERE es.EstaActivo = 1
-        AND es.Orden = @MinOrdenProd;
+          AND es.Orden = @MinOrdenProd;
 
-        SELECT TOP 1
-            @NuevoPedidoEstatusId = pe.PedidoEstatusId
+        SELECT TOP 1 @NuevoPedidoEstatusId = pe.PedidoEstatusId
         FROM dbo.TblPedidoEstatus pe WITH (NOLOCK)
         WHERE pe.Nombre = @NombreEstatusProd;
 
@@ -290,15 +306,14 @@ BEGIN
             SET p.PedidoEstatusId = @NuevoPedidoEstatusId
             FROM dbo.TblPedidos p WITH (UPDLOCK, HOLDLOCK)
             WHERE p.PedidoId = @PedidoId
-            AND p.UsuarioId = @loginId
-            AND p.PedidoEstatusId IN (5,6,7,8)
-            AND p.PedidoEstatusId <> 9
-            AND p.PedidoEstatusId < @NuevoPedidoEstatusId;
+              AND p.UsuarioId = @loginId
+              AND p.PedidoEstatusId IN (5,6,7,8)
+              AND p.PedidoEstatusId <> 9
+              AND p.PedidoEstatusId < @NuevoPedidoEstatusId;
         END
 
         COMMIT;
 
-        -- ✅ NUEVO: devuelve campos extra para que C# dispare el costeo
         SELECT
             @result [result],
             @message [message],
@@ -313,7 +328,6 @@ BEGIN
         SET @result = 'fail';
         SET @message = CONCAT(ERROR_MESSAGE(), '. Error Line: *', ERROR_LINE(), '*.');
 
-        -- ✅ NUEVO: devuelve mismas columnas para que el mapeo no falle
         SELECT
             @result [result],
             @message [message],
