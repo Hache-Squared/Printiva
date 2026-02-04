@@ -121,6 +121,8 @@ namespace ManejoPresupuestos.Servicios
             string? q
         );
 
+         Task<ReportesIndexViewModel> ObtenerIndexResumen(int usuarioId, int diasUrgente = 3, int topN = 10);
+
     }
     public class RepositorioReportes : IRepositorioReportes
     {
@@ -780,6 +782,26 @@ namespace ManejoPresupuestos.Servicios
             vm.Categorias = (await multi.ReadAsync<CatalogoDto>()).ToList();
             vm.Tipos = (await multi.ReadAsync<CatalogoDto>()).ToList();
             vm.Inventarios = (await multi.ReadAsync<CatalogoDto>()).ToList();
+
+            return vm;
+        }
+
+         public async Task<ReportesIndexViewModel> ObtenerIndexResumen(int usuarioId, int diasUrgente = 3, int topN = 10)
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "dbo.procReportesIndexResumen",
+                new { loginId = usuarioId, diasUrgente, topN },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+
+            var vm = new ReportesIndexViewModel();
+
+            vm.Kpis = (await multi.ReadFirstOrDefaultAsync<ReportesIndexKpis>()) ?? new ReportesIndexKpis();
+            vm.PedidosUrgentes = await multi.ReadAsync<ReportePedidoUrgenteRow>();
+            vm.InventarioFaltante = await multi.ReadAsync<ReporteInventarioFaltanteRow>();
+            vm.ProduccionPendiente = await multi.ReadAsync<ReporteProduccionPendienteRow>();
 
             return vm;
         }

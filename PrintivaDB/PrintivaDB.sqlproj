@@ -164,6 +164,7 @@
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidoDetalle.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCosteoPedidos.sql" />
     <Build Include="dbo\StoredProcedures\procReportesCotizacionesSeguimiento.sql" />
+    <Build Include="dbo\StoredProcedures\procReportesIndexResumen.sql" />
     <Build Include="dbo\StoredProcedures\procReportesInventarioConsumoMejorado.sql" />
     <Build Include="dbo\StoredProcedures\procReportesPagosCxcAging.sql" />
     <Build Include="dbo\StoredProcedures\procReportesPedido360.sql" />

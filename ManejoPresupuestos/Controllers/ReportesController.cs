@@ -19,9 +19,11 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+            var vm = await repositorioReportes.ObtenerIndexResumen(usuarioId, diasUrgente: 3, topN: 10);
+            return View(vm);
         }
 
         [HttpGet]
