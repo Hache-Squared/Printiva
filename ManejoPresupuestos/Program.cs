@@ -66,6 +66,7 @@ builder.Services.AddTransient<IRepositorioInventarios, RepositorioInventarios>()
 builder.Services.AddTransient<IRepositorioCompraTiposV2, RepositorioCompraTiposV2>();
 
 builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
+builder.Services.AddTransient<ITransformToReport, TransformToReport>();
 
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();

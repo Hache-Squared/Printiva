@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using ManejoPresupuestos.Models;
 using ManejoPresupuestos.Servicios;
 using Microsoft.AspNetCore.Mvc;
@@ -8,14 +9,17 @@ namespace ManejoPresupuestos.Controllers
     {
         private readonly IServicioUsuarios servicioUsuarios;
         private readonly IRepositorioReportes repositorioReportes;
+        private readonly ITransformToReport transformToReport;
 
         public ReportesController(
             IServicioUsuarios servicioUsuarios,
-            IRepositorioReportes repositorioReportes
+            IRepositorioReportes repositorioReportes,
+            ITransformToReport transformToReport
         )
         {
             this.servicioUsuarios = servicioUsuarios;
             this.repositorioReportes = repositorioReportes;
+            this.transformToReport = transformToReport;
         }
 
         [HttpGet]
@@ -78,6 +82,51 @@ namespace ManejoPresupuestos.Controllers
             );
 
             return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<FileResult> ExportarProduccionExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            int? estatusId,
+            int? impresoraId,
+            bool? soloWip,
+            bool? soloAtrasados,
+            bool? sinImpresora,
+            int? minDiasCola,
+            string? q
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.ProduccionWipDashboard(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                pedidoId,
+                estatusId,
+                impresoraId,
+                soloWip ?? true,
+                soloAtrasados ?? false,
+                sinImpresora ?? false,
+                minDiasCola,
+                q
+            );
+
+            var bytes = transformToReport.GenerarExcelProduccionWip(vm);
+
+            var d1 = (vm.Desde ?? DateTime.Today).ToString("yyyyMMdd");
+            var d2 = (vm.Hasta ?? DateTime.Today).ToString("yyyyMMdd");
+            var nombreArchivo = $"Produccion_WIP_Carga_{d1}-{d2}.xlsx";
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                nombreArchivo
+            );
         }
 
         [HttpGet]

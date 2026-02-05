@@ -103,6 +103,21 @@
 
                 <div class="col-md-6 d-flex gap-2 justify-content-end">
                     <button class="btn btn-primary" type="submit">Filtrar</button>
+                    <a class="btn btn-success"
+                    asp-action="ExportarProduccionExcel"
+                    asp-route-desde="@fmtDate(Model.Desde)"
+                    asp-route-hasta="@fmtDate(Model.Hasta)"
+                    asp-route-clienteId="@Model.ClienteId"
+                    asp-route-pedidoId="@Model.PedidoId"
+                    asp-route-estatusId="@Model.EstatusId"
+                    asp-route-impresoraId="@Model.ImpresoraId"
+                    asp-route-soloWip="@Model.SoloWip"
+                    asp-route-soloAtrasados="@Model.SoloAtrasados"
+                    asp-route-sinImpresora="@Model.SinImpresora"
+                    asp-route-minDiasCola="@Model.MinDiasCola"
+                    asp-route-q="@Model.Q">
+                        Exportar Excel
+                    </a>
                     <a class="btn btn-outline-secondary" href="/Reportes/Produccion">Limpiar</a>
                 </div>
             </div>
