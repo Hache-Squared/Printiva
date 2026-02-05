@@ -404,6 +404,39 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ProduccionUtilizacionExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? impresoraId,
+            bool incluirEnCurso = true,
+            bool incluirSinImpresora = true,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.ProduccionUtilizacionImpresoras(
+                loginId,
+                desde,
+                hasta,
+                impresoraId,
+                incluirEnCurso,
+                incluirSinImpresora,
+                q
+            );
+
+            var bytes = transformToReport.GenerarExcelProduccionUtilizacion(vm);
+
+            var d = (vm.Desde ?? DateTime.Today.AddDays(-30)).Date;
+            var h = (vm.Hasta ?? DateTime.Today).Date;
+
+            var fileName = $"ProduccionUtilizacion_{d:yyyyMMdd}_{h:yyyyMMdd}.xlsx";
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> InventarioConsumoMejorado(
             DateTime? desde,
             DateTime? hasta,

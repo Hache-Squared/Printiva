@@ -14,6 +14,7 @@ namespace ManejoPresupuestos.Servicios
         byte[] GenerarExcelPedidosOperativos(ReportePedidosOperativosViewModel vm);
         byte[] GenerarExcelPagosPendientes(ReporteCxcViewModel vm);
         byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm);
+        byte[] GenerarExcelProduccionUtilizacion(ReporteProduccionUtilizacionViewModel vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -1653,6 +1654,288 @@ namespace ManejoPresupuestos.Servicios
             ws.PageSetup.CenterHorizontally = true;
 
             ws.Columns(1, 13).AdjustToContents(1, 80);
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+
+        public byte[] GenerarExcelProduccionUtilizacion(ReporteProduccionUtilizacionViewModel vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Utilización");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            const int MAX_COL = 18; // A..R
+            int r = 1;
+
+            // Paleta sobria (igual familia que tus otros reportes)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cPurple   = XLColor.FromHtml("#5B21B6"); // violet-800
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            var cWarnRow  = XLColor.FromHtml("#FEF3C7"); // warning suave
+            var cOkRow    = XLColor.FromHtml("#ECFDF5"); // green suave
+
+            string fmtDate(DateTime? d) => d.HasValue ? d.Value.ToString("yyyy-MM-dd") : "-";
+            string fmtHours(decimal h) => h.ToString("0.00");
+            string fmtMin(decimal m) => m.ToString("0.0");
+
+            string NombreImpresora(int? id)
+            {
+                if (!id.HasValue) return "(Sin impresora)";
+                var it = vm.CatImpresoras?.FirstOrDefault(x => x.Id == id.Value);
+                if (it == null) return id.Value.ToString();
+                return string.IsNullOrWhiteSpace(it.Modelo) ? it.Nombre : $"{it.Nombre} ({it.Modelo})";
+            }
+
+            // ----------------
+            // Título
+            // ----------------
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Producción — Utilización por impresora";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ----------------
+            // Filtros
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var fDesde = fmtDate(vm.Desde);
+            var fHasta = fmtDate(vm.Hasta);
+            var fImp = vm.ImpresoraId.HasValue ? NombreImpresora(vm.ImpresoraId) : "Todas";
+            var fQ = string.IsNullOrWhiteSpace(vm.Q) ? "-" : vm.Q.Trim();
+            var fEnCurso = vm.IncluirEnCurso ? "Sí" : "No";
+            var fSinImp = vm.IncluirSinImpresora ? "Sí" : "No";
+
+            // fila 1
+            EscribirKVInline(ws, r,  1, "Desde",     fDesde, 2, 2, cSoftGray); // 1..4
+            EscribirKVInline(ws, r,  5, "Hasta",     fHasta, 2, 2, cSoftGray); // 5..8
+            EscribirKVInline(ws, r,  9, "Impresora", fImp,   2, 4, cSoftGray); // 9..14
+            EscribirKVInline(ws, r, 15, "Buscar",    fQ,     2, 2, cSoftGray); // 15..18
+            r++;
+
+            // fila 2
+            EscribirKVInline(ws, r,  1, "Incluir curso", fEnCurso, 2, 2, cSoftGray); // 1..4
+            EscribirKVInline(ws, r,  5, "Incl. sin imp", fSinImp,  2, 2, cSoftGray); // 5..8
+            r += 2;
+
+            // ----------------
+            // KPIs (cards)
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            EscribirKpiCard(ws, r,  1,  4, "Horas completadas", fmtHours(vm.Totales.HorasCompletadas), cSoftGray);
+            EscribirKpiCard(ws, r,  5,  8, "Horas en curso",    fmtHours(vm.Totales.HorasEnCurso), cSoftGray);
+            EscribirKpiCard(ws, r,  9, 12, "Items (total)",     vm.Totales.Items.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r, 13, 18, "Duración prom (min)", $"{fmtMin(vm.Totales.AvgDuracionMin)}", cSoftGray);
+
+            r += 3;
+
+            // fila kpi extra (texto compacto)
+            EscribirKpiCard(ws, r,  1,  6, "Items completados", vm.Totales.ItemsCompletados.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7, 12, "Items en curso",    vm.Totales.ItemsEnCurso.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r, 13, 18, "Sin tiempos",       vm.Totales.ItemsSinTiempos.ToString("N0"), cSoftGray);
+
+            r += 3;
+
+            // ----------------
+            // Tabla: Utilización por impresora
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Utilización por impresora", cPurple, MAX_COL);
+
+            var dtImp = new DataTable("PorImpresora");
+            dtImp.Columns.Add("Impresora");
+            dtImp.Columns.Add("Horas (total)", typeof(decimal));
+            dtImp.Columns.Add("Horas compl.", typeof(decimal));
+            dtImp.Columns.Add("Horas curso", typeof(decimal));
+            dtImp.Columns.Add("Items", typeof(int));
+            dtImp.Columns.Add("Compl.", typeof(int));
+            dtImp.Columns.Add("Curso", typeof(int));
+            dtImp.Columns.Add("Avg min", typeof(decimal));
+            dtImp.Columns.Add("Fallas", typeof(int));
+            dtImp.Columns.Add("Reimp", typeof(int));
+            dtImp.Columns.Add("Sin tiempos", typeof(int));
+
+            foreach (var x in vm.PorImpresora
+                .OrderByDescending(x => x.HorasTotales)
+                .ThenByDescending(x => x.Items)
+                .ThenBy(x => x.ImpresoraNombre))
+            {
+                var nombre = x.ImpresoraId.HasValue
+                    ? (string.IsNullOrWhiteSpace(x.ImpresoraModelo)
+                        ? (x.ImpresoraNombre ?? x.ImpresoraId.Value.ToString())
+                        : $"{x.ImpresoraNombre} ({x.ImpresoraModelo})")
+                    : "(Sin impresora)";
+
+                dtImp.Rows.Add(
+                    nombre,
+                    x.HorasTotales,
+                    x.HorasCompletadas,
+                    x.HorasEnCurso,
+                    x.Items,
+                    x.ItemsCompletados,
+                    x.ItemsEnCurso,
+                    x.AvgDuracionMin,
+                    x.Fallas,
+                    x.Reimpresiones,
+                    x.ItemsSinTiempos
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtImp, "tblUtilImp", cPurple, MAX_COL, cZebra, out var tblImp) + 2;
+
+            if (tblImp != null)
+            {
+                AplicarFormatosTabla(tblImp, new()
+                {
+                    ["Horas (total)"] = "#,##0.00",
+                    ["Horas compl."]  = "#,##0.00",
+                    ["Horas curso"]   = "#,##0.00",
+                    ["Avg min"]       = "#,##0.0",
+                });
+
+                // resaltar fallas/reimp/sin tiempos (suave)
+                if (tblImp.DataRange != null)
+                {
+                    var dr = tblImp.DataRange;
+
+                    int posFallas = TieneCampo(tblImp, "Fallas") ? ObtenerPosCampo1Based(tblImp, "Fallas") : 0;
+                    int posReimp  = TieneCampo(tblImp, "Reimp") ? ObtenerPosCampo1Based(tblImp, "Reimp") : 0;
+                    int posSin    = TieneCampo(tblImp, "Sin tiempos") ? ObtenerPosCampo1Based(tblImp, "Sin tiempos") : 0;
+
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        bool warn = false;
+
+                        if (posFallas > 0 && dr.Row(i).Cell(posFallas).GetValue<int>() > 0) warn = true;
+                        if (posReimp  > 0 && dr.Row(i).Cell(posReimp).GetValue<int>() > 0) warn = true;
+                        if (posSin    > 0 && dr.Row(i).Cell(posSin).GetValue<int>() > 0) warn = true;
+
+                        if (warn) dr.Row(i).Style.Fill.BackgroundColor = cWarnRow;
+                    }
+                }
+
+                // ancho útil impresora
+                ws.Column(1).Width = Math.Max(ws.Column(1).Width, 28);
+            }
+
+            // ----------------
+            // Tabla: Detalle
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Detalle", cBlueGray, MAX_COL);
+
+            var dtDet = new DataTable("Detalle");
+            dtDet.Columns.Add("ProdItem", typeof(int));
+            dtDet.Columns.Add("Pedido", typeof(int));
+            dtDet.Columns.Add("Cliente");
+            dtDet.Columns.Add("Producto");
+            dtDet.Columns.Add("Impresora");
+            dtDet.Columns.Add("Inicio");
+            dtDet.Columns.Add("Fin");
+            dtDet.Columns.Add("Min", typeof(decimal));
+            dtDet.Columns.Add("Estatus");
+            dtDet.Columns.Add("Falla");
+            dtDet.Columns.Add("Reimp");
+
+            foreach (var x in vm.Detalle
+                .OrderByDescending(x => x.FechaInicio ?? DateTime.MinValue)
+                .ThenByDescending(x => x.ProduccionItemId))
+            {
+                dtDet.Rows.Add(
+                    x.ProduccionItemId,
+                    x.PedidoId,
+                    x.ClienteNombre ?? "-",
+                    x.ProductoNombre ?? "-",
+                    x.ImpresoraNombre ?? "(Sin impresora)",
+                    x.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    x.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    x.DuracionMin,
+                    x.ProduccionEstatusNombre ?? "-",
+                    x.MarcadaFalla ? "Sí" : "No",
+                    x.EsReimpresion ? "Sí" : "No"
+                );
+            }
+
+            var last = InsertarTablaAt(ws, r, 1, dtDet, "tblUtilDetalle", cBlueGray, MAX_COL, cZebra, out var tblDet);
+
+            if (tblDet != null)
+            {
+                AplicarFormatosTabla(tblDet, new()
+                {
+                    ["Min"] = "#,##0",
+                });
+
+                // resaltar filas con Falla/Reimp
+                if (tblDet.DataRange != null)
+                {
+                    var dr = tblDet.DataRange;
+
+                    int posFalla = TieneCampo(tblDet, "Falla") ? ObtenerPosCampo1Based(tblDet, "Falla") : 0;
+                    int posReimp = TieneCampo(tblDet, "Reimp") ? ObtenerPosCampo1Based(tblDet, "Reimp") : 0;
+
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        var falla = posFalla > 0 ? dr.Row(i).Cell(posFalla).GetString() : "";
+                        var reimp = posReimp > 0 ? dr.Row(i).Cell(posReimp).GetString() : "";
+
+                        if (falla.Equals("Sí", StringComparison.OrdinalIgnoreCase) ||
+                            reimp.Equals("Sí", StringComparison.OrdinalIgnoreCase))
+                        {
+                            dr.Row(i).Style.Fill.BackgroundColor = cWarnRow;
+                        }
+                    }
+                }
+
+                // Convierte estatus "Entregado" a verde suave (si existe)
+                if (tblDet.DataRange != null && TieneCampo(tblDet, "Estatus"))
+                {
+                    var posEst = ObtenerPosCampo1Based(tblDet, "Estatus");
+                    var rngEst = ObtenerRangoDatosColumna(tblDet, posEst);
+
+                    rngEst.AddConditionalFormat()
+                        .WhenEquals("Entregado")
+                        .Fill.SetBackgroundColor(cOkRow);
+                }
+
+                // freeze hasta header de detalle
+                ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
+
+                // anchos mínimos útiles
+                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 22); // Cliente
+                ws.Column(4).Width = Math.Max(ws.Column(4).Width, 22); // Producto
+                ws.Column(5).Width = Math.Max(ws.Column(5).Width, 22); // Impresora
+                ws.Column(6).Width = Math.Max(ws.Column(6).Width, 18); // Inicio
+                ws.Column(7).Width = Math.Max(ws.Column(7).Width, 18); // Fin
+            }
+
+            // Ajustes finales
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            ws.Columns(1, 11).AdjustToContents(1, 80);
 
             using var ms = new MemoryStream();
             wb.SaveAs(ms);
