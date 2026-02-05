@@ -16,6 +16,7 @@ namespace ManejoPresupuestos.Servicios
         byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm);
         byte[] GenerarExcelProduccionUtilizacion(ReporteProduccionUtilizacionViewModel vm);
         byte[] GenerarExcelInventarioConsumoMejorado(ReporteInventarioConsumoMejoradoViewModel vm);
+        byte[] GenerarExcelComprasHistorico(ReporteComprasHistoricoVm vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -2417,6 +2418,330 @@ namespace ManejoPresupuestos.Servicios
             ws.PageSetup.CenterHorizontally = true;
 
             ws.Columns(1, MAX_COL).AdjustToContents(1, 80);
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+
+        public byte[] GenerarExcelComprasHistorico(ReporteComprasHistoricoVm vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Compras histórico");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            const int MAX_COL = 24; // A..X (detalle trae varias columnas)
+            int r = 1;
+
+            // Paleta sobria (misma línea que el resto)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            var cDangerBg = XLColor.FromHtml("#FEE2E2"); // red-100
+            var cDangerTx = XLColor.FromHtml("#7F1D1D"); // red-900
+
+            string MoneyFmt() => "$#,##0.00";
+            string QtyFmt() => "#,##0.####";
+            string Safe(string? s) => string.IsNullOrWhiteSpace(s) ? "-" : s.Trim();
+
+            string NombreLookup(List<CatalogoDto> list, int? id)
+            {
+                if (!id.HasValue) return "Todos";
+                return list.FirstOrDefault(x => x.Id == id.Value)?.Nombre ?? id.Value.ToString();
+            }
+
+            // ==========================
+            // TÍTULO
+            // ==========================
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Compras — histórico";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ==========================
+            // FILTROS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var desdeTxt = vm.Desde?.ToString("yyyy-MM-dd") ?? "-";
+            var hastaTxt = vm.Hasta?.ToString("yyyy-MM-dd") ?? "-";
+
+            var catTxt  = NombreLookup(vm.Categorias, vm.CategoriaId);
+            var tipoTxt = NombreLookup(vm.Tipos, vm.TipoId);
+
+            var invTxt = vm.InventarioId.HasValue
+                ? (vm.Inventarios.FirstOrDefault(x => x.Id == vm.InventarioId.Value)?.Nombre ?? vm.InventarioId.Value.ToString())
+                : "Todos";
+
+            var soloInvTxt = vm.SoloInventario == null
+                ? "Todos"
+                : (vm.SoloInventario.Value ? "Sí (inventario)" : "No (gasto)");
+
+            var estTxt = vm.SoloActivos == null
+                ? "Todos"
+                : (vm.SoloActivos.Value ? "Activos" : "Anulados");
+
+            var compraTxt = vm.CompraId?.ToString() ?? "-";
+            var topNTxt   = vm.TopN.ToString("N0");
+            var qTxt      = Safe(vm.Q);
+
+            // fila 1 (1..24)
+            EscribirKVInline(ws, r,  1, "Desde",     desdeTxt, 2, 2, cSoftGray); // 1..4
+            EscribirKVInline(ws, r,  5, "Hasta",     hastaTxt, 2, 2, cSoftGray); // 5..8
+            EscribirKVInline(ws, r,  9, "Categoría", catTxt,   2, 6, cSoftGray); // 9..16
+            EscribirKVInline(ws, r, 17, "Estatus",   estTxt,   2, 6, cSoftGray); // 17..24
+            r++;
+
+            // fila 2
+            EscribirKVInline(ws, r,  1, "Tipo",        tipoTxt,     2, 6, cSoftGray); // 1..8
+            EscribirKVInline(ws, r,  9, "Afectó inv.", soloInvTxt,  2, 6, cSoftGray); // 9..16
+            EscribirKVInline(ws, r, 17, "CompraId",    compraTxt,   2, 2, cSoftGray); // 17..20
+            EscribirKVInline(ws, r, 21, "Top N",       topNTxt,     2, 2, cSoftGray); // 21..24
+            r++;
+
+            // fila 3
+            EscribirKVInline(ws, r,  1, "Inventario",  invTxt, 2, 10, cSoftGray); // 1..12
+            EscribirKVInline(ws, r, 13, "Buscar (q)",  qTxt,   2, 10, cSoftGray); // 13..24
+            r += 2;
+
+            // ==========================
+            // KPIs
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            EscribirKpiCard(ws, r,  1,  6,  "Compras",              vm.Kpis.Compras.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7,  12, "Gasto total",          vm.Kpis.GastoTotal.ToString("N2"), cSoftGray, isMoney: true);
+            EscribirKpiCard(ws, r,  13, 18, "Compras a inventario",  vm.Kpis.ComprasInventario.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  19, 24, "Cant. stock",          vm.Kpis.CantidadTotalInventario.ToString("0.####"), cSoftGray);
+
+            // enfatiza gasto total
+            ws.Range(r + 1, 7, r + 1, 12).Style.Font.FontColor = XLColor.FromHtml("#0F766E");
+            r += 3;
+
+            // extras
+            EscribirKVInline(ws, r,  1,  "Gasto inventario", vm.Kpis.GastoInventario.ToString("N2"),    2, 4, cSoftGray); // 1..6
+            EscribirKVInline(ws, r,  7,  "Gasto no invent.", vm.Kpis.GastoNoInventario.ToString("N2"),  2, 4, cSoftGray); // 7..12
+            EscribirKVInline(ws, r,  13, "Compras no inv.",  vm.Kpis.ComprasNoInventario.ToString("N0"),2, 4, cSoftGray); // 13..18
+            r += 2;
+
+            // ==========================
+            // TOP CATEGORÍAS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Top categorías", cBlueGray, MAX_COL);
+
+            var dtCat = new DataTable("TopCategorias");
+            dtCat.Columns.Add("Categoría");
+            dtCat.Columns.Add("Compras", typeof(int));
+            dtCat.Columns.Add("Total", typeof(decimal));
+
+            foreach (var x in vm.TopCategorias)
+                dtCat.Rows.Add(x.CategoriaNombre, x.Compras, x.Total);
+
+            r = InsertarTablaAt(ws, r, 1, dtCat, "tblTopCategorias", cBlueGray, MAX_COL, cZebra, out var tblCat) + 2;
+
+            if (tblCat != null)
+            {
+                AplicarFormatosTabla(tblCat, new()
+                {
+                    ["Compras"] = "0",
+                    ["Total"]   = MoneyFmt(),
+                });
+            }
+
+            // ==========================
+            // TOP TIPOS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Top tipos", cBlueGray, MAX_COL);
+
+            var dtTipo = new DataTable("TopTipos");
+            dtTipo.Columns.Add("Tipo");
+            dtTipo.Columns.Add("Es inventario");
+            dtTipo.Columns.Add("Compras", typeof(int));
+            dtTipo.Columns.Add("Total", typeof(decimal));
+
+            foreach (var x in vm.TopTipos)
+                dtTipo.Rows.Add(x.TipoNombre, x.EsInventario == 1 ? "Sí" : "No", x.Compras, x.Total);
+
+            r = InsertarTablaAt(ws, r, 1, dtTipo, "tblTopTipos", cBlueGray, MAX_COL, cZebra, out var tblTipo) + 2;
+
+            if (tblTipo != null)
+            {
+                AplicarFormatosTabla(tblTipo, new()
+                {
+                    ["Compras"] = "0",
+                    ["Total"]   = MoneyFmt(),
+                });
+            }
+
+            // ==========================
+            // TOP INVENTARIOS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Top inventarios", cBlueGray, MAX_COL);
+
+            var dtInv = new DataTable("TopInventarios");
+            dtInv.Columns.Add("Inventario");
+            dtInv.Columns.Add("Unidad");
+            dtInv.Columns.Add("Compras", typeof(int));
+            dtInv.Columns.Add("Cantidad", typeof(decimal));
+            dtInv.Columns.Add("Total", typeof(decimal));
+
+            foreach (var x in vm.TopInventarios)
+                dtInv.Rows.Add(x.InventarioNombre, x.UnidadNombre ?? "-", x.Compras, x.Cantidad, x.Total);
+
+            r = InsertarTablaAt(ws, r, 1, dtInv, "tblTopInventarios", cBlueGray, MAX_COL, cZebra, out var tblInv) + 2;
+
+            if (tblInv != null)
+            {
+                AplicarFormatosTabla(tblInv, new()
+                {
+                    ["Compras"]   = "0",
+                    ["Cantidad"]  = QtyFmt(),
+                    ["Total"]     = MoneyFmt(),
+                });
+            }
+
+            // ==========================
+            // DETALLE
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Detalle de transacciones", cBlueGray, MAX_COL);
+
+            var dtDet = new DataTable("DetalleCompras");
+            dtDet.Columns.Add("Fecha compra", typeof(DateTime));
+            dtDet.Columns.Add("Fecha log", typeof(DateTime));
+            dtDet.Columns.Add("Compra", typeof(int));
+            dtDet.Columns.Add("Categoría");
+            dtDet.Columns.Add("Tipo");
+            dtDet.Columns.Add("Es inventario");
+            dtDet.Columns.Add("Afectó inv.");
+            dtDet.Columns.Add("Inventario");
+            dtDet.Columns.Add("Unidad");
+            dtDet.Columns.Add("Filamento tipo");
+            dtDet.Columns.Add("Descripción");
+            dtDet.Columns.Add("Operación");
+            dtDet.Columns.Add("Transacción");
+            dtDet.Columns.Add("Cant.", typeof(decimal));
+            dtDet.Columns.Add("Costo U.", typeof(decimal));
+            dtDet.Columns.Add("Total", typeof(decimal));
+            dtDet.Columns.Add("Antes", typeof(decimal));
+            dtDet.Columns.Add("Después", typeof(decimal));
+            dtDet.Columns.Add("Estatus");
+
+            // IMPORTANTE: guardo el orden para poder pintar “Anulados” por fila
+            var detOrdered = vm.Detalle
+                .OrderByDescending(x => x.FechaCompraFinal)
+                .ThenByDescending(x => x.CompraId)
+                .ToList();
+
+            foreach (var x in detOrdered)
+            {
+                dtDet.Rows.Add(
+                    x.FechaCompraFinal.Date,
+                    x.FechaLogFinal,
+                    x.CompraId,
+                    x.CategoriaNombre,
+                    x.TipoNombre,
+                    x.EsInventario ? "Sí" : "No",
+                    x.AfectoInventario ? "Sí" : "No",
+                    x.InventarioNombre ?? "-",
+                    x.InventarioUnidadNombre ?? "-",
+                    x.FilamentoTipoNombre ?? "-",
+                    x.CompraDescripcion ?? "-",
+                    x.Operacion ?? "-",
+                    x.TransaccionDescripcion ?? "-",
+                    x.CantidadFinal,
+                    x.CostoUnitarioFinal,
+                    x.CostoTotalFinal,
+                    x.InventarioAntes.HasValue ? x.InventarioAntes.Value : DBNull.Value,
+                    x.InventarioDespues.HasValue ? x.InventarioDespues.Value : DBNull.Value,
+                    x.EstaActivo ? "Activo" : "Anulado"
+                );
+            }
+
+            var lastDet = InsertarTablaAt(ws, r, 1, dtDet, "tblComprasDetalle", cBlueGray, MAX_COL, cZebra, out var tblDet);
+
+            if (tblDet != null)
+            {
+                // formatos numéricos
+                AplicarFormatosTabla(tblDet, new()
+                {
+                    ["Cant."]    = QtyFmt(),
+                    ["Costo U."] = MoneyFmt(),
+                    ["Total"]    = MoneyFmt(),
+                    ["Antes"]    = QtyFmt(),
+                    ["Después"]  = QtyFmt(),
+                });
+
+                // fechas (dateformat)
+                foreach (var name in new[] { "Fecha compra", "Fecha log" })
+                {
+                    if (!TieneCampo(tblDet, name)) continue;
+                    var pos = ObtenerPosCampo1Based(tblDet, name);
+                    var rng = ObtenerRangoDatosColumna(tblDet, pos);
+                    rng.Style.DateFormat.Format = "yyyy-mm-dd";
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // wrap descripción/transacción
+                if (TieneCampo(tblDet, "Descripción"))
+                    tblDet.Field("Descripción").Column.Style.Alignment.WrapText = true;
+
+                if (TieneCampo(tblDet, "Transacción"))
+                    tblDet.Field("Transacción").Column.Style.Alignment.WrapText = true;
+
+                // pintar anulados por fila completa
+                if (tblDet.DataRange != null)
+                {
+                    var dr = tblDet.DataRange;
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        if (!detOrdered[i - 1].EstaActivo)
+                        {
+                            dr.Row(i).Style.Fill.BackgroundColor = cDangerBg;
+                            dr.Row(i).Style.Font.FontColor = cDangerTx;
+                        }
+                    }
+                }
+
+                // freeze hasta el header del detalle (para que se queden título/filtros/kpis/top)
+                ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
+
+                // anchos mínimos útiles
+                // (ajusta a tu gusto)
+                ws.Column(11).Width = Math.Max(ws.Column(11).Width, 34); // Descripción
+                ws.Column(13).Width = Math.Max(ws.Column(13).Width, 30); // Transacción
+                ws.Column(8).Width  = Math.Max(ws.Column(8).Width, 20);  // Inventario
+            }
+
+            // ==========================
+            // Ajustes finales
+            // ==========================
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            // Ajusta según columnas reales usadas
+            var usedCols = Math.Max(12, dtDet.Columns.Count);
+            ws.Columns(1, Math.Min(usedCols, MAX_COL)).AdjustToContents(1, 80);
 
             using var ms = new MemoryStream();
             wb.SaveAs(ms);

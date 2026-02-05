@@ -148,7 +148,23 @@
                     <input type="number" name="topN" class="form-control" value="@Model.TopN" min="1" />
                 </div>
 
-                <div class="col-md-12 text-end">
+                @* Ponlo en el form (junto a Limpiar / Aplicar filtros) *@
+                <div class="col-md-12 text-end d-flex justify-content-end gap-2">
+                    <a class="btn btn-success"
+                    asp-action="ComprasHistoricoExcel"
+                    asp-route-desde="@(Model.Desde?.ToString("yyyy-MM-dd"))"
+                    asp-route-hasta="@(Model.Hasta?.ToString("yyyy-MM-dd"))"
+                    asp-route-compraId="@Model.CompraId"
+                    asp-route-categoriaId="@Model.CategoriaId"
+                    asp-route-tipoId="@Model.TipoId"
+                    asp-route-inventarioId="@Model.InventarioId"
+                    asp-route-soloActivos="@Model.SoloActivos"
+                    asp-route-soloInventario="@Model.SoloInventario"
+                    asp-route-topN="@Model.TopN"
+                    asp-route-q="@Model.Q">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </a>
+
                     <a href="@Url.Action("ComprasHistorico")" class="btn btn-outline-secondary">Limpiar</a>
                     <button class="btn btn-primary px-4" type="submit">
                         <i class="bi bi-filter"></i> Aplicar Filtros

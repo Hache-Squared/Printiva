@@ -533,5 +533,55 @@ namespace ManejoPresupuestos.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ComprasHistoricoExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? compraId,
+            int? categoriaId,
+            int? tipoId,
+            int? inventarioId,
+            bool? soloActivos,
+            bool? soloInventario,
+            int topN = 10,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            // ✅ NO default 30 días: respeta null tal cual (igual que la vista si así la manejas)
+            var d = desde?.Date;
+            var h = hasta?.Date;
+
+            var vm = await repositorioReportes.ComprasHistorico(
+                loginId,
+                d,
+                h,
+                compraId,
+                categoriaId,
+                tipoId,
+                inventarioId,
+                soloActivos,
+                soloInventario,
+                topN <= 0 ? 10 : topN,
+                q
+            );
+
+            var bytes = transformToReport.GenerarExcelComprasHistorico(vm);
+
+            var now = DateTime.Now;
+
+            var dName = d?.ToString("yyyyMMdd") ?? now.ToString("yyyyMMdd");
+            var hName = h?.ToString("yyyyMMdd") ?? now.ToString("yyyyMMdd_HHmm");
+
+            var fileName = $"ComprasHistorico_{dName}_{hName}.xlsx";
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
     }
 }
