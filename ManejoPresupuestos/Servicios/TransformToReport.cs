@@ -12,6 +12,7 @@ namespace ManejoPresupuestos.Servicios
         byte[] GenerarExcelProduccionWip(ReporteProduccionWipViewModel vm);
         byte[] GenerarExcelPedido360(ReportePedido360ViewModel vm);
         byte[] GenerarExcelPedidosOperativos(ReportePedidosOperativosViewModel vm);
+        byte[] GenerarExcelPagosPendientes(ReporteCxcViewModel vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -1133,6 +1134,263 @@ namespace ManejoPresupuestos.Servicios
 
             ws.Row(topRow).Height = 15;
             ws.Row(topRow + 1).Height = 22;
+        }
+
+        public byte[] GenerarExcelPagosPendientes(ReporteCxcViewModel vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Pagos pendientes");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            const int MAX_COL = 18; // A..R
+            int r = 1;
+
+            // Paleta (misma línea sobria)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            var cWarnRow  = XLColor.FromHtml("#FEF3C7"); // warning suave
+
+            string ClienteNombre()
+            {
+                if (!vm.ClienteId.HasValue) return "Todos";
+                return vm.Clientes.FirstOrDefault(x => x.Id == vm.ClienteId.Value)?.Nombre
+                    ?? vm.ClienteId.Value.ToString();
+            }
+
+            string BucketNombre()
+            {
+                if (!vm.BucketId.HasValue) return "Todos";
+                return vm.BucketId.Value switch
+                {
+                    0 => "No vencido",
+                    1 => "1-7",
+                    2 => "8-14",
+                    3 => "15-30",
+                    4 => "31-60",
+                    5 => "61+",
+                    _ => vm.BucketId.Value.ToString()
+                };
+            }
+
+            // ------------------
+            // TÍTULO
+            // ------------------
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Pagos pendientes";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ------------------
+            // FILTROS
+            // ------------------
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var desde = vm.Desde.ToString("yyyy-MM-dd");
+            var hasta = vm.Hasta.ToString("yyyy-MM-dd");
+            var cliente = ClienteNombre();
+            var pedido = vm.PedidoId?.ToString() ?? "-";
+            var metodo = string.IsNullOrWhiteSpace(vm.Metodo) ? "-" : vm.Metodo.Trim();
+            var bucket = BucketNombre();
+            var minSaldo = vm.MinSaldo?.ToString("0.##") ?? "-";
+            var soloVencidos = vm.SoloVencidos ? "Sí" : "No";
+
+            // fila 1
+            EscribirKVInline(ws, r,  1, "Desde",   desde,   2, 2, cSoftGray);
+            EscribirKVInline(ws, r,  5, "Hasta",   hasta,   2, 2, cSoftGray);
+            EscribirKVInline(ws, r,  9, "Cliente", cliente, 2, 4, cSoftGray);
+            EscribirKVInline(ws, r, 15, "PedidoId",pedido,  2, 2, cSoftGray);
+            r++;
+
+            // fila 2
+            EscribirKVInline(ws, r,  1, "Bucket",       bucket,      2, 2, cSoftGray);
+            EscribirKVInline(ws, r,  5, "Min saldo",    minSaldo,    2, 2, cSoftGray);
+            EscribirKVInline(ws, r,  9, "Método/Ref",   metodo,      2, 6, cSoftGray);
+            EscribirKVInline(ws, r, 15, "Solo vencidos",soloVencidos,2, 2, cSoftGray);
+            r += 2;
+
+            // ------------------
+            // KPIs
+            // ------------------
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            EscribirKpiCard(ws, r,  1,  4, "Pedidos con saldo", vm.Totales.PedidosConSaldo.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  5,  8, "Saldo total",       (vm.Totales.SaldoTotal ?? 0m).ToString("N2"), cSoftGray, isMoney: true);
+            EscribirKpiCard(ws, r,  9, 12, "Pedidos vencidos",  vm.Totales.PedidosVencidos.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r, 13, 18, "Saldo vencido",     (vm.Totales.SaldoVencido ?? 0m).ToString("N2"), cSoftGray, isMoney: true);
+
+            // rojo si saldo vencido > 0
+            if ((vm.Totales.SaldoVencido ?? 0m) > 0m)
+                ws.Range(r + 1, 13, r + 1, 18).Style.Font.FontColor = XLColor.FromHtml("#B91C1C"); // red-700
+
+            r += 3;
+
+            // ------------------
+            // BUCKETS
+            // ------------------
+            r = EscribirTituloSeccion(ws, r, "Buckets de vencimiento", cBlueGray, MAX_COL);
+
+            var dtBuckets = new DataTable("Buckets");
+            dtBuckets.Columns.Add("Bucket");
+            dtBuckets.Columns.Add("Pedidos", typeof(int));
+            dtBuckets.Columns.Add("Saldo", typeof(decimal));
+
+            foreach (var b in vm.Buckets)
+            {
+                dtBuckets.Rows.Add(
+                    b.BucketNombre,
+                    b.Pedidos,
+                    (b.Saldo ?? 0m)
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtBuckets, "tblCxcBuckets", cBlueGray, MAX_COL, cZebra, out var tblBuckets) + 2;
+
+            if (tblBuckets != null)
+            {
+                AplicarFormatosTabla(tblBuckets, new()
+                {
+                    ["Saldo"] = "#,##0.00;[Red]-#,##0.00",
+                });
+
+                foreach (var name in new[] { "Pedidos", "Saldo" })
+                {
+                    if (!TieneCampo(tblBuckets, name)) continue;
+                    var pos = ObtenerPosCampo1Based(tblBuckets, name);
+                    var rng = ObtenerRangoDatosColumna(tblBuckets, pos);
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                }
+            }
+
+            // ------------------
+            // DETALLE
+            // ------------------
+            r = EscribirTituloSeccion(ws, r, "Detalle (pedidos con saldo)", cBlueGray, MAX_COL);
+
+            var dt = new DataTable("Detalle");
+            dt.Columns.Add("Pedido", typeof(int));
+            dt.Columns.Add("Cliente");
+            dt.Columns.Add("Estatus");
+            dt.Columns.Add("Fecha base", typeof(DateTime));
+            dt.Columns.Add("Días", typeof(int));
+            dt.Columns.Add("Bucket");
+            dt.Columns.Add("Total", typeof(decimal));
+            dt.Columns.Add("Pagado", typeof(decimal));
+            dt.Columns.Add("Saldo", typeof(decimal));
+            dt.Columns.Add("Pagado %", typeof(decimal)); // ratio 0..1
+            dt.Columns.Add("Último pago", typeof(DateTime));
+            dt.Columns.Add("Método");
+
+            foreach (var x in vm.Rows
+                .OrderByDescending(x => x.DiasVencidos)
+                .ThenByDescending(x => x.Saldo)
+                .ThenBy(x => x.PedidoId))
+            {
+                var pctRaw = x.PagadoPct;                 // en tu UI lo pintas como 0..100
+                var pct = pctRaw > 1m ? pctRaw / 100m : pctRaw;
+
+                dt.Rows.Add(
+                    x.PedidoId,
+                    x.ClienteNombre ?? "-",
+                    x.PedidoEstatusNombre ?? "-",
+                    x.FechaBase.Date,
+                    x.DiasVencidos,
+                    x.BucketNombre,
+                    x.TotalCobro,
+                    x.TotalPagado,
+                    x.Saldo,
+                    pct,
+                    x.UltimoPagoFecha.HasValue ? x.UltimoPagoFecha.Value.Date : DBNull.Value,
+                    (x.UltimoPagoMetodo ?? x.UltimoPagoTipoNombre ?? "-")
+                );
+            }
+
+            var lastRow = InsertarTablaAt(ws, r, 1, dt, "tblCxcDetalle", cBlueGray, MAX_COL, cZebra, out var tbl);
+
+            if (tbl != null)
+            {
+                AplicarFormatosTabla(tbl, new()
+                {
+                    ["Total"]    = "#,##0.00",
+                    ["Pagado"]   = "#,##0.00",
+                    ["Saldo"]    = "#,##0.00;[Red]-#,##0.00",
+                    ["Pagado %"] = "0.00%",
+                    ["Días"]     = "0",
+                });
+
+                // fechas
+                foreach (var field in new[] { "Fecha base", "Último pago" })
+                {
+                    if (!TieneCampo(tbl, field)) continue;
+                    var pos = ObtenerPosCampo1Based(tbl, field);
+                    var rng = ObtenerRangoDatosColumna(tbl, pos);
+                    rng.Style.DateFormat.Format = "yyyy-mm-dd";
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // resaltar vencidos (fila completa) si Días > 0
+                if (tbl.DataRange != null && TieneCampo(tbl, "Días"))
+                {
+                    var posDias = ObtenerPosCampo1Based(tbl, "Días");
+                    var dr = tbl.DataRange;
+
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        var dias = dr.Row(i).Cell(posDias).GetValue<int>();
+                        if (dias > 0)
+                            dr.Row(i).Style.Fill.BackgroundColor = cWarnRow;
+                    }
+                }
+
+                // freeze dejando arriba título + filtros + kpis + buckets
+                ws.SheetView.FreezeRows(tbl.RangeAddress.FirstAddress.RowNumber);
+
+                // anchos mínimos útiles
+                ws.Column(2).Width = Math.Max(ws.Column(2).Width, 26); // Cliente
+                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 14); // Estatus
+                ws.Column(6).Width = Math.Max(ws.Column(6).Width, 12); // Bucket
+                ws.Column(12).Width = Math.Max(ws.Column(12).Width, 18); // Método
+            }
+
+            r = lastRow + 2;
+
+            // Nota final
+            var note = ws.Range(r, 1, r, MAX_COL);
+            note.Merge();
+            note.FirstCell().Value = "* Fecha base = Vigencia cotización > Fecha creación cotización > Fecha creación pedido.";
+            note.Style.Font.FontSize = 9;
+            note.Style.Font.FontColor = XLColor.Gray;
+
+            // ajustes finales
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            ws.Columns(1, 12).AdjustToContents(1, 80);
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
         }
 
 

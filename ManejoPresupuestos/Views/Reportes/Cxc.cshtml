@@ -1,12 +1,31 @@
 @model ManejoPresupuestos.Models.ReporteCxcViewModel
 @{
-    ViewData["Title"] = "Pagos y CxC (Aging)";
+    ViewData["Title"] = "Pagos pendientes";
 }
 
 <div class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="mb-0">Pagos y CxC (Aging)</h1>
-        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+        <h1 class="mb-0">Pagos pendientes</h1>
+        <div class="d-flex gap-2">
+            @{
+                string fmtDate(DateTime d) => d.ToString("yyyy-MM-dd");
+            }
+
+            <a class="btn btn-success"
+            asp-controller="Reportes"
+            asp-action="CxcExcel"
+            asp-route-desde="@fmtDate(Model.Desde)"
+            asp-route-hasta="@fmtDate(Model.Hasta)"
+            asp-route-clienteId="@Model.ClienteId"
+            asp-route-pedidoId="@Model.PedidoId"
+            asp-route-soloVencidos="@Model.SoloVencidos"
+            asp-route-bucketId="@Model.BucketId"
+            asp-route-metodo="@Model.Metodo"
+            asp-route-minSaldo="@Model.MinSaldo">
+                Exportar Excel
+            </a>
+            <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+        </div>
     </div>
 
     <form class="card card-body mb-3" method="get">

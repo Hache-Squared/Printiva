@@ -277,6 +277,42 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> CxcExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? pedidoId,
+            bool? soloVencidos,
+            int? bucketId,
+            string? metodo,
+            decimal? minSaldo
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.CxcAging(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                pedidoId,
+                soloVencidos ?? false,
+                bucketId,
+                metodo,
+                minSaldo
+            );
+
+            var bytes = transformToReport.GenerarExcelPagosPendientes(vm);
+
+            var fileName = $"PagosPendientes_{vm.Desde:yyyyMMdd}_{vm.Hasta:yyyyMMdd}.xlsx";
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Cotizaciones(
             DateTime? desde,
             DateTime? hasta,

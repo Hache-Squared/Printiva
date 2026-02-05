@@ -78,9 +78,21 @@
 
             <div class="col-md-5 d-flex justify-content-end gap-2 align-items-end">
                 <button class="btn btn-primary" type="submit">Filtrar</button>
+                @{
+                    string fmtDate(DateTime d) => d.ToString("yyyy-MM-dd");
+                }
+
                 <a class="btn btn-success"
-                href="/Reportes/PedidosOperativosExcel">
-                Exportar Excel
+                asp-controller="Reportes"
+                asp-action="PedidosOperativosExcel"
+                asp-route-desde="@fmtDate(Model.Desde)"
+                asp-route-hasta="@fmtDate(Model.Hasta)"
+                asp-route-pedidoEstatusId="@Model.PedidoEstatusId"
+                asp-route-clienteId="@Model.ClienteId"
+                asp-route-produccionEstatusId="@Model.ProduccionEstatusId"
+                asp-route-canal="@Model.Canal"
+                asp-route-atrasados="@Model.SoloAtrasados">
+                    Exportar Excel
                 </a>
                 <a class="btn btn-outline-secondary" href="/Reportes/PedidosOperativos">Limpiar</a>
             </div>
