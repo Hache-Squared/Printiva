@@ -81,6 +81,7 @@ BEGIN
 			ON r.ProductoId = p.ProductoId
 		LEFT JOIN dbo.TblProductosCategorias pc (NOLOCK)
 			ON p.ProductoCategoriaId = pc.ProductoCategoriaId
+		WHERE r.EstaActivo = 1
 
 
 		IF(ISNULL(@elementoId,0) = 0)

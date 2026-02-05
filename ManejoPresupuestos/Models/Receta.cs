@@ -28,4 +28,15 @@ namespace ManejoPresupuestos.Models
         [Required] public int RecetaId { get; set; }
     }
 
+    public class ReplicarRecetaViewModel
+    {
+        public int RecetaIdOrigen { get; set; }
+        public string? NombreNuevo { get; set; } // opcional
+    }
+
+    public class DesactivarRecetaViewModel
+    {
+        public int RecetaId { get; set; }
+    }
+
 }

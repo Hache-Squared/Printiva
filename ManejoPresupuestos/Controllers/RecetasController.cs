@@ -234,5 +234,35 @@ namespace ManejoPresupuestos.Controllers
             });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ReplicarReceta([FromBody] ReplicarRecetaViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var res = await repositorioRecetas.ReplicarReceta(
+                recetaIdOrigen: modelo.RecetaIdOrigen,
+                loginId: usuarioId,
+                nombreNuevo: modelo.NombreNuevo
+            );
+
+            if (res.result != ResultProcedureType.SUCCESS)
+                return Json(new { result = "fail", message = res.message });
+
+            return Json(new { result = "success", recetaId = res.elementoId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DesactivarReceta([FromBody] DesactivarRecetaViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var res = await repositorioRecetas.DesactivarReceta(modelo.RecetaId, usuarioId);
+
+            if (res.result != ResultProcedureType.SUCCESS)
+                return Json(new { result = "fail", message = res.message });
+
+            return Json(new { result = "success", message = "Receta desactivada" });
+        }
+
     }
 }

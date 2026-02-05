@@ -16,6 +16,8 @@ namespace ManejoPresupuestos.Servicios
         Task<Inventario?> ObtenerPorId(int id);
         Task Actualizar(Inventario inventario);
         Task Borrar(int id);
+        Task<ResultProcedureGeneric> ReplicarReceta(int recetaIdOrigen, int loginId, string? nombreNuevo = null, int? productoIdNuevo = null);
+        Task<ResultProcedureGeneric> DesactivarReceta(int recetaId, int loginId);
     }
 
     public class RepositorioRecetas : IRepositorioRecetas
@@ -156,6 +158,35 @@ namespace ManejoPresupuestos.Servicios
                     loginId = loginId,
                     ElementoObtenerId = id
 
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<ResultProcedureGeneric> ReplicarReceta(int recetaIdOrigen, int loginId, string? nombreNuevo = null, int? productoIdNuevo = null)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procReplicarReceta",
+                new
+                {
+                    loginId,
+                    RecetaIdOrigen = recetaIdOrigen,
+                    NombreNuevo = nombreNuevo,
+                    ProductoIdNuevo = productoIdNuevo
+                },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+        public async Task<ResultProcedureGeneric> DesactivarReceta(int recetaId, int loginId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procDesactivarReceta",
+                new
+                {
+                    loginId,
+                    RecetaId = recetaId
                 },
                 commandType: System.Data.CommandType.StoredProcedure
             );

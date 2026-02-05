@@ -134,6 +134,7 @@
     <Build Include="dbo\StoredProcedures\procAlteraPago.sql" />
     <Build Include="dbo\StoredProcedures\procBorrarPedido.sql" />
     <Build Include="dbo\StoredProcedures\procCrearPedido.sql" />
+    <Build Include="dbo\StoredProcedures\procDesactivarReceta.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerComprasV2.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerCotizaciones.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerCotizacionItems.sql" />
@@ -158,6 +159,7 @@
     <Build Include="dbo\StoredProcedures\procProduccionRecetasDisponiblesPorItem.sql" />
     <Build Include="dbo\StoredProcedures\procRecetasCalcularCostoEstimado.sql" />
     <Build Include="dbo\StoredProcedures\procReemplazarPedidoItems.sql" />
+    <Build Include="dbo\StoredProcedures\procReplicarReceta.sql" />
     <Build Include="dbo\StoredProcedures\procReportesComprasHistorico.sql" />
     <Build Include="dbo\StoredProcedures\procReportesConsumoInventarioDetalle.sql" />
     <Build Include="dbo\StoredProcedures\procReportesConsumoInventarioResumen.sql" />
