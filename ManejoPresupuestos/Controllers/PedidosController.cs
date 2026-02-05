@@ -324,5 +324,24 @@ namespace ManejoPresupuestos.Controllers
             });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OcultarEnKanbanAjax(PedidoOcultarKanbanViewModel modelo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var pedido = await repositorioPedidos.ObtenerPorId(usuarioId, modelo.PedidoId);
+            if (pedido is null)
+                return Json(new { ok = false, message = "Pedido no encontrado." });
+
+            var res = await repositorioPedidos.OcultarEnKanban(usuarioId, modelo.PedidoId);
+
+            return Json(new
+            {
+                ok = res.result == ResultProcedureType.SUCCESS,
+                message = res.message
+            });
+        }
+
     }
 }

@@ -83,6 +83,7 @@ BEGIN
             OR (ISNULL(tc.TotalCotizado,0) - ISNULL(tp.TotalPagado,0)) > 0
       )
       AND p.EstaActivo = 1 
+      AND ISNULL(p.MostrarEnKanban, 1) = 1
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END
 GO

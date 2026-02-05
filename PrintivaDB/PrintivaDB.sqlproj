@@ -147,6 +147,7 @@
     <Build Include="dbo\StoredProcedures\procObtenerPedidosKanban.sql" />
     <Build Include="dbo\StoredProcedures\procPedidoAccionesDisponibles.sql" />
     <Build Include="dbo\StoredProcedures\procPedidoCambiarEstatus.sql" />
+    <Build Include="dbo\StoredProcedures\procPedidoOcultarEnKanban.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionAccionesDisponibles.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionActualizarItemDatos.sql" />
     <Build Include="dbo\StoredProcedures\procProduccionAsignarRecetaItem.sql" />

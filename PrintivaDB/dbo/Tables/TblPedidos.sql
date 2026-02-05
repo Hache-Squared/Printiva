@@ -7,20 +7,11 @@ CREATE TABLE [dbo].[TblPedidos] (
     [FechaEntregaEstimada] DATETIME2 (7)   NULL,
     [Notas]                NVARCHAR (500)  NULL,
     [TotalEstimado]        DECIMAL (18, 2) NULL,
-    [EstaActivo]           BIT             NOT NULL,
-    PRIMARY KEY CLUSTERED ([PedidoId] ASC)
+    [EstaActivo]           BIT             CONSTRAINT [DF_TblPedidos_EstaActivo] DEFAULT ((1)) NOT NULL,
+    [MostrarEnKanban]      BIT             CONSTRAINT [DF_TblPedidos_MostrarEnKanban] DEFAULT ((1)) NOT NULL,
+    PRIMARY KEY CLUSTERED ([PedidoId] ASC),
+    CONSTRAINT [FK_TblPedidos_Clientes] FOREIGN KEY ([ClienteId]) REFERENCES [dbo].[TblClientes] ([ClienteId]),
+    CONSTRAINT [FK_TblPedidos_Estatus] FOREIGN KEY ([PedidoEstatusId]) REFERENCES [dbo].[TblPedidoEstatus] ([PedidoEstatusId])
 );
-GO
-
-ALTER TABLE [dbo].[TblPedidos]
-    ADD CONSTRAINT [FK_TblPedidos_Clientes] FOREIGN KEY ([ClienteId]) REFERENCES [dbo].[TblClientes] ([ClienteId]);
-GO
-
-ALTER TABLE [dbo].[TblPedidos]
-    ADD CONSTRAINT [FK_TblPedidos_Estatus] FOREIGN KEY ([PedidoEstatusId]) REFERENCES [dbo].[TblPedidoEstatus] ([PedidoEstatusId]);
-GO
-
-ALTER TABLE [dbo].[TblPedidos]
-    ADD CONSTRAINT [DF_TblPedidos_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
 GO
 

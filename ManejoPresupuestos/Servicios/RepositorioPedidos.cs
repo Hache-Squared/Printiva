@@ -15,7 +15,7 @@ namespace ManejoPresupuestos.Servicios
         Task<IEnumerable<PedidoAccionDisponible>> ObtenerAccionesDisponibles(int usuarioId, int pedidoId);
         Task<ResultProcedureGeneric> CambiarEstatus(int usuarioId, int pedidoId, int haciaEstatusId, string? notas);
         Task<IEnumerable<PedidoKanbanCard>> ObtenerKanban(int usuarioId, int clienteId = 0, string? q = null, bool soloPendientes = false);
-
+        Task<ResultProcedureGeneric> OcultarEnKanban(int usuarioId, int pedidoId);
     }
 
     public class RepositorioPedidos : IRepositorioPedidos
@@ -212,6 +212,16 @@ namespace ManejoPresupuestos.Servicios
                     q = q ?? "",
                     SoloPendientes = soloPendientes ? 1 : 0
                 },
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<ResultProcedureGeneric> OcultarEnKanban(int usuarioId, int pedidoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QuerySingleAsync<ResultProcedureGeneric>(
+                "dbo.procPedidoOcultarEnKanban",
+                new { loginId = usuarioId, PedidoId = pedidoId },
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }

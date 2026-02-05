@@ -13,4 +13,8 @@ namespace ManejoPresupuestos.Models
         public string Notas { get; set; }
         public decimal? TotalEstimado { get; set; }
     }
+    public class PedidoOcultarKanbanViewModel
+    {
+        public int PedidoId { get; set; }
+    }
 }

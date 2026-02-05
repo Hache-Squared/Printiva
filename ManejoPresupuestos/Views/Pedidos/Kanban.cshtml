@@ -192,6 +192,8 @@
 
                 const badges = buildBadges(c);
 
+                const canHide = ['entregado','cancelado'].includes(String(c.estatusNombre || '').toLowerCase());
+
                 div.innerHTML = `
                     <div class="card-body p-3">
                         <div class="d-flex align-items-start justify-content-between gap-2">
@@ -199,11 +201,21 @@
                                 <div class="fw-semibold">Pedido #${c.pedidoId}</div>
                                 <div class="text-muted small">${escapeHtml(c.clienteNombre || '')}</div>
                             </div>
-                            <a class="btn btn-sm btn-outline-secondary" href="/Pedidos/Detalles/${c.pedidoId}">Ver</a>
+
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-outline-secondary" href="/Pedidos/Detalles/${c.pedidoId}">Ver</a>
+                                ${canHide ? `
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        data-hide-kanban="1"
+                                        title="Ocultar del kanban">
+                                    Ocultar
+                                </button>` : ``}
+                            </div>
                         </div>
 
                         <div class="mt-2 d-flex flex-wrap gap-2">
-                            ${badges}
+                        ${badges}
                         </div>
 
                         <div class="mt-2 small text-muted">
@@ -215,9 +227,40 @@
                     </div>
                 `;
 
+                const btnHide = div.querySelector('[data-hide-kanban="1"]');
+                if (btnHide) {
+                    btnHide.addEventListener('click', async (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+
+                        const ok = confirm('¿Quieres dejar de ver este pedido en el kanban? (Solo afecta el kanban)');
+                        if (!ok) return;
+
+                        const payload = new URLSearchParams();
+                        payload.set('PedidoId', String(c.pedidoId));
+
+                        const res = await fetch('/Pedidos/OcultarEnKanbanAjax', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                            'RequestVerificationToken': token
+                        },
+                        body: payload.toString()
+                        });
+
+                        const r = await res.json();
+                        if (!r.ok) {
+                        alert(r.message || 'No se pudo ocultar el pedido.');
+                        return;
+                        }
+
+                        await loadData(); // refresca columnas
+                    });
+                }
+
                 div.addEventListener('click', (ev) => {
                     // evita que el click en el botón "Ver" dispare el modal
-                    if(ev.target.closest('a')) return;
+                    if (ev.target.closest('a') || ev.target.closest('button')) return;
                     openModal(c);
                 });
 
