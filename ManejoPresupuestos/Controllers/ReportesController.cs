@@ -463,6 +463,43 @@ namespace ManejoPresupuestos.Controllers
             return View(vm);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> InventarioConsumoMejoradoExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoId,
+            int? productoId,
+            int? recetaId,
+            int? inventarioId,
+            string periodo = "month",
+            int topN = 10,
+            string? q = null
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            var vm = await repositorioReportes.InventarioConsumoMejorado(
+                loginId,
+                desde, hasta,
+                pedidoId, productoId, recetaId, inventarioId,
+                periodo ?? "month",
+                topN <= 0 ? 10 : topN,
+                q
+            );
+
+            var bytes = transformToReport.GenerarExcelInventarioConsumoMejorado(vm);
+
+            var d = (desde ?? DateTime.Today.AddDays(-30)).Date;
+            var h = (hasta ?? DateTime.Today).Date;
+
+            var fileName = $"InventarioConsumoMejorado_{d:yyyyMMdd}_{h:yyyyMMdd}.xlsx";
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+
         
         [HttpGet]
         public async Task<IActionResult> ComprasHistorico(

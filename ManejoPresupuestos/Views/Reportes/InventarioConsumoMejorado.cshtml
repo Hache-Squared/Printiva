@@ -14,6 +14,20 @@
                 Consumo por producto/pedido/receta e insumo. Costos por tarifas (costeo), no por Inventarios.CostoUnitario.
             </div>
         </div>
+        <a class="btn btn-success"
+        asp-controller="Reportes"
+        asp-action="InventarioConsumoMejoradoExcel"
+        asp-route-desde="@fmtDate(Model.Desde)"
+        asp-route-hasta="@fmtDate(Model.Hasta)"
+        asp-route-pedidoId="@Model.PedidoId"
+        asp-route-productoId="@Model.ProductoId"
+        asp-route-recetaId="@Model.RecetaId"
+        asp-route-inventarioId="@Model.InventarioId"
+        asp-route-periodo="@Model.Periodo"
+        asp-route-topN="@Model.TopN"
+        asp-route-q="@Model.Q">
+            Exportar Excel
+        </a>
         <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
     </div>
 

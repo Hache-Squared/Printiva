@@ -15,6 +15,7 @@ namespace ManejoPresupuestos.Servicios
         byte[] GenerarExcelPagosPendientes(ReporteCxcViewModel vm);
         byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm);
         byte[] GenerarExcelProduccionUtilizacion(ReporteProduccionUtilizacionViewModel vm);
+        byte[] GenerarExcelInventarioConsumoMejorado(ReporteInventarioConsumoMejoradoViewModel vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -1936,6 +1937,486 @@ namespace ManejoPresupuestos.Servicios
             ws.PageSetup.CenterHorizontally = true;
 
             ws.Columns(1, 11).AdjustToContents(1, 80);
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+
+        public byte[] GenerarExcelInventarioConsumoMejorado(ReporteInventarioConsumoMejoradoViewModel vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Consumo inventario");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            const int MAX_COL = 24; // A..X (porque va MUCHA data)
+            int r = 1;
+
+            // Paleta sobria (misma vibra que Pedido360)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cPurple   = XLColor.FromHtml("#5B21B6"); // violet-800
+            var cOrange   = XLColor.FromHtml("#9A3412"); // orange-800
+            var cGreen    = XLColor.FromHtml("#166534"); // green-800
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+
+            string MoneyFmt = "#,##0.00";
+            string MoneyFmtRed = "#,##0.00;[Red]-#,##0.00";
+
+            // ---------- lookups ----------
+            string LookupNombre<T>(List<T> list, int? id, Func<T, int> getId, Func<T, string> getName, string fallbackTodos = "Todos")
+            {
+                if (!id.HasValue) return fallbackTodos;
+                var item = list.FirstOrDefault(x => getId(x) == id.Value);
+                return item == null ? id.Value.ToString() : getName(item);
+            }
+
+            string Safe(string? s) => string.IsNullOrWhiteSpace(s) ? "-" : s.Trim();
+
+            // ---------- tarifas por renglón ----------
+            string BuildTarifasDetalle(ReporteInventarioConsumoDetalleDto x)
+            {
+                var keyInsumo = $"{x.ProduccionItemId}|{x.InventarioId}";
+                var keyGlobal = $"{x.ProduccionItemId}|0";
+
+                vm.TarifasPorKey.TryGetValue(keyInsumo, out var tInsumo);
+                vm.TarifasPorKey.TryGetValue(keyGlobal, out var tGlobal);
+
+                if ((tInsumo == null || tInsumo.Count == 0) && (tGlobal == null || tGlobal.Count == 0))
+                    return "-";
+
+                var lines = new List<string>();
+
+                if (tInsumo != null && tInsumo.Count > 0)
+                {
+                    lines.Add("INSUMO:");
+                    foreach (var t in tInsumo)
+                    {
+                        lines.Add($"• {t.ConceptoCodigo} · {t.TarifaNombre} | {t.Cantidad:0.####} x {t.MontoTarifa:0.00} = {t.Subtotal:0.00}");
+                    }
+                }
+
+                if (tGlobal != null && tGlobal.Count > 0)
+                {
+                    lines.Add("GLOBAL (InventarioId=0):");
+                    foreach (var t in tGlobal)
+                    {
+                        lines.Add($"• {t.ConceptoCodigo} · {t.TarifaNombre} | {t.Cantidad:0.####} x {t.MontoTarifa:0.00} = {t.Subtotal:0.00}");
+                    }
+                }
+
+                return string.Join(Environment.NewLine, lines);
+            }
+
+            // ==========================
+            // TÍTULO
+            // ==========================
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Consumo de inventario — Costeo por tarifas";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ==========================
+            // FILTROS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var desdeStr = vm.Desde?.ToString("yyyy-MM-dd") ?? "-";
+            var hastaStr = vm.Hasta?.ToString("yyyy-MM-dd") ?? "-";
+
+            var productoNombre = LookupNombre(vm.CatProductos, vm.ProductoId, x => x.Id, x => x.Nombre);
+            var recetaNombre   = LookupNombre(vm.CatRecetas, vm.RecetaId, x => x.Id, x => x.Nombre, fallbackTodos: "Todas");
+            var insumoNombre   = LookupNombre(vm.CatInsumos, vm.InventarioId, x => x.Id, x => string.IsNullOrWhiteSpace(x.UnidadNombre) ? x.Nombre : $"{x.Nombre} ({x.UnidadNombre})");
+
+            EscribirKVInline(ws, r, 1,  "Desde",     desdeStr,             2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 5,  "Hasta",     hastaStr,             2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "PedidoId",  vm.PedidoId?.ToString() ?? "-", 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 13, "Periodo",   Safe(vm.Periodo),     2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 17, "TopN",      vm.TopN.ToString(),   2, 2, cSoftGray);
+            r++;
+
+            EscribirKVInline(ws, r, 1,  "Producto",  productoNombre, 2, 6, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "Receta",    recetaNombre,   2, 6, cSoftGray);
+            EscribirKVInline(ws, r, 17, "Insumo",    insumoNombre,   2, 2, cSoftGray);
+            r++;
+
+            EscribirKVInline(ws, r, 1, "Buscar (q)", Safe(vm.Q), 2, 10, cSoftGray);
+            r += 2;
+
+            // ==========================
+            // KPIs
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            // 4 cards grandes (2 filas cada una)
+            EscribirKpiCard(ws, r,  1,  6,  "Movimientos", vm.Totales.Movimientos.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7,  12, "Costo insumos (tarifas)", vm.Totales.CostoInsumosEstimado.ToString("N2"), cSoftGray);
+            EscribirKpiCard(ws, r,  13, 18, "Costo material (item)", vm.Totales.CostoMaterialTotal.ToString("N2"), cSoftGray);
+            EscribirKpiCard(ws, r,  19, 24, "Venta items (est.)", vm.Totales.VentaItemsEstimada.ToString("N2"), cSoftGray);
+            r += 3;
+
+            // segunda fila de KPIs (texto)
+            EscribirKVInline(ws, r, 1,  "Items",              vm.Totales.ProduccionItems.ToString("N0"), 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 5,  "Cantidad total",     vm.Totales.CantidadTotal.ToString("0.####"), 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "Global (material)",  vm.Totales.CostoMaterialGlobal.ToString("N2"), 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 13, "Ratio costo/venta",  vm.Totales.RatioCostoSobreVentaItems?.ToString("0.0000") ?? "-", 2, 2, cSoftGray);
+            r += 2;
+
+            // ==========================
+            // TOP INSUMOS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Top insumos", cBlueGray, MAX_COL);
+
+            var dtTop = new DataTable("TopInsumos");
+            dtTop.Columns.Add("InventarioId", typeof(int));
+            dtTop.Columns.Add("Insumo");
+            dtTop.Columns.Add("Unidad");
+            dtTop.Columns.Add("Cantidad", typeof(decimal));
+            dtTop.Columns.Add("Costo (tarifas)", typeof(decimal));
+            dtTop.Columns.Add("Pedidos", typeof(int));
+            dtTop.Columns.Add("Productos", typeof(int));
+
+            foreach (var x in vm.TopInsumos)
+            {
+                dtTop.Rows.Add(
+                    x.InventarioId,
+                    x.InsumoNombre,
+                    x.UnidadNombre,
+                    x.CantidadTotal,
+                    x.CostoTotalEstimado,
+                    x.Pedidos,
+                    x.Productos
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtTop, "tblTopInsumos", cBlueGray, MAX_COL, cZebra, out var tblTop) + 2;
+            AplicarFormatosTabla(tblTop, new()
+            {
+                ["Cantidad"] = "#,##0.####",
+                ["Costo (tarifas)"] = MoneyFmt,
+            });
+
+            // ==========================
+            // RESÚMENES (Producto / Pedido / Receta / Periodo)
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Resúmenes", cPurple, MAX_COL);
+
+            // --- Por producto ---
+            var dtProd = new DataTable("PorProducto");
+            dtProd.Columns.Add("ProductoId", typeof(int));
+            dtProd.Columns.Add("Producto");
+            dtProd.Columns.Add("Cantidad", typeof(decimal));
+            dtProd.Columns.Add("Costo insumos", typeof(decimal));
+            dtProd.Columns.Add("Costo material", typeof(decimal));
+            dtProd.Columns.Add("Venta est.", typeof(decimal));
+            dtProd.Columns.Add("Pedidos", typeof(int));
+            dtProd.Columns.Add("ProdItems", typeof(int));
+            dtProd.Columns.Add("Recetas", typeof(int));
+
+            foreach (var x in vm.PorProducto)
+            {
+                dtProd.Rows.Add(
+                    x.ProductoId,
+                    x.ProductoNombre,
+                    x.CantidadTotal ?? 0m,
+                    x.CostoInsumosEstimado ?? 0m,
+                    x.CostoMaterialTotal,
+                    x.VentaItemsEstimada,
+                    x.Pedidos,
+                    x.ProduccionItems,
+                    x.Recetas
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtProd, "tblPorProducto", cPurple, MAX_COL, cZebra, out var tblProd) + 1;
+            AplicarFormatosTabla(tblProd, new()
+            {
+                ["Cantidad"] = "#,##0.####",
+                ["Costo insumos"] = MoneyFmt,
+                ["Costo material"] = MoneyFmt,
+                ["Venta est."] = MoneyFmt,
+            });
+
+            r += 1;
+
+            // --- Por pedido ---
+            var dtPed = new DataTable("PorPedido");
+            dtPed.Columns.Add("PedidoId", typeof(int));
+            dtPed.Columns.Add("Cliente");
+            dtPed.Columns.Add("Fecha", typeof(DateTime));
+            dtPed.Columns.Add("Pedido total", typeof(decimal));
+            dtPed.Columns.Add("Cantidad", typeof(decimal));
+            dtPed.Columns.Add("Costo insumos", typeof(decimal));
+            dtPed.Columns.Add("Costo material", typeof(decimal));
+            dtPed.Columns.Add("Venta est.", typeof(decimal));
+            dtPed.Columns.Add("Ratio costo/venta", typeof(decimal));
+
+            foreach (var x in vm.PorPedido)
+            {
+                dtPed.Rows.Add(
+                    x.PedidoId,
+                    x.ClienteNombre,
+                    x.PedidoFechaCreacion.Date,
+                    x.PedidoTotalEstimado,
+                    x.CantidadTotal ?? 0m,
+                    x.CostoInsumosEstimado ?? 0m,
+                    x.CostoMaterialTotal,
+                    x.VentaItemsEstimada,
+                    x.RatioCostoSobreVentaItems ?? 0m
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtPed, "tblPorPedido", cPurple, MAX_COL, cZebra, out var tblPed) + 1;
+            AplicarFormatosTabla(tblPed, new()
+            {
+                ["Fecha"] = "yyyy-mm-dd",
+                ["Pedido total"] = MoneyFmt,
+                ["Cantidad"] = "#,##0.####",
+                ["Costo insumos"] = MoneyFmt,
+                ["Costo material"] = MoneyFmt,
+                ["Venta est."] = MoneyFmt,
+                ["Ratio costo/venta"] = "0.0000",
+            });
+
+            r += 1;
+
+            // --- Por receta ---
+            var dtRec = new DataTable("PorReceta");
+            dtRec.Columns.Add("RecetaId");
+            dtRec.Columns.Add("Receta");
+            dtRec.Columns.Add("ProductoId", typeof(int));
+            dtRec.Columns.Add("Producto");
+            dtRec.Columns.Add("Cantidad", typeof(decimal));
+            dtRec.Columns.Add("Costo insumos", typeof(decimal));
+            dtRec.Columns.Add("Costo material", typeof(decimal));
+            dtRec.Columns.Add("ProdItems", typeof(int));
+            dtRec.Columns.Add("Pedidos", typeof(int));
+
+            foreach (var x in vm.PorReceta)
+            {
+                dtRec.Rows.Add(
+                    x.RecetaId?.ToString() ?? "-",
+                    x.RecetaNombre,
+                    x.ProductoId,
+                    x.ProductoNombre,
+                    x.CantidadTotal ?? 0m,
+                    x.CostoInsumosEstimado ?? 0m,
+                    x.CostoMaterialTotal,
+                    x.ProduccionItems,
+                    x.Pedidos
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtRec, "tblPorReceta", cPurple, MAX_COL, cZebra, out var tblRec) + 2;
+            AplicarFormatosTabla(tblRec, new()
+            {
+                ["Cantidad"] = "#,##0.####",
+                ["Costo insumos"] = MoneyFmt,
+                ["Costo material"] = MoneyFmt,
+            });
+
+            // --- Top por periodo ---
+            r = EscribirTituloSeccion(ws, r, "Top por periodo (insumo)", cSlate, MAX_COL);
+
+            var dtPer = new DataTable("TopPorPeriodo");
+            dtPer.Columns.Add("Periodo inicio", typeof(DateTime));
+            dtPer.Columns.Add("InventarioId", typeof(int));
+            dtPer.Columns.Add("Insumo");
+            dtPer.Columns.Add("Unidad");
+            dtPer.Columns.Add("Cantidad", typeof(decimal));
+            dtPer.Columns.Add("Costo (tarifas)", typeof(decimal));
+
+            foreach (var x in vm.TopPorPeriodo)
+            {
+                dtPer.Rows.Add(
+                    x.PeriodoInicio.Date,
+                    x.InventarioId,
+                    x.InsumoNombre,
+                    x.UnidadNombre,
+                    x.CantidadTotal,
+                    x.CostoTotalEstimado
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtPer, "tblTopPeriodo", cSlate, MAX_COL, cZebra, out var tblPer) + 2;
+            AplicarFormatosTabla(tblPer, new()
+            {
+                ["Periodo inicio"] = "yyyy-mm-dd",
+                ["Cantidad"] = "#,##0.####",
+                ["Costo (tarifas)"] = MoneyFmt,
+            });
+
+            // ==========================
+            // DETALLE (con tarifas por renglón)
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Detalle (con tarifas por renglón)", cBlueGray, MAX_COL);
+
+            var dtDet = new DataTable("Detalle");
+            dtDet.Columns.Add("ConsumoId", typeof(int));
+            dtDet.Columns.Add("Fecha", typeof(DateTime));
+            dtDet.Columns.Add("PedidoId", typeof(int));
+            dtDet.Columns.Add("Cliente");
+            dtDet.Columns.Add("PedidoItemId", typeof(int));
+            dtDet.Columns.Add("ProdItemId", typeof(int));
+
+            dtDet.Columns.Add("Producto");
+            dtDet.Columns.Add("Receta");
+            dtDet.Columns.Add("InventarioId", typeof(int));
+            dtDet.Columns.Add("Insumo");
+            dtDet.Columns.Add("Unidad");
+
+            dtDet.Columns.Add("Cant.", typeof(decimal));
+            dtDet.Columns.Add("Costo unit (tarifa)", typeof(decimal));
+            dtDet.Columns.Add("Costo (tarifa)", typeof(decimal));
+
+            dtDet.Columns.Add("Costo global", typeof(decimal));
+            dtDet.Columns.Add("Total + global", typeof(decimal));
+            dtDet.Columns.Add("Unit + global", typeof(decimal));
+
+            dtDet.Columns.Add("Venta item", typeof(decimal));
+            dtDet.Columns.Add("Notas");
+            dtDet.Columns.Add("Tarifas (detalle)"); // <- AQUÍ VA TODO EL DESGLOSE
+
+            foreach (var x in vm.Detalle.OrderByDescending(x => x.FechaConsumo))
+            {
+                dtDet.Rows.Add(
+                    x.ProduccionInventarioConsumoId,
+                    x.FechaConsumo,
+                    x.PedidoId,
+                    x.ClienteNombre,
+                    x.PedidoItemId,
+                    x.ProduccionItemId,
+                    x.ProductoNombre,
+                    string.IsNullOrWhiteSpace(x.RecetaNombre) ? "-" : x.RecetaNombre,
+                    x.InventarioId,
+                    x.InsumoNombre,
+                    x.UnidadNombre,
+                    x.CantidadConsumida,
+                    x.CostoUnitarioActual,
+                    x.CostoTotalEstimado,
+                    x.CostoGlobalAplicado,
+                    x.CostoTotalConGlobal,
+                    x.CostoUnitarioConGlobal,
+                    x.VentaItemEstimada,
+                    x.Notas ?? "-",
+                    BuildTarifasDetalle(x)
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtDet, "tblDetalleConsumo", cBlueGray, MAX_COL, cZebra, out var tblDet) + 2;
+
+            AplicarFormatosTabla(tblDet, new()
+            {
+                ["Fecha"] = "yyyy-mm-dd HH:mm",
+                ["Cant."] = "#,##0.####",
+                ["Costo unit (tarifa)"] = MoneyFmt,
+                ["Costo (tarifa)"] = MoneyFmtRed,
+                ["Costo global"] = MoneyFmtRed,
+                ["Total + global"] = MoneyFmtRed,
+                ["Unit + global"] = MoneyFmt,
+                ["Venta item"] = MoneyFmt,
+            });
+
+            // Wrap para Notas y Tarifas(detalle) + ancho cómodo
+            if (tblDet != null)
+            {
+                if (TieneCampo(tblDet, "Notas"))
+                    tblDet.Field("Notas").Column.Style.Alignment.WrapText = true;
+
+                if (tblDet != null && TieneCampo(tblDet, "Tarifas (detalle)"))
+                {
+                    // wrap dentro del rango de la tabla
+                    tblDet.Field("Tarifas (detalle)").Column.Style.Alignment.WrapText = true;
+
+                    // columna real en hoja = inicioTabla + (indexCampo - 1)
+                    var colNum =
+                        tblDet.RangeAddress.FirstAddress.ColumnNumber
+                        + tblDet.Field("Tarifas (detalle)").Index - 1;
+
+                    var col = ws.Column(colNum); // IXLColumn (aquí SÍ hay Width)
+                    col.Width = Math.Max(col.Width, 60d);
+                }
+
+                ws.Column(4).Width = Math.Max(ws.Column(4).Width, 22);  // Cliente
+                ws.Column(7).Width = Math.Max(ws.Column(7).Width, 22);  // Producto
+                ws.Column(10).Width = Math.Max(ws.Column(10).Width, 22); // Insumo
+            }
+
+            // ==========================
+            // TARIFAS RAW (para “sí o sí toda la data”)
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Tarifas (raw)", cOrange, MAX_COL);
+
+            var dtTar = new DataTable("TarifasRaw");
+            dtTar.Columns.Add("ProdItemId", typeof(int));
+            dtTar.Columns.Add("InventarioId", typeof(int));
+            dtTar.Columns.Add("Fecha costeo", typeof(DateTime));
+            dtTar.Columns.Add("ProduccionCosteoId", typeof(int));
+            dtTar.Columns.Add("ConceptoCodigo");
+            dtTar.Columns.Add("ConceptoNombre");
+            dtTar.Columns.Add("ConceptoUnidad");
+            dtTar.Columns.Add("TarifaId", typeof(int));
+            dtTar.Columns.Add("TarifaNombre");
+            dtTar.Columns.Add("TarifaOrden", typeof(int));
+            dtTar.Columns.Add("Cantidad", typeof(decimal));
+            dtTar.Columns.Add("Monto", typeof(decimal));
+            dtTar.Columns.Add("Subtotal", typeof(decimal));
+
+            foreach (var t in vm.TarifasDetalle.OrderByDescending(x => x.FechaCosteo).ThenBy(x => x.ProduccionItemId))
+            {
+                dtTar.Rows.Add(
+                    t.ProduccionItemId,
+                    t.InventarioId,
+                    t.FechaCosteo,
+                    t.ProduccionCosteoId,
+                    t.ConceptoCodigo,
+                    t.ConceptoNombre,
+                    t.ConceptoUnidad ?? "-",
+                    t.TarifaId,
+                    t.TarifaNombre,
+                    t.TarifaOrden,
+                    t.Cantidad,
+                    t.MontoTarifa,
+                    t.Subtotal
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtTar, "tblTarifasRaw", cOrange, MAX_COL, cZebra, out var tblTar) + 2;
+            AplicarFormatosTabla(tblTar, new()
+            {
+                ["Fecha costeo"] = "yyyy-mm-dd",
+                ["Cantidad"] = "#,##0.####",
+                ["Monto"] = MoneyFmt,
+                ["Subtotal"] = MoneyFmt,
+            });
+
+            // Ajustes finales
+            ws.SheetView.FreezeRows(3);
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            ws.Columns(1, MAX_COL).AdjustToContents(1, 80);
 
             using var ms = new MemoryStream();
             wb.SaveAs(ms);
