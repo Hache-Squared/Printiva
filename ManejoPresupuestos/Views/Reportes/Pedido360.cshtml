@@ -27,6 +27,14 @@
             </div>
             <div class="col-md-3 d-flex gap-2">
                 <button class="btn btn-primary" type="submit">Buscar</button>
+                @if (Model.Header is not null)
+                {
+                    <a class="btn btn-success"
+                    asp-action="ExportarPedido360Excel"
+                    asp-route-pedidoId="@Model.PedidoId">
+                        Exportar Excel
+                    </a>
+                }
                 <a class="btn btn-outline-secondary" href="/Reportes/Pedido360">Limpiar</a>
             </div>
         </div>
@@ -384,7 +392,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach (var h in Model.Historia.OrderByDescending(x => x.Fecha))
+                    @foreach (var h in Model.Historia)
                     {
                         <tr>
                             <td>@h.Fecha.ToString("yyyy-MM-dd HH:mm")</td>

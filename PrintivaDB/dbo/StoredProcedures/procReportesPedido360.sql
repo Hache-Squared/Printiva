@@ -381,7 +381,7 @@ BEGIN
   WHERE pb.PedidoId = @pedidoId
     AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
-  ORDER BY Fecha, Tipo, BitacoraId;
+  ORDER BY Tipo DESC, Fecha DESC, BitacoraId;
 
 END
 GO

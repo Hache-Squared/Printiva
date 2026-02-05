@@ -153,6 +153,36 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
+        public async Task<FileResult> ExportarPedido360Excel(int? pedidoId)
+        {
+            if (!pedidoId.HasValue || pedidoId.Value <= 0)
+            {
+                var empty = transformToReport.GenerarExcelPedido360(new ReportePedido360ViewModel
+                {
+                    PedidoId = pedidoId ?? 0,
+                    Mensaje = "Debes indicar un PedidoId válido."
+                });
+
+                return File(
+                    empty,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Pedido360_INVALIDO_{DateTime.Today:yyyyMMdd}.xlsx"
+                );
+            }
+
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+            var vm = await repositorioReportes.Pedido360(loginId, pedidoId.Value);
+
+            var bytes = transformToReport.GenerarExcelPedido360(vm);
+            var nombre = $"Pedido360_{pedidoId.Value}_{DateTime.Today:yyyyMMdd}.xlsx";
+
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                nombre
+            );
+        }
+
+        [HttpGet]
         public async Task<IActionResult> PedidosOperativos(
             DateTime? desde,
             DateTime? hasta,

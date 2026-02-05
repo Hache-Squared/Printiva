@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ASP.NET MVC (.NET 8)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/ManejoPresupuestos/ManejoPresupuestos.csproj",
+      "launchSettingsProfile": "ManejoPresupuestos"
+    }
+  ]
+}
