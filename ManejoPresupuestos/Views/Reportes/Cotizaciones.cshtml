@@ -6,8 +6,31 @@
 
 <div class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="mb-0">Cotizaciones: conversión y seguimiento</h1>
-        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+        @{
+            string fmtDate(DateTime d) => d.ToString("yyyy-MM-dd");
+        }
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="mb-0">Cotizaciones: conversión y seguimiento</h1>
+
+            <div class="d-flex gap-2">
+                <a class="btn btn-success"
+                asp-controller="Reportes"
+                asp-action="CotizacionesExcel"
+                asp-route-desde="@fmtDate(Model.Desde)"
+                asp-route-hasta="@fmtDate(Model.Hasta)"
+                asp-route-clienteId="@Model.ClienteId"
+                asp-route-cotizacionEstatusId="@Model.CotizacionEstatusId"
+                asp-route-soloConvertidas="@Model.SoloConvertidas"
+                asp-route-soloUltimaPorPedido="@Model.SoloUltimaPorPedido"
+                asp-route-minMonto="@Model.MinMonto"
+                asp-route-q="@Model.Q">
+                    Exportar Excel
+                </a>
+
+                <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
+            </div>
+        </div>
     </div>
 
     <form class="card card-body mb-3" method="get">

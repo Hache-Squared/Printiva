@@ -342,6 +342,43 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> CotizacionesExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? clienteId,
+            int? cotizacionEstatusId,
+            bool? soloConvertidas,
+            bool? soloUltimaPorPedido,
+            decimal? minMonto,
+            string? q
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            // MISMO repo que arma el VM del reporte (con defaults adentro)
+            var vm = await repositorioReportes.CotizacionesSeguimiento(
+                loginId,
+                desde,
+                hasta,
+                clienteId,
+                cotizacionEstatusId,
+                soloConvertidas ?? false,
+                soloUltimaPorPedido ?? false,
+                minMonto,
+                q
+            );
+
+            var bytes = transformToReport.GenerarExcelCotizacionesSeguimiento(vm);
+
+            var fileName = $"CotizacionesSeguimiento_{vm.Desde:yyyyMMdd}_{vm.Hasta:yyyyMMdd}.xlsx";
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ProduccionUtilizacion(
             DateTime? desde,
             DateTime? hasta,

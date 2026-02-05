@@ -13,6 +13,7 @@ namespace ManejoPresupuestos.Servicios
         byte[] GenerarExcelPedido360(ReportePedido360ViewModel vm);
         byte[] GenerarExcelPedidosOperativos(ReportePedidosOperativosViewModel vm);
         byte[] GenerarExcelPagosPendientes(ReporteCxcViewModel vm);
+        byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -1387,6 +1388,271 @@ namespace ManejoPresupuestos.Servicios
             ws.PageSetup.CenterHorizontally = true;
 
             ws.Columns(1, 12).AdjustToContents(1, 80);
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+        public byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Cotizaciones");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            const int MAX_COL = 18; // A..R
+            int r = 1;
+
+            // Paleta sobria (igual familia que los demás)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cPurple   = XLColor.FromHtml("#5B21B6"); // violet-800
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+
+            // resaltados suaves por categoría
+            var cOkRow    = XLColor.FromHtml("#ECFDF5"); // green-50
+            var cWarnRow  = XLColor.FromHtml("#FEF3C7"); // amber-100
+            var cBadRow   = XLColor.FromHtml("#FEE2E2"); // red-100
+            var cGrayRow  = XLColor.FromHtml("#F1F5F9"); // slate-100
+
+            string NombreLookup(List<SimpleOption> list, int? id)
+            {
+                if (!id.HasValue) return "Todos";
+                return list.FirstOrDefault(x => x.Id == id.Value)?.Nombre ?? id.Value.ToString();
+            }
+
+            // ----------------
+            // Título
+            // ----------------
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Cotizaciones — Conversión y seguimiento";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ----------------
+            // Filtros
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var fDesde = vm.Desde.ToString("yyyy-MM-dd");
+            var fHasta = vm.Hasta.ToString("yyyy-MM-dd");
+            var fCliente = NombreLookup(vm.Clientes, vm.ClienteId);
+            var fEstatus = NombreLookup(vm.Estatus, vm.CotizacionEstatusId);
+            var fSoloConv = vm.SoloConvertidas ? "Sí" : "No";
+            var fSoloUltima = vm.SoloUltimaPorPedido ? "Sí" : "No";
+            var fMinMonto = vm.MinMonto?.ToString("0.##") ?? "-";
+            var fQ = string.IsNullOrWhiteSpace(vm.Q) ? "-" : vm.Q.Trim();
+
+            // fila 1
+            EscribirKVInline(ws, r,  1, "Desde",   fDesde,   2, 2, cSoftGray); // 1..4
+            EscribirKVInline(ws, r,  5, "Hasta",   fHasta,   2, 2, cSoftGray); // 5..8
+            EscribirKVInline(ws, r,  9, "Cliente", fCliente, 2, 4, cSoftGray); // 9..14
+            EscribirKVInline(ws, r, 15, "Estatus", fEstatus, 2, 2, cSoftGray); // 15..18
+            r++;
+
+            // fila 2
+            EscribirKVInline(ws, r,  1, "Solo conv.",  fSoloConv,   2, 2, cSoftGray); // 1..4
+            EscribirKVInline(ws, r,  5, "Solo última", fSoloUltima, 2, 2, cSoftGray); // 5..8
+            EscribirKVInline(ws, r,  9, "Min monto",   fMinMonto,   2, 2, cSoftGray); // 9..12
+            EscribirKVInline(ws, r, 13, "Buscar",      fQ,          2, 4, cSoftGray); // 13..18
+            r += 2;
+
+            // ----------------
+            // KPIs (cards)
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            // 1era fila (5 cards)
+            EscribirKpiCard(ws, r,  1,  3, "Cotizaciones", vm.Totales.Cotizaciones.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  4,  6, "Convertidas",  vm.Totales.Convertidas.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7,  9, "Conversión %", $"{(vm.Totales.ConversionPct ?? 0):N2}%", cSoftGray);
+            EscribirKpiCard(ws, r, 10, 13, "Monto total",  $"{(vm.Totales.MontoTotal ?? 0):N2}", cSoftGray);
+            EscribirKpiCard(ws, r, 14, 18, "Avg días conv.", $"{(vm.Totales.AvgDiasAConversion ?? 0):N1}", cSoftGray);
+
+            r += 3;
+
+            // 2da fila (3 cards)
+            EscribirKpiCard(ws, r,  1,  6, "Aceptadas",  vm.Totales.Aceptadas.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7, 12, "Pendientes", vm.Totales.Pendientes.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r, 13, 18, "Rechazadas", vm.Totales.Rechazadas.ToString("N0"), cSoftGray);
+
+            r += 3;
+
+            // ----------------
+            // Resumen por estatus
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Resumen por estatus", cPurple, MAX_COL);
+
+            var dtResumen = new DataTable("ResumenEstatus");
+            dtResumen.Columns.Add("Estatus");
+            dtResumen.Columns.Add("Cotizaciones", typeof(int));
+            dtResumen.Columns.Add("Monto", typeof(decimal));
+            dtResumen.Columns.Add("Convertidas", typeof(int));
+            dtResumen.Columns.Add("Conversión %", typeof(decimal)); // ratio 0..1
+
+            foreach (var x in vm.PorEstatus.OrderBy(x => x.CotizacionEstatusNombre))
+            {
+                var pctRaw = x.ConversionPct ?? 0m;
+                var pct = pctRaw > 1m ? pctRaw / 100m : pctRaw;
+
+                dtResumen.Rows.Add(
+                    x.CotizacionEstatusNombre,
+                    x.Cotizaciones,
+                    x.Monto ?? 0m,
+                    x.Convertidas,
+                    pct
+                );
+            }
+
+            r = InsertarTablaAt(ws, r, 1, dtResumen, "tblCotResumen", cPurple, MAX_COL, cZebra, out var tblResumen) + 2;
+
+            if (tblResumen != null)
+            {
+                AplicarFormatosTabla(tblResumen, new()
+                {
+                    ["Monto"] = "#,##0.00",
+                    ["Conversión %"] = "0.00%",
+                });
+
+                // alineación
+                foreach (var name in new[] { "Cotizaciones", "Monto", "Convertidas", "Conversión %" })
+                {
+                    if (!TieneCampo(tblResumen, name)) continue;
+                    var pos = ObtenerPosCampo1Based(tblResumen, name);
+                    var rng = ObtenerRangoDatosColumna(tblResumen, pos);
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                }
+            }
+
+            // ----------------
+            // Detalle
+            // ----------------
+            r = EscribirTituloSeccion(ws, r, "Detalle", cBlueGray, MAX_COL);
+
+            var dtDet = new DataTable("DetalleCotizaciones");
+            dtDet.Columns.Add("Cotización", typeof(int));
+            dtDet.Columns.Add("Pedido", typeof(int));
+            dtDet.Columns.Add("Cliente");
+            dtDet.Columns.Add("Estatus");
+            dtDet.Columns.Add("Categoría");
+            dtDet.Columns.Add("Fecha", typeof(DateTime));
+            dtDet.Columns.Add("Monto", typeof(decimal));
+            dtDet.Columns.Add("Pagado", typeof(decimal));
+            dtDet.Columns.Add("Saldo", typeof(decimal));
+            dtDet.Columns.Add("Último pago", typeof(DateTime));
+            dtDet.Columns.Add("Método");
+            dtDet.Columns.Add("Conv");
+            dtDet.Columns.Add("Días", typeof(int));
+
+            foreach (var x in vm.Rows
+                .OrderByDescending(x => x.CotizacionFechaCreacion)
+                .ThenByDescending(x => x.CotizacionId))
+            {
+                dtDet.Rows.Add(
+                    x.CotizacionId,
+                    x.PedidoId,
+                    x.ClienteNombre ?? "-",
+                    x.CotizacionEstatusNombre ?? "-",
+                    x.Categoria ?? "-",
+                    x.CotizacionFechaCreacion.Date,
+                    x.MontoCotizacion,
+                    x.TotalPagado,
+                    x.Saldo,
+                    x.UltimoPagoFecha.HasValue ? x.UltimoPagoFecha.Value.Date : DBNull.Value,
+                    (x.UltimoPagoTipoNombre ?? x.UltimoPagoMetodo ?? "-"),
+                    x.Convertida ? "Sí" : "No",
+                    x.DiasAConversion ?? (object)DBNull.Value
+                );
+            }
+
+            var lastRow = InsertarTablaAt(ws, r, 1, dtDet, "tblCotDetalle", cBlueGray, MAX_COL, cZebra, out var tblDet);
+
+            if (tblDet != null)
+            {
+                AplicarFormatosTabla(tblDet, new()
+                {
+                    ["Monto"] = "#,##0.00",
+                    ["Pagado"] = "#,##0.00",
+                    ["Saldo"] = "#,##0.00;[Red]-#,##0.00",
+                });
+
+                // fechas
+                foreach (var name in new[] { "Fecha", "Último pago" })
+                {
+                    if (!TieneCampo(tblDet, name)) continue;
+                    var pos = ObtenerPosCampo1Based(tblDet, name);
+                    var rng = ObtenerRangoDatosColumna(tblDet, pos);
+                    rng.Style.DateFormat.Format = "yyyy-mm-dd";
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // resaltar por categoría (fila completa)
+                if (tblDet.DataRange != null && TieneCampo(tblDet, "Categoría"))
+                {
+                    var posCat = ObtenerPosCampo1Based(tblDet, "Categoría");
+                    var dr = tblDet.DataRange;
+
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        var cat = dr.Row(i).Cell(posCat).GetString();
+
+                        if (cat.Equals("Aceptada", StringComparison.OrdinalIgnoreCase))
+                            dr.Row(i).Style.Fill.BackgroundColor = cOkRow;
+                        else if (cat.Equals("Pendiente", StringComparison.OrdinalIgnoreCase))
+                            dr.Row(i).Style.Fill.BackgroundColor = cWarnRow;
+                        else if (cat.Equals("Rechazada", StringComparison.OrdinalIgnoreCase))
+                            dr.Row(i).Style.Fill.BackgroundColor = cBadRow;
+                        else
+                            dr.Row(i).Style.Fill.BackgroundColor = cGrayRow;
+                    }
+                }
+
+                // Conv = Sí en verde suave (columna)
+                if (TieneCampo(tblDet, "Conv") && tblDet.DataRange != null)
+                {
+                    var posConv = ObtenerPosCampo1Based(tblDet, "Conv");
+                    var rngConv = ObtenerRangoDatosColumna(tblDet, posConv);
+
+                    rngConv.AddConditionalFormat()
+                        .WhenEquals("Sí")
+                        .Fill.SetBackgroundColor(cOkRow);
+                }
+
+                // freeze hasta el header de detalle (para que queden filtros + KPIs)
+                ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
+
+                // anchos mínimos útiles
+                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 26);  // Cliente
+                ws.Column(4).Width = Math.Max(ws.Column(4).Width, 16);  // Estatus
+                ws.Column(5).Width = Math.Max(ws.Column(5).Width, 12);  // Categoría
+                ws.Column(11).Width = Math.Max(ws.Column(11).Width, 18); // Método
+            }
+
+            // Ajustes finales
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            ws.Columns(1, 13).AdjustToContents(1, 80);
 
             using var ms = new MemoryStream();
             wb.SaveAs(ms);
