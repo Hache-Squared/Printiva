@@ -11,6 +11,7 @@ namespace ManejoPresupuestos.Servicios
     {
         byte[] GenerarExcelProduccionWip(ReporteProduccionWipViewModel vm);
         byte[] GenerarExcelPedido360(ReportePedido360ViewModel vm);
+        byte[] GenerarExcelPedidosOperativos(ReportePedidosOperativosViewModel vm);
     }
     public class TransformToReport : ITransformToReport
     {
@@ -884,5 +885,256 @@ namespace ManejoPresupuestos.Servicios
 
             return dr.Worksheet.Range(firstRow, colNumber, lastRow, colNumber);
         }
+
+        public byte[] GenerarExcelPedidosOperativos(ReportePedidosOperativosViewModel vm)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Pedidos operativos");
+
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+            // ws.SheetView.ShowGridLines = false;
+
+            const int MAX_COL = 18; // A..R
+            int r = 1;
+
+            // Paleta (igual estilo que Pedido360, sobria)
+            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
+            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
+            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
+            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
+            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            var cWarnRow  = XLColor.FromHtml("#FEF3C7"); // warning suave
+
+            // ---------- helpers locales ----------
+            string NombreLookup(List<ReporteOpcionRow> list, int? id)
+            {
+                if (!id.HasValue) return "Todos";
+                return list.FirstOrDefault(x => x.Id == id.Value)?.Nombre ?? id.Value.ToString();
+            }
+
+            // --- Título ---
+            var title = ws.Range(r, 1, r, MAX_COL);
+            title.Merge();
+            title.FirstCell().Value = "Pedidos operativos";
+            title.Style.Font.Bold = true;
+            title.Style.Font.FontSize = 16;
+            title.Style.Font.FontColor = XLColor.White;
+            title.Style.Fill.BackgroundColor = cTitle;
+            title.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            title.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(r).Height = 26;
+            r++;
+
+            var gen = ws.Range(r, 1, r, MAX_COL);
+            gen.Merge();
+            gen.FirstCell().Value = $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}";
+            gen.Style.Font.FontSize = 9;
+            gen.Style.Font.FontColor = XLColor.Gray;
+            gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            r += 2;
+
+            // ==========================
+            // FILTROS
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
+
+            var desde = vm.Desde.ToString("yyyy-MM-dd");
+            var hasta = vm.Hasta.ToString("yyyy-MM-dd");
+            var estPedido = NombreLookup(vm.EstatusPedido, vm.PedidoEstatusId);
+            var cliente = NombreLookup(vm.Clientes, vm.ClienteId);
+            var estProd = NombreLookup(vm.EstatusProduccion, vm.ProduccionEstatusId);
+            var canal = string.IsNullOrWhiteSpace(vm.Canal) ? "-" : vm.Canal.Trim();
+            var soloAtrasados = vm.SoloAtrasados ? "Sí" : "No";
+
+            // fila 1 filtros
+            EscribirKVInline(ws, r, 1,  "Desde",         desde,     2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 5,  "Hasta",         hasta,     2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "Estatus pedido",estPedido, 2, 4, cSoftGray);
+            EscribirKVInline(ws, r, 15, "Cliente",       cliente,   2, 2, cSoftGray);
+            r++;
+
+            // fila 2 filtros
+            EscribirKVInline(ws, r, 1,  "Estatus prod.", estProd,       2, 4, cSoftGray);
+            EscribirKVInline(ws, r, 7,  "Canal",         canal,         2, 6, cSoftGray);
+            EscribirKVInline(ws, r, 15, "Solo atrasados",soloAtrasados, 2, 2, cSoftGray);
+            r += 2;
+
+            // ==========================
+            // KPIs (cards)
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
+
+            EscribirKpiCard(ws, r,  1,  4, "Pedidos",     vm.TotalPedidos.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  5,  8, "Atrasados",   vm.TotalAtrasados.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  9, 12, "Saldo total", vm.TotalSaldo.ToString("N2"), cSoftGray, isMoney: true);
+            EscribirKpiCard(ws, r, 13, 18, "Rango",       $"{vm.Desde:yyyy-MM-dd} → {vm.Hasta:yyyy-MM-dd}", cSoftGray);
+
+            // rojo si saldo negativo
+            if (vm.TotalSaldo < 0)
+            {
+                // celda de valor del card 3 (Saldo total)
+                ws.Cell(r + 1, 9).Style.Font.FontColor = XLColor.FromHtml("#B91C1C"); // red-700
+            }
+
+            r += 3; // card ocupa 2 filas + 1 separación
+
+            // ==========================
+            // TABLA
+            // ==========================
+            r = EscribirTituloSeccion(ws, r, "Tablero diario", cBlueGray, MAX_COL);
+
+            var dt = new DataTable("PedidosOperativos");
+            dt.Columns.Add("Prioridad", typeof(int));
+            dt.Columns.Add("Pedido", typeof(int));
+            dt.Columns.Add("Cliente");
+            dt.Columns.Add("Total", typeof(decimal));
+            dt.Columns.Add("Pagado %", typeof(decimal)); // ratio 0..1
+            dt.Columns.Add("Saldo", typeof(decimal));
+            dt.Columns.Add("Estatus pedido");
+            dt.Columns.Add("Estatus producción");
+            dt.Columns.Add("Fecha estimada", typeof(DateTime));
+            dt.Columns.Add("Atraso");
+
+            foreach (var x in vm.Rows
+                .OrderBy(x => x.Prioridad)
+                .ThenBy(x => x.FechaEntregaEstimada ?? DateTime.MaxValue)
+                .ThenBy(x => x.PedidoId))
+            {
+                var pctRaw = x.PagadoPorcentaje;
+                var pct = pctRaw > 1m ? pctRaw / 100m : pctRaw; // soporta 100 o 1.0
+
+                dt.Rows.Add(
+                    x.Prioridad,
+                    x.PedidoId,
+                    x.ClienteNombre ?? "-",
+                    x.Total,
+                    pct,
+                    x.Saldo,
+                    x.PedidoEstatusNombre ?? "-",
+                    string.IsNullOrWhiteSpace(x.ProduccionEstatusNombre) ? "Sin producción" : x.ProduccionEstatusNombre!,
+                    x.FechaEntregaEstimada.HasValue ? x.FechaEntregaEstimada.Value.Date : DBNull.Value,
+                    x.EsAtrasado ? $"Sí ({x.DiasAtraso}d)" : "No"
+                );
+            }
+
+            var lastRow = InsertarTablaAt(
+                ws,
+                r,
+                1,
+                dt,
+                "tblPedidosOperativos",
+                cBlueGray,
+                MAX_COL,
+                cZebra,
+                out var tbl
+            );
+
+            // formatos
+            if (tbl != null)
+            {
+                // money + percent
+                AplicarFormatosTabla(tbl, new()
+                {
+                    ["Total"]    = "#,##0.00",
+                    ["Saldo"]    = "#,##0.00;[Red]-#,##0.00",
+                    ["Pagado %"] = "0.00%",
+                });
+
+                // fecha
+                if (TieneCampo(tbl, "Fecha estimada"))
+                {
+                    var posFecha = ObtenerPosCampo1Based(tbl, "Fecha estimada");
+                    var rngFecha = ObtenerRangoDatosColumna(tbl, posFecha);
+                    rngFecha.Style.DateFormat.Format = "yyyy-mm-dd";
+                    rngFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // alinear números a la derecha (por si alguna col quedó sin formato)
+                foreach (var name in new[] { "Prioridad", "Pedido", "Total", "Pagado %", "Saldo" })
+                {
+                    if (!TieneCampo(tbl, name)) continue;
+                    var pos = ObtenerPosCampo1Based(tbl, name);
+                    var rng = ObtenerRangoDatosColumna(tbl, pos);
+                    rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                }
+
+                // resaltar atrasados (fila completa)
+                if (tbl.DataRange != null && TieneCampo(tbl, "Atraso"))
+                {
+                    var posAtraso = ObtenerPosCampo1Based(tbl, "Atraso");
+                    var dr = tbl.DataRange;
+
+                    for (int i = 1; i <= dr.RowCount(); i++)
+                    {
+                        var val = dr.Row(i).Cell(posAtraso).GetString();
+                        if (val.StartsWith("Sí", StringComparison.OrdinalIgnoreCase))
+                        {
+                            dr.Row(i).Style.Fill.BackgroundColor = cWarnRow;
+                        }
+                    }
+                }
+
+                // freeze hasta el header de la tabla (para que se queden título/filtros/kpis)
+                ws.SheetView.FreezeRows(tbl.RangeAddress.FirstAddress.RowNumber);
+
+                // anchos mínimos útiles
+                // (col 3 cliente, 7-8 estatus, 10 atraso)
+                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 24);
+                ws.Column(7).Width = Math.Max(ws.Column(7).Width, 18);
+                ws.Column(8).Width = Math.Max(ws.Column(8).Width, 18);
+                ws.Column(10).Width = Math.Max(ws.Column(10).Width, 12);
+            }
+
+            // ajustes finales
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.CenterHorizontally = true;
+
+            ws.Columns(1, 10).AdjustToContents(1, 80); // solo columnas usadas por la tabla
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+
+        private static void EscribirKpiCard(
+            IXLWorksheet ws,
+            int topRow,
+            int colFrom,
+            int colTo,
+            string label,
+            string value,
+            XLColor bg,
+            bool isMoney = false
+        )
+        {
+            var rLabel = ws.Range(topRow, colFrom, topRow, colTo);
+            rLabel.Merge();
+            rLabel.FirstCell().Value = label;
+            rLabel.Style.Font.FontColor = XLColor.FromHtml("#64748B"); // slate-500
+            rLabel.Style.Font.FontSize = 9;
+            rLabel.Style.Fill.BackgroundColor = bg;
+            rLabel.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            var rVal = ws.Range(topRow + 1, colFrom, topRow + 1, colTo);
+            rVal.Merge();
+            rVal.FirstCell().Value = value;
+            rVal.Style.Font.Bold = true;
+            rVal.Style.Font.FontSize = 14;
+            rVal.Style.Fill.BackgroundColor = bg;
+            rVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            // borde tipo "card"
+            var box = ws.Range(topRow, colFrom, topRow + 1, colTo);
+            box.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            box.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1"); // slate-300
+
+            ws.Row(topRow).Height = 15;
+            ws.Row(topRow + 1).Height = 22;
+        }
+
+
     }
 }

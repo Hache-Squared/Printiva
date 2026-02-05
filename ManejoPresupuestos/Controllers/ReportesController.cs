@@ -210,6 +210,44 @@ namespace ManejoPresupuestos.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> PedidosOperativosExcel(
+            DateTime? desde,
+            DateTime? hasta,
+            int? pedidoEstatusId,
+            int? clienteId,
+            bool? atrasados,
+            int? produccionEstatusId,
+            string? canal
+        )
+        {
+            var loginId = servicioUsuarios.ObtenerUsuarioId();
+
+            // Reusa EXACTAMENTE el mismo armado del VM que la vista
+            var vm = await repositorioReportes.PedidosOperativos(
+                loginId,
+                desde,
+                hasta,
+                pedidoEstatusId,
+                clienteId,
+                atrasados,
+                produccionEstatusId,
+                canal
+            );
+
+            var bytes = transformToReport.GenerarExcelPedidosOperativos(vm);
+
+            var d = (vm.Desde).Date;
+            var h = (vm.Hasta).Date;
+            var fileName = $"PedidosOperativos_{d:yyyyMMdd}_{h:yyyyMMdd}.xlsx";
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Cxc(
             DateTime? desde,
             DateTime? hasta,
