@@ -20,20 +20,19 @@ BEGIN
             SELECT 1
             FROM dbo.TblProduccionItems pi WITH (NOLOCK)
             WHERE pi.ProduccionItemId=@ProduccionItemId
-              AND pi.UsuarioId=@loginId
               AND pi.EstaActivo=1
         )
             THROW 50000, 'Item de producción no encontrado.', 1;
 
         BEGIN TRAN;
 
-        -- Upsert header (único por item+user+tipo)
-        SELECT @costeoId = ProduccionCosteoId
+        -- Upsert header (único por item+tipo)
+        SELECT TOP (1) @costeoId = ProduccionCosteoId
         FROM dbo.TblProduccionCosteos WITH (UPDLOCK, HOLDLOCK)
         WHERE ProduccionItemId=@ProduccionItemId
-          AND UsuarioId=@loginId
           AND TipoCodigo='MATERIAL'
-          AND EstaActivo=1;
+          AND EstaActivo=1
+        ORDER BY Fecha DESC, ProduccionCosteoId DESC;
 
         IF (@costeoId IS NULL)
         BEGIN

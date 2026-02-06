@@ -24,7 +24,6 @@ BEGIN
             FROM dbo.TblProduccionItems pr (NOLOCK)
             INNER JOIN dbo.TblPedidos ped (NOLOCK) ON ped.PedidoId = pr.PedidoId
             WHERE pr.ProduccionItemId = @ProduccionItemId
-              AND ped.UsuarioId = @loginId
               AND ISNULL(pr.EstaActivo,1)=1
         )
             RAISERROR('Item de producción no encontrado.', 16, 1);
@@ -35,7 +34,6 @@ BEGIN
                 SELECT 1
                 FROM dbo.TblImpresoras i (NOLOCK)
                 WHERE i.ImpresoraId = @ImpresoraId
-                  AND i.UsuarioId = @loginId
                   AND i.EstaActivo = 1
             )
                 RAISERROR('Impresora inválida o inactiva.', 16, 1);
@@ -70,15 +68,15 @@ BEGIN
                PesoEstimadoGr  = @PesoEstimadoGr,
                PesoRealGr      = @PesoRealGr,
 
-               -- ✅ FECHAS: NO borres si vienen NULL
-               -- ✅ y si está En producción y aún no hay inicio, arráncalo
+               -- FECHAS: NO borres si vienen NULL
+               -- y si está En producción y aún no hay inicio, arráncalo
                FechaInicio = CASE
                                 WHEN @FechaInicio IS NOT NULL THEN @FechaInicio
                                 WHEN pi.FechaInicio IS NULL AND @EnProdId IS NOT NULL AND pi.ProduccionEstatusId = @EnProdId THEN @Now
                                 ELSE pi.FechaInicio
                             END,
 
-               -- ✅ FECHA FIN: solo se setea si la mandan; o si está Post y no hay fin (fallback)
+               -- FECHA FIN: solo se setea si la mandan; o si está Post y no hay fin (fallback)
                FechaFin = CASE
                             WHEN @FechaFin IS NOT NULL THEN @FechaFin
                             WHEN pi.FechaFin IS NULL AND @PostId IS NOT NULL AND pi.ProduccionEstatusId = @PostId THEN @Now
@@ -88,7 +86,6 @@ BEGIN
                FechaActualizacion = SYSDATETIME()
         FROM dbo.TblProduccionItems pi
         WHERE pi.ProduccionItemId = @ProduccionItemId
-          AND pi.UsuarioId = @loginId
           AND pi.EstaActivo = 1;
 
         SET @message = 'Datos de producción guardados.';

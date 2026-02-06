@@ -16,7 +16,7 @@ BEGIN
         FechaEntregaEstimada = @fechaEntregaEstimada,
         Notas = @notas,
         TotalEstimado = @totalEstimado
-    WHERE PedidoId = @pedidoId AND UsuarioId = @loginId;
+    WHERE PedidoId = @pedidoId;
 END
 GO
 

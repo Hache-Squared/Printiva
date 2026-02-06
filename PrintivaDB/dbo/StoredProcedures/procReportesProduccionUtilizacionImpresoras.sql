@@ -43,10 +43,8 @@ BEGIN
       pi.Notas,
       pi.NotasOperativas,
 
-      -- Para filtrar por periodo:
       CAST(COALESCE(pi.FechaFin, pi.FechaInicio, pi.FechaCreacion) AS date) AS FechaRef,
 
-      -- Señales por texto/estatus (heurística)
       CASE
         WHEN pes.Nombre COLLATE Latin1_General_CI_AI LIKE N'%falla%'
           OR pes.Nombre COLLATE Latin1_General_CI_AI LIKE N'%fallo%'
@@ -71,20 +69,17 @@ BEGIN
       END AS MarcadaReimpresion
 
     FROM dbo.TblProduccionItems pi
-    INNER JOIN dbo.TblPedidos p ON p.PedidoId = pi.PedidoId AND p.UsuarioId = @loginId AND p.EstaActivo = 1
+    INNER JOIN dbo.TblPedidos p ON p.PedidoId = pi.PedidoId AND p.EstaActivo = 1
     INNER JOIN dbo.TblClientes cl ON cl.ClienteId = p.ClienteId
     INNER JOIN dbo.TblProductos pr ON pr.ProductoId = pi.ProductoId
     INNER JOIN dbo.TblProduccionEstatus pes ON pes.ProduccionEstatusId = pi.ProduccionEstatusId
 
-    -- ✅ CAMBIO ÚNICO: quitar filtro de EstaActivo para que no se “pierdan” impresoras inactivas y no se duplique "(Sin impresora)"
+    -- Join de impresoras sin filtrar por usuario (y sin filtrar por activo)
     LEFT  JOIN dbo.TblImpresoras imp
       ON imp.ImpresoraId = pi.ImpresoraId
-      AND imp.UsuarioId = @loginId
-      -- AND imp.EstaActivo = 1  <-- QUITADO
 
     WHERE
-      pi.UsuarioId = @loginId
-      AND pi.EstaActivo = 1
+      pi.EstaActivo = 1
       AND (@impresoraId IS NULL OR pi.ImpresoraId = @impresoraId)
       AND (@incluirSinImpresora = 1 OR pi.ImpresoraId IS NOT NULL)
       AND (@desde IS NULL OR CAST(COALESCE(pi.FechaFin, pi.FechaInicio, pi.FechaCreacion) AS date) >= @desde)
@@ -101,19 +96,16 @@ BEGIN
   SELECT
     r.*,
 
-    -- Flags de estado (completado/en curso/sin tiempos)
     CASE WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NOT NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS EsCompletado,
     CASE WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS EsEnCurso,
     CASE WHEN r.FechaInicio IS NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS SinTiempos,
 
-    -- Duración completada (min)
     CASE
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NOT NULL AND r.FechaFin >= r.FechaInicio
         THEN DATEDIFF(MINUTE, r.FechaInicio, r.FechaFin)
       ELSE NULL
     END AS DuracionMinCompletada,
 
-    -- Duración en curso (min) - si se incluye
     CASE
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NULL AND @incluirEnCurso = 1
         THEN CASE WHEN DATEDIFF(MINUTE, r.FechaInicio, CAST(GETDATE() AS datetime2(0))) < 0 THEN 0
@@ -121,7 +113,6 @@ BEGIN
       ELSE NULL
     END AS DuracionMinEnCurso,
 
-    -- Duración usada para "horas totales" (min)
     CASE
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NOT NULL AND r.FechaFin >= r.FechaInicio
         THEN DATEDIFF(MINUTE, r.FechaInicio, r.FechaFin)
@@ -131,15 +122,13 @@ BEGIN
       ELSE NULL
     END AS DuracionMinTotal,
 
-    -- Heurística de reimpresión:
     CASE
       WHEN r.MarcadaReimpresion = 1 THEN CAST(1 AS bit)
       WHEN EXISTS (
         SELECT 1
         FROM dbo.TblProduccionItems pi2
         INNER JOIN dbo.TblProduccionEstatus pes2 ON pes2.ProduccionEstatusId = pi2.ProduccionEstatusId
-        WHERE pi2.UsuarioId = @loginId
-          AND pi2.EstaActivo = 1
+        WHERE pi2.EstaActivo = 1
           AND pi2.PedidoItemId = r.PedidoItemId
           AND pi2.ProductoId = r.ProductoId
           AND pi2.ProduccionItemId < r.ProduccionItemId
@@ -251,15 +240,14 @@ BEGIN
     ProduccionItemId DESC;
 
   -----------------------------------------------------------------------
-  -- Resultset 4: Dropdown impresoras
+  -- Resultset 4: Dropdown impresoras (global)
   -----------------------------------------------------------------------
   SELECT
     ImpresoraId AS Id,
     Nombre,
     Modelo
   FROM dbo.TblImpresoras
-  WHERE UsuarioId = @loginId
-    AND EstaActivo = 1
+  WHERE EstaActivo = 1
   ORDER BY Nombre;
 
 END

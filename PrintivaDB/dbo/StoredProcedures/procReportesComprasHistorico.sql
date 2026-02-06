@@ -86,14 +86,11 @@ BEGIN
             SELECT TOP 1 tc.*
             FROM dbo.TblTransaccionesCompras tc
             WHERE tc.CompraId = c.CompraId
-              AND tc.UsuarioId = @loginId
             ORDER BY tc.FechaLog DESC, tc.TransaccionCompraId DESC
         ) tx
 
         WHERE
-            (c.UsuarioId = @loginId OR c.UsuarioId IS NULL)
-
-            AND (@compraId IS NULL OR c.CompraId = @compraId)
+            (@compraId IS NULL OR c.CompraId = @compraId)
             AND (@categoriaId IS NULL OR c.CompraCategoriaId = @categoriaId)
             AND (@tipoId IS NULL OR c.CompraTipoId = @tipoId)
             AND (@inventarioId IS NULL OR c.InventarioId = @inventarioId)
@@ -145,8 +142,7 @@ BEGIN
     (
         SELECT TOP 1 m.DisponibleAntes, m.DisponibleDespues
         FROM dbo.TblInventariosMovimientos m
-        WHERE m.UsuarioId = @loginId
-        AND m.CompraId = b.CompraId
+        WHERE m.CompraId = b.CompraId
         AND m.InventarioId = b.InventarioId
         AND m.DisponibleAntes IS NOT NULL
         ORDER BY m.FechaCreacion DESC, m.InventarioMovimientoId DESC
@@ -264,8 +260,7 @@ BEGIN
       AND EXISTS (
           SELECT 1
           FROM dbo.TblCompras c
-          WHERE (c.UsuarioId = @loginId OR c.UsuarioId IS NULL)
-            AND c.InventarioId = inv.InventarioId
+          WHERE c.InventarioId = inv.InventarioId
       )
     ORDER BY Nombre;
 END

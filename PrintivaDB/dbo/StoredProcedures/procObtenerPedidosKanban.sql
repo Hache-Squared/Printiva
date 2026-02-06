@@ -70,8 +70,7 @@ BEGIN
     LEFT JOIN Cot1 c1 ON c1.PedidoId = p.PedidoId
     LEFT JOIN TotCot tc ON tc.CotizacionId = c1.CotizacionId
     LEFT JOIN TotPago tp ON tp.CotizacionId = c1.CotizacionId
-    WHERE p.UsuarioId = @loginId
-      AND (@ClienteId = 0 OR p.ClienteId = @ClienteId)
+    WHERE (@ClienteId = 0 OR p.ClienteId = @ClienteId)
       AND (
             ISNULL(@q,'') = ''
             OR c.Nombre LIKE '%' + @q + '%'
@@ -82,7 +81,7 @@ BEGIN
             @SoloPendientes = 0
             OR (ISNULL(tc.TotalCotizado,0) - ISNULL(tp.TotalPagado,0)) > 0
       )
-      AND p.EstaActivo = 1 
+      AND p.EstaActivo = 1
       AND ISNULL(p.MostrarEnKanban, 1) = 1
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END

@@ -9,7 +9,6 @@ BEGIN
         SELECT 1
         FROM dbo.TblProduccionItems pi WITH (NOLOCK)
         WHERE pi.ProduccionItemId=@ProduccionItemId
-          AND pi.UsuarioId=@loginId
           AND pi.EstaActivo=1
     )
     BEGIN
@@ -25,7 +24,6 @@ BEGIN
         CAST(SUM(c.Cantidad) AS DECIMAL(18,4)) AS CantidadUsada
     FROM dbo.TblProduccionInventarioConsumo c WITH (NOLOCK)
     WHERE c.ProduccionItemId=@ProduccionItemId
-      AND c.UsuarioId=@loginId
     GROUP BY c.InventarioId;
 END
 GO

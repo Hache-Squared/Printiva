@@ -21,7 +21,6 @@ BEGIN
         t.ImpresoraId,
         t.InventarioId,
 
-        /* legacy (por si existen en la tabla; no los usamos para UI nueva) */
         t.InventarioTipoId,
         t.InventarioNombreId,
 
@@ -31,8 +30,7 @@ BEGIN
     FROM dbo.TblTarifas t WITH (NOLOCK)
     INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
         ON c.TarifaConceptoId = t.TarifaConceptoId
-    WHERE t.UsuarioId = @loginId
-      AND t.EstaActivo = 1
+    WHERE t.EstaActivo = 1
     ORDER BY
         c.Orden ASC,
         t.ImpresoraId ASC,

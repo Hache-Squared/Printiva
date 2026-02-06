@@ -18,8 +18,7 @@ BEGIN
     existentes_global AS (
         SELECT TarifaConceptoId
         FROM dbo.TblTarifas WITH (NOLOCK)
-        WHERE UsuarioId = @loginId
-          AND EstaActivo = 1
+        WHERE EstaActivo = 1
           AND ImpresoraId IS NULL
           AND InventarioId IS NULL
     )

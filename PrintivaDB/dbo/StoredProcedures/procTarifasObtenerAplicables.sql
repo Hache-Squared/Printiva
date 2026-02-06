@@ -39,21 +39,16 @@ BEGIN
         t.Monto,
         t.Moneda
     FROM dbo.TblTarifas t WITH (NOLOCK)
-    WHERE t.UsuarioId = @loginId
-      AND t.TarifaConceptoId = @TarifaConceptoId
+    WHERE t.TarifaConceptoId = @TarifaConceptoId
       AND t.EstaActivo = 1
       AND (
-            /* si viene inventario, aplica inventario específico + global */
             (@InventarioId IS NOT NULL AND (t.InventarioId = @InventarioId OR t.InventarioId IS NULL) AND t.ImpresoraId IS NULL)
             OR
-            /* si viene impresora, aplica impresora específica + global */
             (@ImpresoraId IS NOT NULL AND (t.ImpresoraId = @ImpresoraId OR t.ImpresoraId IS NULL) AND t.InventarioId IS NULL)
             OR
-            /* si no viene scope, solo global puro */
             (@InventarioId IS NULL AND @ImpresoraId IS NULL AND t.InventarioId IS NULL AND t.ImpresoraId IS NULL)
       )
     ORDER BY
-        /* primero específicos, luego globales */
         CASE WHEN @InventarioId IS NOT NULL AND t.InventarioId = @InventarioId THEN 2
              WHEN @ImpresoraId IS NOT NULL AND t.ImpresoraId = @ImpresoraId THEN 2
              ELSE 1 END DESC,

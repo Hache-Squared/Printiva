@@ -6,7 +6,7 @@ BEGIN
   SET NOCOUNT ON;
 
   -----------------------------------------------------------------------
-  -- Seguridad: el pedido debe pertenecer al usuario logueado
+  -- Cotización más reciente activa del pedido (sin filtrar por usuario)
   -----------------------------------------------------------------------
   DECLARE @CotizacionId INT;
 
@@ -16,7 +16,6 @@ BEGIN
   INNER JOIN dbo.TblPedidos p ON p.PedidoId = c.PedidoId
   WHERE c.PedidoId = @pedidoId
     AND c.EstaActivo = 1
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY c.FechaCreacion DESC, c.CotizacionId DESC;
 
@@ -70,7 +69,6 @@ BEGIN
       @PaidTotal             AS TotalPagado,
       (@QuoteTotal - @PaidTotal) AS TotalPendiente,
 
-      -- métricas útiles
       (SELECT COUNT(1) FROM dbo.TblPedidoItems i
         WHERE i.PedidoId = p.PedidoId AND i.EstaActivo = 1) AS PedidoItemsActivos,
 
@@ -81,7 +79,6 @@ BEGIN
   INNER JOIN dbo.TblClientes cl ON cl.ClienteId = p.ClienteId
   INNER JOIN dbo.TblPedidoEstatus pe ON pe.PedidoEstatusId = p.PedidoEstatusId
   WHERE p.PedidoId = @pedidoId
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1;
 
   -----------------------------------------------------------------------
@@ -99,7 +96,6 @@ BEGIN
       i.Notas,
       i.EstaActivo,
 
-      -- resumen de producción asociado a este PedidoItemId
       COALESCE(prod.ProduccionItems, 0)              AS ProduccionItems,
       COALESCE(prod.CantidadEnProduccion, 0)         AS CantidadEnProduccion,
       COALESCE(prod.PesoEstimadoGrTotal, 0)          AS PesoEstimadoGrTotal,
@@ -121,14 +117,12 @@ BEGIN
   ) prod
   WHERE i.PedidoId = @pedidoId
     AND i.EstaActivo = 1
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY i.PedidoItemId;
 
   -----------------------------------------------------------------------
   -- 3) quote: Cotización vinculada (HEADER + ITEM en el MISMO resultset)
   -----------------------------------------------------------------------
-  -- Si no hay cotización vinculada, devuelve 0 filas.
   SELECT
       'HEADER' AS RowType,
       c.CotizacionId,
@@ -141,7 +135,6 @@ BEGIN
       c.EstaActivo,
       @QuoteTotal AS CotizacionTotal,
 
-      -- columnas de item (NULL en HEADER)
       CAST(NULL AS INT)            AS CotizacionItemId,
       CAST(NULL AS INT)            AS ConceptoTipoId,
       CAST(NULL AS VARCHAR(100))   AS ConceptoTipoNombre,
@@ -158,7 +151,6 @@ BEGIN
   INNER JOIN dbo.TblCotizacionesEstatus ce ON ce.CotizacionEstatusId = c.CotizacionEstatusId
   INNER JOIN dbo.TblPedidos p ON p.PedidoId = c.PedidoId
   WHERE c.CotizacionId = @CotizacionId
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
 
   UNION ALL
@@ -196,7 +188,6 @@ BEGIN
   LEFT  JOIN dbo.TblProductosCategorias ppc ON ppc.ProductoCategoriaId = ppr.ProductoCategoriaId
   WHERE c.CotizacionId = @CotizacionId
     AND ci.EstaActivo = 1
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY RowType, CotizacionItemId;
 
@@ -269,7 +260,6 @@ BEGIN
   LEFT  JOIN dbo.TblRecetas r ON r.RecetaId = pi.RecetaId
   WHERE pi.PedidoId = @pedidoId
     AND pi.EstaActivo = 1
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY pi.ProduccionItemId;
 
@@ -288,7 +278,6 @@ BEGIN
       COALESCE(c.RecetaNombre, r.Nombre) AS RecetaNombre,
 
       c.InventarioId,
-      -- “Nombre de insumo” usando normalizado si existe, si no lo denormalizado
       COALESCE(
         c.InsumoNombre,
         CONCAT(
@@ -300,7 +289,6 @@ BEGIN
 
       c.Cantidad AS CantidadConsumida,
 
-      -- planeado desde TblRecetasInventarios (si existe)
       ri.Cantidad AS CantidadPlaneadaBase,
       CAST(
         COALESCE(ri.Cantidad, 0) *
@@ -331,7 +319,6 @@ BEGIN
   LEFT  JOIN dbo.TblInventariosColores ic ON ic.InventarioColorId = inv.InventarioColorId
 
   WHERE c.PedidoId = @pedidoId
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY c.Fecha, c.ProduccionInventarioConsumoId;
 
@@ -356,7 +343,6 @@ BEGIN
   INNER JOIN dbo.TblPedidoEstatus peD ON peD.PedidoEstatusId = b.DesdeEstatusId
   INNER JOIN dbo.TblPedidoEstatus peH ON peH.PedidoEstatusId = b.HaciaEstatusId
   WHERE b.PedidoId = @pedidoId
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
 
   UNION ALL
@@ -379,7 +365,6 @@ BEGIN
   INNER JOIN dbo.TblProduccionEstatus prD ON prD.ProduccionEstatusId = pb.DesdeEstatusId
   INNER JOIN dbo.TblProduccionEstatus prH ON prH.ProduccionEstatusId = pb.HaciaEstatusId
   WHERE pb.PedidoId = @pedidoId
-    AND p.UsuarioId = @loginId
     AND p.EstaActivo = 1
   ORDER BY Tipo DESC, Fecha DESC, BitacoraId;
 

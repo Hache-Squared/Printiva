@@ -30,8 +30,7 @@ BEGIN
         t.TarifaId, t.Monto, t.Moneda,
         'success' AS result, 'OK' AS message
     FROM dbo.TblTarifas t WITH (NOLOCK)
-    WHERE t.UsuarioId = @loginId
-      AND t.TarifaConceptoId = @TarifaConceptoId
+    WHERE t.TarifaConceptoId = @TarifaConceptoId
       AND t.EstaActivo = 1
       AND (t.ImpresoraId IS NULL OR t.ImpresoraId = @ImpresoraId)
       AND (t.InventarioTipoId IS NULL OR t.InventarioTipoId = @InventarioTipoId)

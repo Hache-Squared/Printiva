@@ -3,7 +3,7 @@ CREATE   PROCEDURE dbo.procReportesIndexResumen
     @loginId     INT,
     @diasUrgente INT = 3,
     @topN        INT = 10,
-    @minStock    DECIMAL(18,2) = 100  -- 👈 umbral para alerta de inventario bajo
+    @minStock    DECIMAL(18,2) = 100  -- umbral para alerta de inventario bajo
 )
 AS
 BEGIN
@@ -58,8 +58,7 @@ BEGIN
         CAST(ISNULL(p.TotalEstimado,0) AS decimal(18,2)) AS TotalEstimado
     INTO #PedidosActivos
     FROM dbo.TblPedidos p
-    WHERE p.UsuarioId = @loginId
-      AND p.EstaActivo = 1
+    WHERE p.EstaActivo = 1
       AND p.PedidoEstatusId NOT IN (
             ISNULL(@EstatusEntregadoId, -1),
             ISNULL(@EstatusCanceladoId, -2)
@@ -82,8 +81,7 @@ BEGIN
     INTO #ProdPend
     FROM dbo.TblProduccionItems pi
     INNER JOIN #PedidosActivos pa ON pa.PedidoId = pi.PedidoId
-    WHERE pi.UsuarioId = @loginId
-      AND pi.EstaActivo = 1
+    WHERE pi.EstaActivo = 1
       AND pi.FechaFin IS NULL
       AND pi.ProduccionEstatusId NOT IN (
             ISNULL(@ProdEstatusEntregadoId, -1),
@@ -100,8 +98,7 @@ BEGIN
             ISNULL(SUM(CAST(ISNULL(c.CostoTotal,0) AS decimal(18,2))),0)
         AS decimal(18,2))
     FROM dbo.TblCompras c
-    WHERE (c.UsuarioId = @loginId OR c.UsuarioId IS NULL)
-      AND c.EstaActivo = 1
+    WHERE c.EstaActivo = 1
       AND CAST(c.FechaCreacion AS date) BETWEEN DATEADD(day,-30,@today) AND @today;
 
     /* ===== Inventario "alerta" (simple: Cantidad < @minStock) ===== */

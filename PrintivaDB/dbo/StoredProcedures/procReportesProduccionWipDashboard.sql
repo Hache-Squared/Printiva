@@ -19,8 +19,6 @@ BEGIN
 
   -----------------------------------------------------------------------
   -- Determinar "orden final" (para decidir WIP)
-  -- 1) intenta por nombre (no por id)
-  -- 2) si no existe, usa MAX(Orden)
   -----------------------------------------------------------------------
   DECLARE @FinalOrden INT = NULL;
 
@@ -42,7 +40,7 @@ BEGIN
   IF OBJECT_ID('tempdb..#prod') IS NOT NULL DROP TABLE #prod;
 
   -----------------------------------------------------------------------
-  -- Base (materializada) para poder sacar múltiples resultsets
+  -- Base (materializada)
   -----------------------------------------------------------------------
   SELECT
     pi.ProduccionItemId,
@@ -83,10 +81,8 @@ BEGIN
     pi.InventarioAplicado,
     pi.EstaActivo,
 
-    -- Último movimiento de estatus (si existe)
     CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS datetime2(0)) AS FechaEnEstatus,
 
-    -- Días en estatus (cola)
     CASE
       WHEN DATEDIFF(DAY,
         CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE),
@@ -98,10 +94,8 @@ BEGIN
       )
     END AS DiasEnEstatus,
 
-    -- WIP según orden (todo lo que no sea la etapa final)
     CASE WHEN pes.Orden < @FinalOrden THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS EsWip,
 
-    -- Atraso: si hay fecha entrega y ya pasó, y sigue WIP
     CASE
       WHEN p.FechaEntregaEstimada IS NOT NULL
        AND CAST(GETDATE() AS DATE) > CAST(p.FechaEntregaEstimada AS DATE)
@@ -110,7 +104,6 @@ BEGIN
       ELSE CAST(0 AS bit)
     END AS Atrasado,
 
-    -- Buckets de antigüedad (cola)
     CASE
       WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) <= 1 THEN 0
       WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 2 AND 3 THEN 1
@@ -144,20 +137,15 @@ BEGIN
     ORDER BY pb.Fecha DESC, pb.ProduccionBitacoraId DESC
   ) lastMv
   WHERE
-    p.UsuarioId = @loginId
-    AND pi.UsuarioId = @loginId
-    AND p.EstaActivo = 1
+    p.EstaActivo = 1
     AND pi.EstaActivo = 1
     AND (@clienteId IS NULL OR p.ClienteId = @clienteId)
     AND (@pedidoId  IS NULL OR p.PedidoId  = @pedidoId)
     AND (@estatusId IS NULL OR pi.ProduccionEstatusId = @estatusId)
     AND (@impresoraId IS NULL OR pi.ImpresoraId = @impresoraId)
     AND (@sinImpresora = 0 OR pi.ImpresoraId IS NULL)
-
-    -- ✅ CAMBIO CLAVE: filtrar por FechaEnEstatus (último movimiento / estatus)
     AND (@desde IS NULL OR CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE) >= @desde)
     AND (@hasta IS NULL OR CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE) <= @hasta)
-
     AND (@q IS NULL
          OR cl.Nombre LIKE '%' + @q + '%'
          OR pr.Nombre LIKE '%' + @q + '%'
@@ -167,7 +155,6 @@ BEGIN
          OR CAST(pi.ProduccionItemId AS NVARCHAR(30)) LIKE '%' + @q + '%'
     );
 
-  -- Aplicar filtros “post” (porque EsWip/DiasEnEstatus viven en #prod)
   IF @soloWip = 1
     DELETE FROM #prod WHERE EsWip = 0;
 
@@ -310,26 +297,24 @@ BEGIN
   ORDER BY Orden;
 
   -----------------------------------------------------------------------
-  -- Resultset 7: Dropdown impresoras
+  -- Resultset 7: Dropdown impresoras (global)
   -----------------------------------------------------------------------
   SELECT
     ImpresoraId AS Id,
     Nombre,
     Modelo
   FROM dbo.TblImpresoras
-  WHERE UsuarioId = @loginId
-    AND EstaActivo = 1
+  WHERE EstaActivo = 1
   ORDER BY Nombre;
 
   -----------------------------------------------------------------------
-  -- Resultset 8: Dropdown clientes
+  -- Resultset 8: Dropdown clientes (global)
   -----------------------------------------------------------------------
   SELECT
     ClienteId AS Id,
     Nombre
   FROM dbo.TblClientes
-  WHERE UsuarioId = @loginId
-    AND EstaActivo = 1
+  WHERE EstaActivo = 1
   ORDER BY Nombre;
 
 END

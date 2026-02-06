@@ -63,7 +63,6 @@ BEGIN
         FROM dbo.TblProduccionInventarioConsumo c
         INNER JOIN dbo.TblPedidos p
             ON p.PedidoId = c.PedidoId
-           AND p.UsuarioId = @loginId
            AND p.EstaActivo = 1
         INNER JOIN dbo.TblClientes cl
             ON cl.ClienteId = p.ClienteId
@@ -81,8 +80,7 @@ BEGIN
         LEFT JOIN dbo.TblInventariosUnidades u
             ON u.InventarioUnidadId = COALESCE(c.InventarioUnidadId, inv.InventarioUnidadId)
         WHERE
-            c.UsuarioId = @loginId
-            AND (@desde IS NULL OR CAST(c.Fecha AS date) >= @desde)
+            (@desde IS NULL OR CAST(c.Fecha AS date) >= @desde)
             AND (@hasta IS NULL OR CAST(c.Fecha AS date) <= @hasta)
 
             AND (@pedidoId IS NULL OR c.PedidoId = @pedidoId)
@@ -118,7 +116,7 @@ BEGIN
         CAST(0 AS decimal(18,4)) AS CostoMaterialTotalItem,
         CAST(0 AS decimal(18,4)) AS CostoMaterialGlobalItem,
 
-        -- ✅ NUEVAS COLUMNAS (para mostrar en tabla detalle)
+        -- NUEVAS COLUMNAS (para mostrar en tabla detalle)
         CAST(0 AS decimal(18,4)) AS CostoGlobalAplicado,
         CAST(0 AS decimal(18,4)) AS CostoTotalConGlobal,
         CAST(0 AS decimal(18,4)) AS CostoUnitarioConGlobal
@@ -141,8 +139,7 @@ BEGIN
                 ORDER BY pc.Fecha DESC, pc.ProduccionCosteoId DESC
             ) AS rn
         FROM dbo.TblProduccionCosteos pc
-        WHERE pc.UsuarioId = @loginId
-          AND pc.EstaActivo = 1
+        WHERE pc.EstaActivo = 1
           AND pc.TipoCodigo = 'MATERIAL'
           AND EXISTS (SELECT 1 FROM #base b WHERE b.ProduccionItemId = pc.ProduccionItemId)
     )
@@ -155,7 +152,7 @@ BEGIN
     WHERE rn = 1;
 
     /* =========================================================
-       2) Detalle de tarifas (MATERIAL*) + ✅ nombre de tarifa real
+       2) Detalle de tarifas (MATERIAL*) + nombre de tarifa real
     ========================================================= */
     SELECT
         lc.ProduccionItemId,
@@ -170,7 +167,6 @@ BEGIN
         d.ImpresoraId,
 
         d.TarifaId,
-        -- ✅ nombre real de tarifa (TblTarifas.Nombre) si existe, si no usamos snapshot del detalle
         COALESCE(NULLIF(t.Nombre,''), d.TarifaNombre) AS TarifaNombre,
         d.TarifaOrden,
 
@@ -242,7 +238,7 @@ BEGIN
     FROM #base b
     GROUP BY b.ProduccionItemId;
 
-    -- reflejar totales en #base (y ✅ nuevas columnas global/total)
+    -- reflejar totales en #base (y nuevas columnas global/total)
     UPDATE b
        SET b.CostoMaterialTotalItem = i.CostoMaterialTotalItem,
            b.CostoMaterialGlobalItem = i.CostoMaterialGlobalItem,
@@ -388,7 +384,7 @@ BEGIN
     ORDER BY PeriodoInicio DESC, rn ASC;
 
     /* =========================================================
-       Resultset 7: Detalle (✅ incluye global + total con global)
+       Resultset 7: Detalle (incluye global + total con global)
     ========================================================= */
     SELECT
         ProduccionInventarioConsumoId,
@@ -416,7 +412,6 @@ BEGIN
         CostoMaterialTotalItem,
         CostoMaterialGlobalItem,
 
-        -- ✅ NUEVAS
         CostoGlobalAplicado,
         CostoTotalConGlobal,
         CostoUnitarioConGlobal,
@@ -431,7 +426,7 @@ BEGIN
     ORDER BY FechaConsumo DESC, ProduccionInventarioConsumoId DESC;
 
     /* =========================================================
-       Resultset 8: Desglose tarifas (✅ incluye TarifaNombre real)
+       Resultset 8: Desglose tarifas (incluye TarifaNombre real)
     ========================================================= */
     SELECT
         ProduccionItemId,
@@ -484,8 +479,7 @@ BEGIN
     WHERE inv.EstaActivo = 1
       AND EXISTS (
         SELECT 1 FROM dbo.TblProduccionInventarioConsumo c
-        WHERE c.UsuarioId = @loginId
-          AND c.InventarioId = inv.InventarioId
+        WHERE c.InventarioId = inv.InventarioId
       )
     ORDER BY Nombre;
 END

@@ -14,8 +14,8 @@ BEGIN
         c.Unidad,
         t.InventarioId,
         t.ImpresoraId,
-        invNom.Nombre AS InventarioNombre,   -- ✅ nombre inventario
-        prn.Nombre AS ImpresoraNombre,    -- (opcional)
+        invNom.Nombre AS InventarioNombre,
+        prn.Nombre AS ImpresoraNombre,
         t.Monto,
         t.Moneda,
         COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio,
@@ -32,14 +32,10 @@ BEGIN
     LEFT JOIN dbo.TblImpresoras prn WITH (NOLOCK)
         ON prn.ImpresoraId = t.ImpresoraId
 
-    WHERE t.UsuarioId = @loginId
-      AND t.EstaActivo = 1
+    WHERE t.EstaActivo = 1
       AND c.EstaActivo = 1
       AND (
-            -- específicas del inventario
             (t.InventarioId = @InventarioId AND t.ImpresoraId IS NULL)
-
-            -- globales de inventarios
             OR (t.InventarioId IS NULL AND t.ImpresoraId IS NULL AND c.Codigo = 'MATERIAL_GENERAL_INV_GLOBAL')
       )
     ORDER BY

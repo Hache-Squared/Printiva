@@ -5,7 +5,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos WHERE PedidoId = @pedidoId AND UsuarioId = @loginId)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos WHERE PedidoId = @pedidoId)
     BEGIN
         SELECT TOP 0
             null as PedidoItemId,
@@ -29,7 +29,7 @@ BEGIN
     FROM dbo.TblPedidoItems i
     INNER JOIN dbo.TblProductos p ON p.ProductoId = i.ProductoId
     WHERE i.PedidoId = @pedidoId
-    AND i.EstaActivo = 1 
+      AND i.EstaActivo = 1
     ORDER BY i.PedidoItemId;
 END
 GO

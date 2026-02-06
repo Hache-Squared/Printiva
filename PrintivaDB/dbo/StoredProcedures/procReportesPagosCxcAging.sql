@@ -81,8 +81,7 @@ BEGIN
       ORDER BY pa.FechaPago DESC, pa.PagoId DESC
     ) lp
 
-    WHERE p.UsuarioId = @loginId
-      AND p.EstaActivo = 1
+    WHERE p.EstaActivo = 1
       AND (@clienteId IS NULL OR p.ClienteId = @clienteId)
       AND (@pedidoId  IS NULL OR p.PedidoId  = @pedidoId)
   ),

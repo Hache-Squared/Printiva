@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===============================================================================
 Author: AGHH
 Date: 27/07/2025
@@ -12,7 +12,7 @@ Version     Author     Date         Description     Ticket
 -------------------------------------------------------------------------------
 1.0         AGHH     27/07/2025     First Version   N/A
 */
-CREATE PROCEDURE dbo.procObtenerRecetaInventario
+CREATE   PROCEDURE dbo.procObtenerRecetaInventario
 @ElementoObtenerId INT = 0,
 @loginId INT = 0
 AS
@@ -91,7 +91,7 @@ BEGIN
         FROM dbo.TblRecetas r (NOLOCK)
         INNER JOIN dbo.TblRecetasInventarios ri (NOLOCK)
             ON ri.RecetaId = r.RecetaId
-           AND ri.EstaActivo = 1  -- ✅ SOLO ACTIVOS
+           AND ri.EstaActivo = 1  -- SOLO ACTIVOS
         INNER JOIN dbo.TblInventarios i (NOLOCK)
             ON ri.InventarioId = i.InventarioId
         INNER JOIN dbo.TblInventariosColores ic (NOLOCK)

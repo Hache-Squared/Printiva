@@ -6,8 +6,8 @@
 ============================================================================ */
 CREATE   PROCEDURE dbo.procUpdateTransaccionesCompra
     @CompraId      INT,
-    @UsuarioId     INT = 0,        -- puedes mandar este...
-    @loginId       INT = 0,        -- ...o este (por compatibilidad)
+    @UsuarioId     INT = 0,
+    @loginId       INT = 0,
     @Descripcion   NVARCHAR(300) = NULL,
     @InventarioId  INT = NULL,
     @Cantidad      DECIMAL(18,4) = 0,
@@ -56,7 +56,6 @@ BEGIN
         ISNULL(@Cantidad,0), ISNULL(@CostoUnitario,0), ISNULL(@CostoTotal,0), @FechaCreacion
     );
 
-    -- IMPORTANTE: tu C# hace QuerySingleAsync<int>, así que regresamos int pelón:
     SELECT CAST(SCOPE_IDENTITY() AS INT);
 END
 GO

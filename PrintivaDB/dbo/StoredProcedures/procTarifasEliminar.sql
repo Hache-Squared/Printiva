@@ -51,12 +51,11 @@ BEGIN
         INTO @del
         FROM dbo.TblTarifas t
         WHERE t.TarifaId = @TarifaId
-          AND t.UsuarioId = @loginId
           AND t.EstaActivo = 1;
 
         IF NOT EXISTS (SELECT 1 FROM @del)
         BEGIN
-            SELECT 'error' AS result, 'No se encontró la tarifa o no pertenece al usuario.' AS message;
+            SELECT 'error' AS result, 'No se encontró la tarifa.' AS message;
             RETURN;
         END
 

@@ -47,7 +47,7 @@ BEGIN
 			   AND COL_LENGTH('dbo.TblCotizacionesItems','EstaActivo') IS NOT NULL
 			   AND COL_LENGTH('dbo.TblCotizacionesItems','CotizacionId') IS NOT NULL
 			BEGIN
-				UPDATE dbo.TblCotizacionesItems
+				UPDATE dbo.TblCotizacionItems
 				SET EstaActivo = 0
 				WHERE CotizacionId = @elementoId AND ISNULL(EstaActivo,1) = 1;
 			END

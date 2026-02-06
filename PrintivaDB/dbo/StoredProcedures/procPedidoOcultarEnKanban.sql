@@ -17,7 +17,6 @@ BEGIN
             SELECT 1
             FROM dbo.TblPedidos p (NOLOCK)
             WHERE p.PedidoId = @elementoId
-              AND p.UsuarioId = @loginId
               AND p.EstaActivo = 1
         )
             RAISERROR('Pedido no encontrado.', 16, 1);

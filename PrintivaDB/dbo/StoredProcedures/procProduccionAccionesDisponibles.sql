@@ -9,7 +9,6 @@ BEGIN
         SELECT 1
         FROM dbo.TblProduccionItems pr WITH (NOLOCK)
         WHERE pr.ProduccionItemId=@ProduccionItemId
-          AND pr.UsuarioId=@loginId
           AND pr.EstaActivo=1
     )
     BEGIN

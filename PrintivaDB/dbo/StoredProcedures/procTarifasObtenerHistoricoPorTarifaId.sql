@@ -27,7 +27,6 @@ BEGIN
         l.FechaAccion
     FROM dbo.TblTarifasLog l WITH (NOLOCK)
     WHERE l.TarifaId = @TarifaId
-      AND l.UsuarioId = @loginId
     ORDER BY l.FechaAccion DESC, l.TarifaLogId DESC;
 END
 GO

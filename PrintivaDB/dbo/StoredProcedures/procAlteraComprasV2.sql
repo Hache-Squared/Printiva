@@ -35,7 +35,7 @@ BEGIN
     DECLARE @TipoMov_AJUSTE   INT = (SELECT TOP 1 TipoMovimientoId FROM dbo.TblInventariosMovimientoTipos WHERE Nombre='AJUSTE_COMPRA');
     DECLARE @TipoMov_REVERSA  INT = (SELECT TOP 1 TipoMovimientoId FROM dbo.TblInventariosMovimientoTipos WHERE Nombre='REVERSA_COMPRA');
 
-    -- ✅ NUEVO: snapshots
+    -- NUEVO: snapshots
     DECLARE @InvAntes   DECIMAL(18,4) = NULL;
     DECLARE @InvDespues DECIMAL(18,4) = NULL;
 
@@ -97,7 +97,7 @@ BEGIN
                     RAISERROR(@message, 16, 1);
                 END
 
-                -- ✅ snapshot ANTES/DESPUÉS con lock
+                -- snapshot ANTES/DESPUÉS con lock
                 SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
                 FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
                 WHERE i.InventarioId = @PrevInventarioId;
@@ -234,7 +234,7 @@ BEGIN
                     RAISERROR(@message, 16, 1);
                 END
 
-                -- ✅ snapshot reversa
+                -- snapshot reversa
                 SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
                 FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
                 WHERE i.InventarioId = @PrevInventarioId;
@@ -255,7 +255,7 @@ BEGIN
             /* Aplica nuevo efecto si ahora es inventario */
             IF (@EsInventario = 1 AND @InventarioId IS NOT NULL)
             BEGIN
-                -- ✅ snapshot apply
+                -- snapshot apply
                 SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
                 FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
                 WHERE i.InventarioId = @InventarioId;
@@ -319,7 +319,7 @@ BEGIN
 
         IF (@EsInventario = 1 AND @InventarioId IS NOT NULL)
         BEGIN
-            -- ✅ snapshot create
+            -- snapshot create
             SELECT @InvAntes = CAST(i.Cantidad AS DECIMAL(18,4))
             FROM dbo.TblInventarios i WITH (UPDLOCK, ROWLOCK)
             WHERE i.InventarioId = @InventarioId;

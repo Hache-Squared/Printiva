@@ -13,7 +13,7 @@ BEGIN
         c.Nombre AS ConceptoNombre,
         c.Unidad,
         t.ImpresoraId,
-        t.InventarioId, -- 👈 agrega para poder detectar globales en UI
+        t.InventarioId, -- agrega para poder detectar globales en UI
         t.Monto,
         t.Moneda,
         COALESCE(t.FechaActualizacion, t.FechaCreacion) AS FechaUltimoCambio,
@@ -21,14 +21,10 @@ BEGIN
     FROM dbo.TblTarifas t WITH (NOLOCK)
     INNER JOIN dbo.TblTarifaConceptos c WITH (NOLOCK)
         ON c.TarifaConceptoId = t.TarifaConceptoId
-    WHERE t.UsuarioId = @loginId
-      AND t.EstaActivo = 1
+    WHERE t.EstaActivo = 1
       AND c.EstaActivo = 1
       AND (
-            -- específicas de la impresora
             (t.ImpresoraId = @ImpresoraId AND t.InventarioId IS NULL)
-
-            -- globales de impresoras
             OR (t.ImpresoraId IS NULL AND t.InventarioId IS NULL AND c.Codigo = 'MATERIAL_GENERAL_PRN_GLOBAL')
       )
     ORDER BY

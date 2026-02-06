@@ -13,7 +13,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.Usuarios u (NOLOCK) WHERE u.Id = @loginId)
             THROW 50000, 'Usuario no encontrado.', 1;
 
-        IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos p (NOLOCK) WHERE p.PedidoId=@PedidoId AND p.UsuarioId=@loginId)
+        IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos p (NOLOCK) WHERE p.PedidoId=@PedidoId AND ISNULL(p.EstaActivo,1)=1)
             THROW 50000, 'Pedido no encontrado.', 1;
 
         DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
@@ -37,7 +37,7 @@ BEGIN
             pi.ProductoId,
             pi.Cantidad,
             @EnProdId,
-            -- ✅ si nace en En producción, arranca timer
+            -- si nace en En producción, arranca timer
             @Now
         FROM dbo.TblPedidoItems pi (NOLOCK)
         INNER JOIN dbo.TblPedidos p (NOLOCK) ON p.PedidoId = pi.PedidoId

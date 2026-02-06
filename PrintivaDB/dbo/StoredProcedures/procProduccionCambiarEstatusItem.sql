@@ -21,7 +21,6 @@ BEGIN
             SELECT 1
             FROM dbo.TblProduccionItems pr WITH (NOLOCK)
             WHERE pr.ProduccionItemId=@ProduccionItemId
-              AND pr.UsuarioId=@loginId
               AND pr.EstaActivo=1
         )
             THROW 50000, 'Item de producción no encontrado.', 1;
@@ -46,7 +45,6 @@ BEGIN
             @RecetaId = pr.RecetaId
         FROM dbo.TblProduccionItems pr WITH (UPDLOCK, HOLDLOCK)
         WHERE pr.ProduccionItemId=@ProduccionItemId
-          AND pr.UsuarioId=@loginId
           AND pr.EstaActivo=1;
 
         IF NOT EXISTS (
@@ -61,7 +59,7 @@ BEGIN
 
         DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
 
-        -- ✅ IDs por proceso (tu tabla real)
+        -- IDs por proceso (tu tabla real)
         DECLARE @EnProdId INT =
         (
             SELECT TOP 1 ProduccionEstatusId
@@ -83,7 +81,6 @@ BEGIN
             ORDER BY Orden ASC
         );
 
-        -- Si va a Post y aún no se aplicó inventario: (tu bloque igual)
         IF (@PostId IS NOT NULL AND @HaciaEstatusId=@PostId AND ISNULL(@InventarioAplicado,0)=0)
         BEGIN
             IF @RecetaId IS NULL
@@ -247,13 +244,12 @@ BEGIN
             SET @InventarioAplicadoAhora = 1;
         END
 
-        -- ✅ Cambio de estatus + bitácora + FECHAS por proceso
         UPDATE dbo.TblProduccionItems
            SET ProduccionEstatusId = @HaciaEstatusId,
                Notas = NULLIF(@Notas,''),
                FechaActualizacion = SYSDATETIME(),
 
-               -- ✅ si entra a En producción y no hay inicio → arranca
+               -- si entra a En producción y no hay inicio → arranca
                FechaInicio = CASE
                                 WHEN @EnProdId IS NOT NULL
                                      AND @HaciaEstatusId = @EnProdId
@@ -262,7 +258,7 @@ BEGIN
                                 ELSE FechaInicio
                             END,
 
-               -- ✅ si sale de En producción hacia Post (fin de impresión) y no hay fin → cierra
+               -- si sale de En producción hacia Post (fin de impresión) y no hay fin → cierra
                FechaFin = CASE
                             WHEN @EnProdId IS NOT NULL AND @PostId IS NOT NULL
                                  AND @DesdeId = @EnProdId
@@ -278,7 +274,6 @@ BEGIN
         VALUES
             (@ProduccionItemId, @PedidoId, @PedidoItemId, @loginId, @DesdeId, @HaciaEstatusId, NULLIF(@Notas,''));
 
-        /* AUTO-AVANCE PEDIDO (igual) */
         DECLARE @MinOrdenProd INT;
         DECLARE @NombreEstatusProd NVARCHAR(100);
         DECLARE @NuevoPedidoEstatusId INT;
@@ -306,7 +301,6 @@ BEGIN
             SET p.PedidoEstatusId = @NuevoPedidoEstatusId
             FROM dbo.TblPedidos p WITH (UPDLOCK, HOLDLOCK)
             WHERE p.PedidoId = @PedidoId
-              AND p.UsuarioId = @loginId
               AND p.PedidoEstatusId IN (5,6,7,8)
               AND p.PedidoEstatusId <> 9
               AND p.PedidoEstatusId < @NuevoPedidoEstatusId;

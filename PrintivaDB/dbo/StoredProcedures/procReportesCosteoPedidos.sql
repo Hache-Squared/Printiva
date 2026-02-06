@@ -32,8 +32,7 @@ BEGIN
         ON inv.InventarioId = c.InventarioId
     LEFT JOIN dbo.TblClientes cli 
         ON cli.ClienteId = p.ClienteId
-    WHERE p.UsuarioId = @loginId
-      AND ISNULL(p.EstaActivo,1)=1
+    WHERE ISNULL(p.EstaActivo,1)=1
       AND (@PedidoId IS NULL OR p.PedidoId=@PedidoId)
     GROUP BY p.PedidoId, cli.Nombre, p.TotalEstimado
     ORDER BY p.PedidoId DESC;

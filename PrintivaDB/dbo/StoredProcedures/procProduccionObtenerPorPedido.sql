@@ -8,7 +8,7 @@ BEGIN
     IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios u (NOLOCK) WHERE u.Id = @loginId)
         RAISERROR('Usuario no encontrado.', 16, 1);
 
-    IF NOT EXISTS(SELECT 1 FROM dbo.TblPedidos p (NOLOCK) WHERE p.PedidoId=@PedidoId AND p.UsuarioId=@loginId)
+    IF NOT EXISTS(SELECT 1 FROM dbo.TblPedidos p (NOLOCK) WHERE p.PedidoId=@PedidoId AND ISNULL(p.EstaActivo,1)=1)
         RAISERROR('Pedido no encontrado.', 16, 1);
 
     SELECT
@@ -44,7 +44,6 @@ BEGIN
         ON pe.ProduccionEstatusId = pr.ProduccionEstatusId
     LEFT JOIN dbo.TblImpresoras imp (NOLOCK)
         ON imp.ImpresoraId = pr.ImpresoraId
-       AND imp.UsuarioId = @loginId  -- seguridad
     WHERE pr.PedidoId = @PedidoId
       AND ISNULL(pr.EstaActivo,1) = 1
     ORDER BY pe.Orden ASC, pr.ProduccionItemId ASC;

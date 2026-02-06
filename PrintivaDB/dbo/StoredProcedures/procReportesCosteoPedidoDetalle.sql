@@ -5,7 +5,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos WITH (NOLOCK) WHERE PedidoId=@PedidoId AND UsuarioId=@loginId)
+    IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos WITH (NOLOCK) WHERE PedidoId=@PedidoId)
     BEGIN
         SELECT TOP 0 0 AS InventarioId, '' AS InsumoNombre, '' AS UnidadNombre, 0 AS Cantidad, 0 AS CostoUnitario, 0 AS CostoTotal;
         RETURN;

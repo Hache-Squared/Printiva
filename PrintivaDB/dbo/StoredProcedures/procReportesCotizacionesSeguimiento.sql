@@ -72,8 +72,7 @@ BEGIN
     INNER JOIN dbo.TblClientes cl ON cl.ClienteId = p.ClienteId
     INNER JOIN dbo.TblCotizacionesEstatus ce ON ce.CotizacionEstatusId = c.CotizacionEstatusId
     INNER JOIN dbo.TblPedidoEstatus pe ON pe.PedidoEstatusId = p.PedidoEstatusId
-    WHERE p.UsuarioId = @loginId
-      AND p.EstaActivo = 1
+    WHERE p.EstaActivo = 1
       AND c.EstaActivo = 1
       AND (@clienteId IS NULL OR p.ClienteId = @clienteId)
       AND (@cotizacionEstatusId IS NULL OR c.CotizacionEstatusId = @cotizacionEstatusId)
@@ -106,7 +105,7 @@ BEGIN
       WHEN ( @EstatusRechazadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusRechazadaId )
         OR ( @EstatusCanceladaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusCanceladaId )
         THEN 'Rechazada'
-      ELSE 'Pendiente'  -- típicamente borrador/enviada u otros futuros
+      ELSE 'Pendiente'
     END AS Categoria,
 
     -------------------------------------------------------------------
@@ -122,9 +121,6 @@ BEGIN
 
     -------------------------------------------------------------------
     -- FechaConversion (proxy):
-    -- 1) primer pago
-    -- 2) primer producción
-    -- 3) si está aceptada y no hay eventos, usa fecha cotización
     -------------------------------------------------------------------
     CAST(
       COALESCE(
@@ -278,8 +274,7 @@ BEGIN
     ClienteId AS Id,
     Nombre
   FROM dbo.TblClientes
-  WHERE UsuarioId = @loginId
-    AND EstaActivo = 1
+  WHERE EstaActivo = 1
   ORDER BY Nombre;
 
   -----------------------------------------------------------------------

@@ -26,13 +26,11 @@ BEGIN
       p.TotalEstimado,
       p.Notas,
 
-      -- Cotización activa más reciente por pedido
       cq.CotizacionId,
       cq.CotizacionTotal,
       cq.TotalPagado,
       (COALESCE(cq.CotizacionTotal, 0) - COALESCE(cq.TotalPagado, 0)) AS Saldo,
 
-      -- Total a mostrar (si hay cotización usa cotización, si no usa TotalEstimado)
       CASE
         WHEN cq.CotizacionId IS NOT NULL THEN COALESCE(cq.CotizacionTotal, 0)
         ELSE COALESCE(p.TotalEstimado, 0)
@@ -46,13 +44,11 @@ BEGIN
         ELSE CAST(0 AS DECIMAL(10,2))
       END AS PagadoPorcentaje,
 
-      -- Producción: “estatus operativo” del pedido = el más atrasado (min Orden)
       prod.ProduccionItems,
       prod.ProduccionEstatusId,
       prod.ProduccionEstatusNombre,
       prod.ProduccionEstatusOrden,
 
-      -- Atraso
       CAST(
         CASE
           WHEN p.FechaEntregaEstimada IS NULL THEN 0
@@ -75,7 +71,6 @@ BEGIN
     INNER JOIN dbo.TblPedidoEstatus pe ON pe.PedidoEstatusId = p.PedidoEstatusId
 
     OUTER APPLY (
-      -- Cotización (más reciente, activa)
       SELECT TOP (1)
         c.CotizacionId,
         CAST(COALESCE((
@@ -112,15 +107,14 @@ BEGIN
         INNER JOIN dbo.TblProduccionEstatus pes ON pes.ProduccionEstatusId = pi2.ProduccionEstatusId
         WHERE pi2.PedidoId = p.PedidoId
           AND pi2.EstaActivo = 1
-        ORDER BY pes.Orden ASC, pi2.ProduccionItemId ASC  -- “más atrasado” = menor orden
+        ORDER BY pes.Orden ASC, pi2.ProduccionItemId ASC
       ) x
       WHERE pi.PedidoId = p.PedidoId
         AND pi.EstaActivo = 1
       GROUP BY x.ProduccionEstatusId, x.ProduccionEstatusNombre, x.ProduccionEstatusOrden
     ) prod
 
-    WHERE p.UsuarioId = @loginId
-      AND p.EstaActivo = 1
+    WHERE p.EstaActivo = 1
       AND (@pedidoEstatusId IS NULL OR p.PedidoEstatusId = @pedidoEstatusId)
       AND (@clienteId IS NULL OR p.ClienteId = @clienteId)
       AND (@produccionEstatusId IS NULL OR prod.ProduccionEstatusId = @produccionEstatusId)
@@ -160,7 +154,6 @@ BEGIN
     EsAtrasado,
     DiasAtraso,
 
-    -- Prioridad (1 = más alto)
     CASE
       WHEN EsAtrasado = 1 THEN 1
       WHEN FechaEntregaEstimada IS NOT NULL AND FechaEntregaEstimada <= DATEADD(DAY, 1, @hoy) THEN 2
@@ -188,8 +181,7 @@ BEGIN
 
   SELECT ClienteId AS Id, Nombre
   FROM dbo.TblClientes
-  WHERE UsuarioId = @loginId
-    AND EstaActivo = 1
+  WHERE EstaActivo = 1
   ORDER BY Nombre;
 
 END

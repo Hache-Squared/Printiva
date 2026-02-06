@@ -51,7 +51,6 @@ BEGIN
                 SELECT 1
                 FROM dbo.TblClientes c (NOLOCK)
                 WHERE c.ClienteId = @ElementoAlterarId
-                  AND c.UsuarioId = @loginId
             )
             BEGIN
                 SET @message = N'Registro no encontrado para borrar.';
@@ -61,8 +60,7 @@ BEGIN
             UPDATE dbo.TblClientes
             SET EstaActivo = 0,
                 FechaActualizacion = SYSUTCDATETIME()
-            WHERE ClienteId = @ElementoAlterarId
-              AND UsuarioId = @loginId;
+            WHERE ClienteId = @ElementoAlterarId;
 
             SET @result = 'success';
             SET @message = N'Cliente desactivado.';
@@ -79,7 +77,6 @@ BEGIN
                 SELECT 1
                 FROM dbo.TblClientes c (NOLOCK)
                 WHERE c.ClienteId = @ElementoAlterarId
-                  AND c.UsuarioId = @loginId
             )
             BEGIN
                 SET @message = N'Registro no encontrado para reactivar.';
@@ -89,8 +86,7 @@ BEGIN
             UPDATE dbo.TblClientes
             SET EstaActivo = 1,
                 FechaActualizacion = SYSUTCDATETIME()
-            WHERE ClienteId = @ElementoAlterarId
-              AND UsuarioId = @loginId;
+            WHERE ClienteId = @ElementoAlterarId;
 
             SET @result = 'success';
             SET @message = N'Cliente reactivado.';
@@ -116,7 +112,6 @@ BEGIN
                 SELECT 1
                 FROM dbo.TblClientes c (NOLOCK)
                 WHERE c.ClienteId = @ElementoAlterarId
-                  AND c.UsuarioId = @loginId
             )
             BEGIN
                 SET @message = N'Registro no encontrado para actualizar.';
@@ -131,8 +126,7 @@ BEGIN
                 Email = @Email,
                 Direccion = @Direccion,
                 FechaActualizacion = SYSUTCDATETIME()
-            WHERE ClienteId = @ElementoAlterarId
-              AND UsuarioId = @loginId;
+            WHERE ClienteId = @ElementoAlterarId;
 
             SET @result = 'success';
             SET @message = N'Cliente actualizado.';

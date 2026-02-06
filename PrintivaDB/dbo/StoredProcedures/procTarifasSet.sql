@@ -15,7 +15,6 @@ BEGIN
     DECLARE @TarifaId INT;
 
     BEGIN TRY
-        -- Normaliza inputs
         SET @TarifaConceptoCodigo = UPPER(LTRIM(RTRIM(ISNULL(@TarifaConceptoCodigo,''))));
         SET @Moneda = UPPER(ISNULL(NULLIF(LTRIM(RTRIM(@Moneda)), ''), 'MXN'));
         SET @Nombre = ISNULL(@Nombre, N'');
@@ -27,7 +26,6 @@ BEGIN
         IF @Monto IS NULL OR @Monto < 0
             RAISERROR('Monto inválido (debe ser >= 0).',16,1);
 
-        -- Obtiene concepto
         SELECT @TarifaConceptoId = TarifaConceptoId
         FROM dbo.TblTarifaConceptos WITH (NOLOCK)
         WHERE Codigo = @TarifaConceptoCodigo AND EstaActivo = 1;
@@ -35,43 +33,29 @@ BEGIN
         IF @TarifaConceptoId IS NULL
             RAISERROR('Concepto de tarifa inválido o inactivo.',16,1);
 
-        -- No permitas ambos scopes a la vez
         IF (@InventarioId IS NOT NULL AND @ImpresoraId IS NOT NULL)
             RAISERROR('Scope inválido: no se permite ImpresoraId e InventarioId a la vez.',16,1);
 
-        /* =========================================================
-           REGLAS POR CONCEPTO
-           ========================================================= */
-
-        -- 1) MATERIAL_UNIT: requiere InventarioId (si quieres forzarlo)
         IF (@TarifaConceptoCodigo = 'MATERIAL_UNIT' AND @InventarioId IS NULL)
             RAISERROR('MATERIAL_UNIT requiere InventarioId.',16,1);
 
-        -- 2) MATERIAL_GENERAL: flat scoped (InventarioId XOR ImpresoraId)
         IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL')
         BEGIN
             IF (@InventarioId IS NULL AND @ImpresoraId IS NULL)
                 RAISERROR('MATERIAL_GENERAL requiere InventarioId o ImpresoraId (uno).',16,1);
-            -- aquí ya está validado que no pueden venir los dos
         END
 
-        -- 3) Global inventarios: siempre sin scope
         IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL_INV_GLOBAL')
         BEGIN
             SET @InventarioId = NULL;
             SET @ImpresoraId = NULL;
         END
 
-        -- 4) Global impresoras: siempre sin scope
         IF (@TarifaConceptoCodigo = 'MATERIAL_GENERAL_PRN_GLOBAL')
         BEGIN
             SET @InventarioId = NULL;
             SET @ImpresoraId = NULL;
         END
-
-        /* =========================================================
-           INSERT Tarifa + LOG
-           ========================================================= */
 
         INSERT dbo.TblTarifas(
             UsuarioId, TarifaConceptoId,

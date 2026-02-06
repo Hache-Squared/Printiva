@@ -109,8 +109,7 @@ BEGIN
     OUTER APPLY (
         SELECT TOP(1) t.Monto, t.Moneda
         FROM dbo.TblTarifas t WITH (NOLOCK)
-        WHERE t.UsuarioId = @loginId
-          AND t.TarifaConceptoId = @ConceptoMaterialId
+        WHERE t.TarifaConceptoId = @ConceptoMaterialId
           AND t.EstaActivo = 1
           AND (t.InventarioTipoId IS NULL OR t.InventarioTipoId = i.InventarioTipoId)
           AND (t.InventarioNombreId IS NULL OR t.InventarioNombreId = i.InventarioNombreId)
@@ -146,8 +145,7 @@ BEGIN
             @PrintRate = t.Monto,
             @PrintMoneda = t.Moneda
         FROM dbo.TblTarifas t WITH (NOLOCK)
-        WHERE t.UsuarioId = @loginId
-          AND t.TarifaConceptoId = @ConceptoPrintId
+        WHERE t.TarifaConceptoId = @ConceptoPrintId
           AND t.EstaActivo = 1
           AND (t.ImpresoraId IS NULL OR t.ImpresoraId = @ImpresoraId)
           AND t.InventarioTipoId IS NULL
@@ -164,8 +162,7 @@ BEGIN
             @PostRate = t.Monto,
             @PostMoneda = t.Moneda
         FROM dbo.TblTarifas t WITH (NOLOCK)
-        WHERE t.UsuarioId = @loginId
-          AND t.TarifaConceptoId = @ConceptoPostId
+        WHERE t.TarifaConceptoId = @ConceptoPostId
           AND t.EstaActivo = 1
           AND (t.ImpresoraId IS NULL OR t.ImpresoraId = @ImpresoraId)
           AND t.InventarioTipoId IS NULL
@@ -181,8 +178,7 @@ BEGIN
         SELECT TOP(1)
             @MarginPct = t.Monto
         FROM dbo.TblTarifas t WITH (NOLOCK)
-        WHERE t.UsuarioId = @loginId
-          AND t.TarifaConceptoId = @ConceptoMarginId
+        WHERE t.TarifaConceptoId = @ConceptoMarginId
           AND t.EstaActivo = 1
           AND t.ImpresoraId IS NULL
           AND t.InventarioTipoId IS NULL

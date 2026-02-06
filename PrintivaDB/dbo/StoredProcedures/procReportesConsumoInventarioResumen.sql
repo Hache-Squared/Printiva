@@ -24,7 +24,6 @@ BEGIN
           AND c.Fecha <  @HastaDT
           AND (@PedidoId     IS NULL OR c.PedidoId     = @PedidoId)
           AND (@InventarioId IS NULL OR c.InventarioId = @InventarioId)
-          AND (@UsuarioId    IS NULL OR c.UsuarioId    = @UsuarioId)
           AND (@ProductoId   IS NULL OR c.ProductoId   = @ProductoId)
           AND (@RecetaId     IS NULL OR c.RecetaId     = @RecetaId)
     )
@@ -43,7 +42,6 @@ BEGIN
           AND c.Fecha <  @HastaDT
           AND (@PedidoId     IS NULL OR c.PedidoId     = @PedidoId)
           AND (@InventarioId IS NULL OR c.InventarioId = @InventarioId)
-          AND (@UsuarioId    IS NULL OR c.UsuarioId    = @UsuarioId)
           AND (@ProductoId   IS NULL OR c.ProductoId   = @ProductoId)
           AND (@RecetaId     IS NULL OR c.RecetaId     = @RecetaId)
     )

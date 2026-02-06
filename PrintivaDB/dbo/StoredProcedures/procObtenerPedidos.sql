@@ -19,9 +19,8 @@ BEGIN
     FROM dbo.TblPedidos p
     INNER JOIN dbo.TblClientes c ON c.ClienteId = p.ClienteId
     INNER JOIN dbo.TblPedidoEstatus e ON e.PedidoEstatusId = p.PedidoEstatusId
-    WHERE p.UsuarioId = @loginId
-      AND (@elementoObtenerId IS NULL OR p.PedidoId = @elementoObtenerId)
-      AND p.EstaActivo = 1 
+    WHERE (@elementoObtenerId IS NULL OR p.PedidoId = @elementoObtenerId)
+      AND p.EstaActivo = 1
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END
 GO

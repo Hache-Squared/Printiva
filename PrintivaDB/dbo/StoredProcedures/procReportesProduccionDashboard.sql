@@ -4,7 +4,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Items por estatus de producción (del usuario dueño)
+    -- Items por estatus de producción (global)
     SELECT
         e.ProduccionEstatusId,
         e.Nombre,
@@ -13,12 +13,11 @@ BEGIN
     FROM dbo.TblProduccionItems i WITH (NOLOCK)
     INNER JOIN dbo.TblProduccionEstatus e WITH (NOLOCK)
         ON e.ProduccionEstatusId = i.ProduccionEstatusId
-    WHERE i.UsuarioId = @loginId
-      AND i.EstaActivo = 1
+    WHERE i.EstaActivo = 1
     GROUP BY e.ProduccionEstatusId, e.Nombre, e.Orden
     ORDER BY e.Orden;
 
-    -- Pedidos por estatus (del usuario dueño)
+    -- Pedidos por estatus (global)
     SELECT
         pe.PedidoEstatusId,
         pe.Nombre,
@@ -26,8 +25,7 @@ BEGIN
     FROM dbo.TblPedidos p WITH (NOLOCK)
     INNER JOIN dbo.TblPedidoEstatus pe WITH (NOLOCK)
         ON pe.PedidoEstatusId = p.PedidoEstatusId
-    WHERE p.UsuarioId = @loginId
-      AND ISNULL(p.EstaActivo,1)=1
+    WHERE ISNULL(p.EstaActivo,1)=1
     GROUP BY pe.PedidoEstatusId, pe.Nombre
     ORDER BY pe.PedidoEstatusId;
 
@@ -44,7 +42,7 @@ BEGIN
         COUNT(*) AS ItemsTotales,
         SUM(CASE WHEN @EntregadoProdId IS NOT NULL AND i.ProduccionEstatusId <> @EntregadoProdId THEN 1 ELSE 0 END) AS ItemsWIP
     FROM dbo.TblProduccionItems i WITH (NOLOCK)
-    WHERE i.UsuarioId=@loginId AND i.EstaActivo=1;
+    WHERE i.EstaActivo=1;
 END
 GO
 

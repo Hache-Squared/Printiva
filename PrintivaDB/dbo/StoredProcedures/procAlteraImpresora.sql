@@ -23,14 +23,14 @@ BEGIN
             IF NOT EXISTS (
                 SELECT 1
                 FROM dbo.TblImpresoras i (NOLOCK)
-                WHERE i.ImpresoraId = @ElementoAlterarId AND i.UsuarioId = @loginId AND i.EstaActivo = 1
+                WHERE i.ImpresoraId = @ElementoAlterarId AND i.EstaActivo = 1
             )
                 RAISERROR('Impresora no encontrada.', 16, 1);
 
             UPDATE dbo.TblImpresoras
             SET EstaActivo = 0,
                 FechaActualizacion = SYSDATETIME()
-            WHERE ImpresoraId = @ElementoAlterarId AND UsuarioId = @loginId;
+            WHERE ImpresoraId = @ElementoAlterarId;
 
             SET @message = 'Impresora desactivada.';
             SELECT @result [result], @message [message], @ElementoAlterarId [elementoId];
@@ -45,7 +45,7 @@ BEGIN
             IF NOT EXISTS (
                 SELECT 1
                 FROM dbo.TblImpresoras i (NOLOCK)
-                WHERE i.ImpresoraId = @ElementoAlterarId AND i.UsuarioId = @loginId
+                WHERE i.ImpresoraId = @ElementoAlterarId
             )
                 RAISERROR('Impresora no encontrada.', 16, 1);
 
@@ -55,7 +55,7 @@ BEGIN
                 Notas = NULLIF(@Notas,''),
                 FechaActualizacion = SYSDATETIME(),
                 EstaActivo = 1
-            WHERE ImpresoraId = @ElementoAlterarId AND UsuarioId = @loginId;
+            WHERE ImpresoraId = @ElementoAlterarId;
 
             SET @message = 'Impresora actualizada.';
             SELECT @result [result], @message [message], @ElementoAlterarId [elementoId];
