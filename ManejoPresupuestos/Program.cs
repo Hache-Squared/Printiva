@@ -21,10 +21,7 @@ builder.Services.AddControllersWithViews(opciones =>
 });
 
 //Es AddTransient porque esta vez no compartiremos datos
-builder.Services.AddTransient<IRepositorioTiposCuentas, RepositorioTiposCuentas>();
 builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>();
-builder.Services.AddTransient<IRepositorioCategorias, RepositorioCategorias>();
-builder.Services.AddTransient<IRepositorioTransacciones, RepositorioTransacciones>();
 builder.Services.AddTransient<IRepositorioUsuarios, RepositorioUsuarios>();
 builder.Services.AddTransient<IRepositorioInventarioMarcas, RepositorioInventarioMarcas>();
 builder.Services.AddTransient<IRepositorioInventarioTipos, RepositorioInventarioTipos>();
@@ -99,7 +96,6 @@ builder.Services.AddAuthentication(options =>
 //----
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddTransient<IServicioReportes, ServicioReportes>();
 
 builder.Services.AddAutoMapper(typeof(Program)); //configuramos autoMapper
 
