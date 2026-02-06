@@ -178,5 +178,13 @@ namespace ManejoPresupuestos.Controllers
 
             return Json(new { result = res.Result, message = res.Message });
         }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Forbidden(string? returnUrl = null)
+        {
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
     }
 }

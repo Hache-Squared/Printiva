@@ -91,6 +91,7 @@ builder.Services.AddAuthentication(options =>
 }).AddCookie(IdentityConstants.ApplicationScheme, opciones =>
 {
     opciones.LoginPath = "/usuarios/login/";
+    opciones.AccessDeniedPath = "/Usuarios/Forbidden"; 
 });
 
 //----
