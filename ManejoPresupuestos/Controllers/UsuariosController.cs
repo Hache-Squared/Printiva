@@ -17,6 +17,7 @@ namespace ManejoPresupuestos.Controllers
         private readonly IRepositorioUsuariosAdmin repoAdmin;
         private readonly IPasswordHasher<Usuario> passwordHasher;
         private readonly IServicioUsuarios servicioUsuarios;
+        private readonly IServicioPermisos permSvc;
 
         private static readonly (string Key, string Label)[] PermisosCatalogo = new[]
         {
@@ -40,7 +41,8 @@ namespace ManejoPresupuestos.Controllers
             SignInManager<Usuario> signInManager,
             IRepositorioUsuariosAdmin repoAdmin,
             IPasswordHasher<Usuario> passwordHasher,
-            IServicioUsuarios servicioUsuarios
+            IServicioUsuarios servicioUsuarios,
+            IServicioPermisos permSvc
         )
         {
             this.userManager = userManager;
@@ -48,6 +50,7 @@ namespace ManejoPresupuestos.Controllers
             this.repoAdmin = repoAdmin;
             this.passwordHasher = passwordHasher;
             this.servicioUsuarios = servicioUsuarios;
+            this.permSvc = permSvc;
         }
 
         /* =========================
@@ -155,6 +158,11 @@ namespace ManejoPresupuestos.Controllers
 
             var esUpdate = vm.Id > 0;
             var res = await repoAdmin.AlteraAsync(vm, loginId, passwordHash, actualizar: esUpdate, borrar: false, reactivar: false);
+            if (res.Result == "success")
+            {
+                permSvc.Invalidar(res.ElementoId); // create/update (ElementoId trae el id correcto)
+            }
+
             return Json(new { result = res.Result, message = res.Message, elementoId = res.ElementoId });
         }
 
@@ -175,6 +183,11 @@ namespace ManejoPresupuestos.Controllers
                 borrar: !activar,
                 reactivar: activar
             );
+
+            if (res.Result == "success")
+            {
+                permSvc.Invalidar(id);
+            }
 
             return Json(new { result = res.Result, message = res.Message });
         }

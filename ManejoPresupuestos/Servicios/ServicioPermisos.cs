@@ -8,6 +8,7 @@ namespace ManejoPresupuestos.Servicios
     {
         Task<bool> EsAdminAsync(int usuarioId);
         Task<HashSet<string>> ObtenerPermisosAsync(int usuarioId);
+        void Invalidar(int usuarioId);
     }
 
     public class ServicioPermisos : IServicioPermisos
@@ -51,6 +52,12 @@ namespace ManejoPresupuestos.Servicios
             set = perms.Select(x => x.Trim()).Where(x => x.Length > 0).ToHashSet(StringComparer.OrdinalIgnoreCase);
             cache.Set(key, set, TimeSpan.FromMinutes(5));
             return set;
+        }
+
+        public void Invalidar(int usuarioId)
+        {
+            cache.Remove($"admin:{usuarioId}");
+            cache.Remove($"perms:{usuarioId}");
         }
     }
 }
