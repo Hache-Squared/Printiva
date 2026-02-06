@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace ManejoPresupuestos.Controllers
 {
-    [Permiso("Usuarios")]
+    
     public class UsuariosController : Controller
     {
         private readonly UserManager<Usuario> userManager;      // si lo sigues usando
