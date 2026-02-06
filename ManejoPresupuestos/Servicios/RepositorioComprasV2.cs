@@ -144,7 +144,7 @@ namespace ManejoPresupuestos.Servicios
                 new
                 {
                     CompraId = compra.CompraId,
-                    UsuarioId = usuarioId,       // usa UsuarioId (el SP también acepta loginId si lo ocupas)
+                    UsuarioId = usuarioId,       
                     Descripcion = compra.Descripcion,
                     InventarioId = compra.InventarioId,
                     Cantidad = compra.Cantidad,

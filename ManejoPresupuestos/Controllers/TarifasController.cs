@@ -139,7 +139,7 @@ namespace ManejoPresupuestos.Controllers
             var codigo = dto.TarifaConceptoCodigo.Trim().ToUpperInvariant();
             var esGlobal = codigo.EndsWith("_GLOBAL", StringComparison.OrdinalIgnoreCase);
 
-            // ✅ Si es GLOBAL, forzamos ambos scopes a NULL (permitido)
+            //  Si es GLOBAL, forzamos ambos scopes a NULL (permitido)
             if (esGlobal)
             {
                 dto.InventarioId = null;

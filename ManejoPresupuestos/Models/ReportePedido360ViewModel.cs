@@ -173,7 +173,7 @@ namespace ManejoPresupuestos.Models
         public int InventarioId { get; set; }
         public string? InsumoNombre { get; set; }
 
-        // 🔥 FIX: el SP trae CantidadConsumida, no Cantidad
+        //  FIX: el SP trae CantidadConsumida, no Cantidad
         public decimal CantidadConsumida { get; set; }
 
         // extras del SP (planeación)

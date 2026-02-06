@@ -16,7 +16,7 @@ namespace ManejoPresupuestos.Models
         public int? ImpresoraId { get; set; }
         public int? InventarioId { get; set; }
 
-        // ✅ nuevos campos (los llena el SP)
+        //  nuevos campos (los llena el SP)
         public string? InventarioNombre { get; set; }
         public string? ImpresoraNombre { get; set; }
 

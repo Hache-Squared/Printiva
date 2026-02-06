@@ -140,14 +140,14 @@ namespace ManejoPresupuestos.Servicios
         {
             using var connection = new SqlConnection(connectionString);
 
-            // OJO: tu SP usa @ElementoObtenerId (0 = todos)
+            
             var rows = await connection.QueryAsync<ProcInventarioRow>(
                 "dbo.procObtenerInventarios",
                 new { ElementoObtenerId = 0, loginId },
                 commandType: System.Data.CommandType.StoredProcedure
             );
 
-            // Proyección para UI (Display + Unidad)
+            
             var result = rows.Select(r =>
             {
                 var color = r.InventarioColor;
@@ -177,9 +177,7 @@ namespace ManejoPresupuestos.Servicios
         {
             using var connection = new SqlConnection(connectionString);
 
-            // FIX CLAVE:
-            // - @ElementoObtenerId debe ser NULL para "todas"
-            // - @SoloActivas = 1 (si quieres solo activas)
+            
             var rows = await connection.QueryAsync<TarifaSelectorImpresoraDto>(
                 "dbo.procObtenerImpresoras",
                 new
@@ -218,7 +216,7 @@ namespace ManejoPresupuestos.Servicios
         {
             using var connection = new SqlConnection(connectionString);
 
-            // Si tu SP mete result/message por fila, usa el “Row seguro” que ya te dejé antes.
+            
             return await connection.QueryAsync<TarifaAplicableDto>(
                 "dbo.procTarifasObtenerAplicables",
                 new { TarifaConceptoCodigo = tarifaConceptoCodigo, ImpresoraId = impresoraId, InventarioId = inventarioId, loginId },

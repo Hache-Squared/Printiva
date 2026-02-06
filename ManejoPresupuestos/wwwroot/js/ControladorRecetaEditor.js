@@ -12,7 +12,7 @@
 
             let nombre = $("#nombre-receta").val();
 
-            // Tiempo impresión (min)
+            // Tiempo impresion (min)
             let tiempoImpresionRaw = $("#tiempo-receta").val();
             let tiempoImpresionMin = parseInt(tiempoImpresionRaw, 10);
 
@@ -49,14 +49,12 @@
                 RecetaId: recetaId,
                 Nombre: nombre,
 
-                // legacy (por si algo viejo lo usa aún)
                 Tiempo: tiempoImpresionMin.toString(),
 
                 // nuevos
                 TiempoImpresionMin: tiempoImpresionMin,
                 TiempoPostMin: tiempoPostMin,
 
-                // ✅ OJO: NO mandamos ProductoId aquí
                 // ProductoId se asigna/actualiza desde el Index (modal)
 
                 Inventarios: inventariosAEnviar

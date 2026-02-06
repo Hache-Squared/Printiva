@@ -151,7 +151,7 @@ namespace ManejoPresupuestos.Models
 
         public decimal CantidadConsumida { get; set; }
 
-        // ⚠️ ahora significa "costo unit por tarifas" para ese insumo
+        //  ahora significa "costo unit por tarifas" para ese insumo
         public decimal CostoUnitarioActual { get; set; }
         public decimal CostoTotalEstimado { get; set; }
 

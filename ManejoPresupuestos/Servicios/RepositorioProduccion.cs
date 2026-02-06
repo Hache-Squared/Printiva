@@ -120,9 +120,7 @@ namespace ManejoPresupuestos.Servicios
             );
         }
 
-        // ==========================
-        // ✅ NUEVOS: motor costeo
-        // ==========================
+        
         public async Task<IEnumerable<ConsumoInventarioDto>> ObtenerConsumosAplicadosPorItem(int usuarioId, int produccionItemId)
         {
             using var connection = new SqlConnection(connectionString);
@@ -157,7 +155,7 @@ namespace ManejoPresupuestos.Servicios
         {
             using var connection = new SqlConnection(connectionString);
 
-            // Si no existe o no está asignada la impresora => regresa null
+            // Si no existe o no esta asignada la impresora => regresa null
             var impresoraId = await connection.QueryFirstOrDefaultAsync<int?>(
                 "dbo.procProduccionObtenerImpresoraIdPorItem",
                 new { ProduccionItemId = produccionItemId, loginId },

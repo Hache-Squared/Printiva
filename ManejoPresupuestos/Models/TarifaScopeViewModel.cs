@@ -7,7 +7,7 @@ namespace ManejoPresupuestos.Models
         public TarifaScopeType ScopeType { get; set; }
         public int ScopeId { get; set; }
 
-        // Para el título (si no tienes nombre, mínimo muestra #id)
+        // Para el titulo (si no tienes nombre, minimo muestra #id)
         public string ScopeTitulo { get; set; } = "";
 
         public List<TarifaConceptoDto> Conceptos { get; set; } = new();

@@ -46,7 +46,6 @@ namespace ManejoPresupuestos.Servicios
             {
                 req ??= new CotizacionTarifaPreviewRequestDto();
 
-                // ✅ AHORA: items con producto y cantidad (Modelado o Producción)
                 var itemsConProducto = (req.Items ?? new List<CotizacionTarifaPreviewItemDto>())
                     .Where(x => x != null
                              && (x.ConceptoTipoId == 1 || x.ConceptoTipoId == 2)
@@ -137,7 +136,6 @@ namespace ManejoPresupuestos.Servicios
 
                         var subtotal = t.Monto * cantidadAplicada;
 
-                        // ✅ AplicaA con nombre de inventario
                         var aplicaA = "GLOBAL";
                         if (!t.EsGlobal)
                         {
@@ -163,7 +161,6 @@ namespace ManejoPresupuestos.Servicios
                     }
                 }
 
-                // 4) (Opcional) Impresora (si luego lo ocupas)
                 if (req.ImpresoraId.HasValue && req.ImpresoraId.Value > 0)
                 {
                     var impId = req.ImpresoraId.Value;

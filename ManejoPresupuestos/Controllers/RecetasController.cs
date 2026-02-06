@@ -174,7 +174,7 @@ namespace ManejoPresupuestos.Controllers
                     });
                 }
 
-                productoIdFinal = recetaDb.ProductoId; // ✅ conservar
+                productoIdFinal = recetaDb.ProductoId; //  conservar
             }
 
             var param = new ParametroAlterarReceta()

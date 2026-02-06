@@ -18,7 +18,7 @@ namespace ManejoPresupuestos.Models
         public List<ReporteProduccionUtilizacionPorImpresoraDto> PorImpresora { get; set; } = new();
         public List<ReporteProduccionUtilizacionDetalleDto> Detalle { get; set; } = new();
 
-        // Catálogos
+        // Catalogos
         public List<CatalogoImpresoraDto> CatImpresoras { get; set; } = new();
     }
 }

@@ -171,7 +171,7 @@ namespace ManejoPresupuestos.Servicios
             wsImp.SheetView.FreezeRows(1);
 
             // -------------------------
-            // Sheet: Antigüedad (cola)
+            // Sheet: Antiguedad (cola)
             // -------------------------
             var wsCola = wb.AddWorksheet("Antigüedad (cola)");
             var dataCola = vm.PorAntiguedad
@@ -234,13 +234,6 @@ namespace ManejoPresupuestos.Servicios
             wsDet.Column(18).Style.Alignment.WrapText = true;
             wsDet.Column(19).Style.Alignment.WrapText = true;
 
-            // Resaltar atrasados en Detalle (columna 12 = "Atrasado")
-            // var colAtrasado = tblDet.Field("Atrasado").Column;
-            // var rngAtrasado = colAtrasado.DataCells;
-            // rngAtrasado.AddConditionalFormat()
-            //     .WhenEquals("Sí")
-            //     .Fill.SetBackgroundColor(XLColor.FromHtml("#FFF3CD"));
-
             // Ajustes generales
             wsResumen.Columns().AdjustToContents();
             wsEstatus.Columns().AdjustToContents();
@@ -284,7 +277,6 @@ namespace ManejoPresupuestos.Servicios
 
             ws.Style.Font.FontName = "Calibri";
             ws.Style.Font.FontSize = 11;
-            //ws.SheetView.ShowGridLines = false; // más limpio
 
             const int MAX_COL = 18; // A..R
             int r = 1;
@@ -351,7 +343,7 @@ namespace ManejoPresupuestos.Servicios
             var totalPagado = vm.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto);
             var pendiente = totalCot - totalPagado;
 
-            // --- Sección: Cliente y pedido ---
+            // --- Seccion: Cliente y pedido ---
             r = EscribirTituloSeccion(ws, r, "Cliente y pedido", cTeal, MAX_COL);
 
             // Bloque izquierda (cliente)
@@ -382,7 +374,7 @@ namespace ManejoPresupuestos.Servicios
             ws.Row(r).Height = 28;
             r += 2;
 
-            // --- Sección: Totales ---
+            // --- Seccion: Totales ---
             r = EscribirTituloSeccion(ws, r, "Totales", cGreen, MAX_COL);
 
             EscribirMoney(ws, r, 1, "Total estimado", h.TotalEstimado ?? 0m, 3); r++;
@@ -438,7 +430,7 @@ namespace ManejoPresupuestos.Servicios
             PintarInactivos(tblItems, "Activo", "No", XLColor.FromHtml("#E5E7EB"));
 
             // ==========================
-            // COTIZACIÓN: Header + Items
+            // COTIZACION: Header + Items
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Cotización vinculada", cPurple, MAX_COL);
 
@@ -555,7 +547,7 @@ namespace ManejoPresupuestos.Servicios
             PintarInactivos(tblPagos, "Activo", "No", XLColor.FromHtml("#E5E7EB"));
 
             // ==========================
-            // PRODUCCIÓN
+            // PRODUCCION
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Producción", cTeal, MAX_COL);
 
@@ -805,7 +797,7 @@ namespace ManejoPresupuestos.Servicios
 
             table = ws.Cell(startRow, startCol).InsertTable(dt, tableName, true);
 
-            // Header pro (color por sección)
+            // Header pro (color por seccion)
             var header = table.Range(1, 1, 1, table.ColumnCount());
             header.Style.Fill.BackgroundColor = headerColor;
             header.Style.Font.FontColor = XLColor.White;
@@ -983,7 +975,7 @@ namespace ManejoPresupuestos.Servicios
                 ws.Cell(r + 1, 9).Style.Font.FontColor = XLColor.FromHtml("#B91C1C"); // red-700
             }
 
-            r += 3; // card ocupa 2 filas + 1 separación
+            r += 3; // card ocupa 2 filas + 1 separacion
 
             // ==========================
             // TABLA
@@ -1056,7 +1048,7 @@ namespace ManejoPresupuestos.Servicios
                     rngFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // alinear números a la derecha (por si alguna col quedó sin formato)
+                // alinear numeros a la derecha (por si alguna col quedo sin formato)
                 foreach (var name in new[] { "Prioridad", "Pedido", "Total", "Pagado %", "Saldo" })
                 {
                     if (!TieneCampo(tbl, name)) continue;
@@ -1084,7 +1076,7 @@ namespace ManejoPresupuestos.Servicios
                 // freeze hasta el header de la tabla (para que se queden título/filtros/kpis)
                 ws.SheetView.FreezeRows(tbl.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos mínimos útiles
+                // anchos minimos útiles
                 // (col 3 cliente, 7-8 estatus, 10 atraso)
                 ws.Column(3).Width = Math.Max(ws.Column(3).Width, 24);
                 ws.Column(7).Width = Math.Max(ws.Column(7).Width, 18);
@@ -1151,7 +1143,7 @@ namespace ManejoPresupuestos.Servicios
             const int MAX_COL = 18; // A..R
             int r = 1;
 
-            // Paleta (misma línea sobria)
+            // Paleta (misma linea sobria)
             var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
             var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
             var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
@@ -1183,7 +1175,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ------------------
-            // TÍTULO
+            // TITULO
             // ------------------
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
@@ -1352,7 +1344,7 @@ namespace ManejoPresupuestos.Servicios
                     rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // resaltar vencidos (fila completa) si Días > 0
+                // resaltar vencidos (fila completa) si Dias > 0
                 if (tbl.DataRange != null && TieneCampo(tbl, "Días"))
                 {
                     var posDias = ObtenerPosCampo1Based(tbl, "Días");
@@ -1366,10 +1358,10 @@ namespace ManejoPresupuestos.Servicios
                     }
                 }
 
-                // freeze dejando arriba título + filtros + kpis + buckets
+                // freeze dejando arriba titulo + filtros + kpis + buckets
                 ws.SheetView.FreezeRows(tbl.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos mínimos útiles
+                // anchos minimos utiles
                 ws.Column(2).Width = Math.Max(ws.Column(2).Width, 26); // Cliente
                 ws.Column(3).Width = Math.Max(ws.Column(3).Width, 14); // Estatus
                 ws.Column(6).Width = Math.Max(ws.Column(6).Width, 12); // Bucket
@@ -1429,7 +1421,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ----------------
-            // Título
+            // Titulo
             // ----------------
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
@@ -1643,7 +1635,7 @@ namespace ManejoPresupuestos.Servicios
                 // freeze hasta el header de detalle (para que queden filtros + KPIs)
                 ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos mínimos útiles
+                // anchos minimos útiles
                 ws.Column(3).Width = Math.Max(ws.Column(3).Width, 26);  // Cliente
                 ws.Column(4).Width = Math.Max(ws.Column(4).Width, 16);  // Estatus
                 ws.Column(5).Width = Math.Max(ws.Column(5).Width, 12);  // Categoría
@@ -1697,7 +1689,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ----------------
-            // Título
+            // Titulo
             // ----------------
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
@@ -1839,7 +1831,7 @@ namespace ManejoPresupuestos.Servicios
                     }
                 }
 
-                // ancho útil impresora
+                // ancho util impresora
                 ws.Column(1).Width = Math.Max(ws.Column(1).Width, 28);
             }
 
@@ -1924,7 +1916,7 @@ namespace ManejoPresupuestos.Servicios
                 // freeze hasta header de detalle
                 ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos mínimos útiles
+                // anchos mínimos utiles
                 ws.Column(3).Width = Math.Max(ws.Column(3).Width, 22); // Cliente
                 ws.Column(4).Width = Math.Max(ws.Column(4).Width, 22); // Producto
                 ws.Column(5).Width = Math.Max(ws.Column(5).Width, 22); // Impresora
@@ -1979,7 +1971,7 @@ namespace ManejoPresupuestos.Servicios
 
             string Safe(string? s) => string.IsNullOrWhiteSpace(s) ? "-" : s.Trim();
 
-            // ---------- tarifas por renglón ----------
+            // ---------- tarifas por renglon ----------
             string BuildTarifasDetalle(ReporteInventarioConsumoDetalleDto x)
             {
                 var keyInsumo = $"{x.ProduccionItemId}|{x.InventarioId}";
@@ -2015,7 +2007,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ==========================
-            // TÍTULO
+            // TITULO
             // ==========================
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
@@ -2118,7 +2110,7 @@ namespace ManejoPresupuestos.Servicios
             });
 
             // ==========================
-            // RESÚMENES (Producto / Pedido / Receta / Periodo)
+            // RESUMENES (Producto / Pedido / Receta / Periodo)
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Resúmenes", cPurple, MAX_COL);
 
@@ -2268,7 +2260,7 @@ namespace ManejoPresupuestos.Servicios
             });
 
             // ==========================
-            // DETALLE (con tarifas por renglón)
+            // DETALLE (con tarifas por renglon)
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Detalle (con tarifas por renglón)", cBlueGray, MAX_COL);
 
@@ -2338,7 +2330,7 @@ namespace ManejoPresupuestos.Servicios
                 ["Venta item"] = MoneyFmt,
             });
 
-            // Wrap para Notas y Tarifas(detalle) + ancho cómodo
+            // Wrap para Notas y Tarifas(detalle) + ancho comodo
             if (tblDet != null)
             {
                 if (TieneCampo(tblDet, "Notas"))
@@ -2354,7 +2346,7 @@ namespace ManejoPresupuestos.Servicios
                         tblDet.RangeAddress.FirstAddress.ColumnNumber
                         + tblDet.Field("Tarifas (detalle)").Index - 1;
 
-                    var col = ws.Column(colNum); // IXLColumn (aquí SÍ hay Width)
+                    var col = ws.Column(colNum); // IXLColumn (aquí SI hay Width)
                     col.Width = Math.Max(col.Width, 60d);
                 }
 
@@ -2364,7 +2356,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ==========================
-            // TARIFAS RAW (para “sí o sí toda la data”)
+            // TARIFAS RAW (para “si o si toda la data”)
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Tarifas (raw)", cOrange, MAX_COL);
 
@@ -2435,7 +2427,7 @@ namespace ManejoPresupuestos.Servicios
             const int MAX_COL = 24; // A..X (detalle trae varias columnas)
             int r = 1;
 
-            // Paleta sobria (misma línea que el resto)
+            // Paleta sobria (misma linea que el resto)
             var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
             var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
             var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
@@ -2456,7 +2448,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             // ==========================
-            // TÍTULO
+            // TITULO
             // ==========================
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
@@ -2545,7 +2537,7 @@ namespace ManejoPresupuestos.Servicios
             r += 2;
 
             // ==========================
-            // TOP CATEGORÍAS
+            // TOP CATEGORIAS
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Top categorías", cBlueGray, MAX_COL);
 
@@ -2681,7 +2673,7 @@ namespace ManejoPresupuestos.Servicios
 
             if (tblDet != null)
             {
-                // formatos numéricos
+                // formatos numericos
                 AplicarFormatosTabla(tblDet, new()
                 {
                     ["Cant."]    = QtyFmt(),
@@ -2701,7 +2693,7 @@ namespace ManejoPresupuestos.Servicios
                     rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // wrap descripción/transacción
+                // wrap descripcion/transaccion
                 if (TieneCampo(tblDet, "Descripción"))
                     tblDet.Field("Descripción").Column.Style.Alignment.WrapText = true;
 
@@ -2722,13 +2714,13 @@ namespace ManejoPresupuestos.Servicios
                     }
                 }
 
-                // freeze hasta el header del detalle (para que se queden título/filtros/kpis/top)
+                // freeze hasta el header del detalle (para que se queden titulo/filtros/kpis/top)
                 ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos mínimos útiles
+                // anchos minimos utiles
                 // (ajusta a tu gusto)
-                ws.Column(11).Width = Math.Max(ws.Column(11).Width, 34); // Descripción
-                ws.Column(13).Width = Math.Max(ws.Column(13).Width, 30); // Transacción
+                ws.Column(11).Width = Math.Max(ws.Column(11).Width, 34); // Descripcion
+                ws.Column(13).Width = Math.Max(ws.Column(13).Width, 30); // Transaccion
                 ws.Column(8).Width  = Math.Max(ws.Column(8).Width, 20);  // Inventario
             }
 

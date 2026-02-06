@@ -551,7 +551,7 @@ namespace ManejoPresupuestos.Controllers
         {
             var loginId = servicioUsuarios.ObtenerUsuarioId();
 
-            // ✅ NO default 30 días: respeta null tal cual (igual que la vista si así la manejas)
+            //  NO default 30 dias: respeta null tal cual (igual que la vista si así la manejas)
             var d = desde?.Date;
             var h = hasta?.Date;
 
