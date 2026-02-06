@@ -375,7 +375,7 @@
         let body = null;
 
         if (tarifaId === 0) {
-            // ✅ Si termina en _GLOBAL => se crea global (sin inventarioId ni impresoraId)
+            //  Si termina en _GLOBAL => se crea global (sin inventarioId ni impresoraId)
             const esGlobal = conceptoCodigo.toUpperCase().endsWith("_GLOBAL");
 
             body = {

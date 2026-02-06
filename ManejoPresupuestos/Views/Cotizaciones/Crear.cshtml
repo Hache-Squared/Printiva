@@ -94,7 +94,7 @@
                         Modelado y Producción se capturan como items separados para cobrar y medir pagos por etapa.
                     </div>
 
-                    @* ✅ Panel movido: abajo de los conceptos *@
+                    @*  Panel movido: abajo de los conceptos *@
                     <div class="card shadow-sm border-0 mt-3" id="cardTarifas">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
@@ -225,7 +225,6 @@
             previewTimer = setTimeout(previewTarifas, 250);
         }
 
-        // ✅ AHORA: recoge Modelado(1) y Producción(2) mientras tenga producto + qty
         function collectPreviewItems() {
             const items = [];
             document.querySelectorAll('#tblItems tbody tr').forEach(tr => {
@@ -468,7 +467,7 @@
                         if (!precioInput.value && p.precioSugerido != null) precioInput.value = p.precioSugerido;
 
                         recalcTotals();
-                        schedulePreviewTarifas(); // ✅ aquí se dispara al seleccionar producto
+                        schedulePreviewTarifas(); 
                         mdlProductos.hide();
                     });
                     tbody.appendChild(tr);

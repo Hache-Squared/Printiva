@@ -95,7 +95,6 @@
                         Modelado y Producción se capturan como items separados para cobrar por etapa.
                     </div>
 
-                    @* ✅ Igual que Crear: Panel de costos extra debajo de los items *@
                     <div class="card shadow-sm border-0 mt-3" id="cardTarifas">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
@@ -225,7 +224,6 @@
             previewTimer = setTimeout(previewTarifas, 250);
         }
 
-        // ✅ Igual que Crear: toma Modelado(1) y Producción(2) si hay producto + qty
         function collectPreviewItems() {
             const items = [];
             document.querySelectorAll('#tblItems tbody tr').forEach(tr => {
@@ -468,7 +466,7 @@
                         if (!precioInput.value && p.precioSugerido != null) precioInput.value = p.precioSugerido;
 
                         recalcTotals();
-                        schedulePreviewTarifas(); // ✅ igual que Crear, dispara al seleccionar producto
+                        schedulePreviewTarifas(); 
                         mdlProductos.hide();
                     });
                     tbody.appendChild(tr);
@@ -478,7 +476,7 @@
         document.getElementById('btnAddItem').addEventListener('click', () => addRow(null));
         document.getElementById('txtBuscarProducto').addEventListener('input', e => renderProductos(e.target.value));
 
-        // ✅ Editar: cargar items del server (lo único que cambia vs Crear)
+        
         const serverItems = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
             (Model.Items ?? new List<ManejoPresupuestos.Models.CotizacionItemEdicionViewModel>())
             .Select(x => new {
