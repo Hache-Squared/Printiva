@@ -377,7 +377,7 @@ namespace ManejoPresupuestos.Servicios
             var clientes = await connection.QueryAsync<LookupItem>(
                 @"SELECT ClienteId AS Id, Nombre
                 FROM dbo.TblClientes
-                WHERE UsuarioId = @usuarioId AND EstaActivo = 1
+                WHERE EstaActivo = 1
                 ORDER BY Nombre;",
                 new { usuarioId }
             );

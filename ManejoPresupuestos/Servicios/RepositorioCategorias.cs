@@ -46,7 +46,7 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection( connectionString);
             return await connection.QueryAsync<Categoria>(
                 @"
-                    SELECT * FROM Categorias WHERE UsuarioId = @usuarioId
+                    SELECT * FROM Categorias
                  ",
                 new { usuarioId }
                 );
@@ -57,7 +57,7 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<Categoria>(
                 @"
-                    SELECT * FROM Categorias WHERE UsuarioId = @usuarioId AND TipoOperacionId = @tipoOperacionId
+                    SELECT * FROM Categorias WHERE TipoOperacionId = @tipoOperacionId
                  ",
                 new { usuarioId, tipoOperacionId }
                 );
@@ -68,7 +68,7 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryFirstOrDefaultAsync<Categoria>(
                 @"
-                    SELECT * FROM Categorias WHERE Id = @Id AND UsuarioId = @usuarioId
+                    SELECT * FROM Categorias WHERE Id = @Id
                  ",
                 new { id, usuarioId }
                 );

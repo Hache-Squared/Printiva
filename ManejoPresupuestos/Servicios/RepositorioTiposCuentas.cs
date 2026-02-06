@@ -54,7 +54,7 @@ namespace ManejoPresupuestos.Servicios
             var existe = await connection.QueryFirstOrDefaultAsync<int>(
                                                 @"SELECT 1
                                                 FROM TiposCuentas
-                                                WHERE Nombre = @Nombre AND UsuarioId = @UsuarioId AND Id <> @id;",
+                                                WHERE Nombre = @Nombre AND Id <> @id;",
                                                 new { nombre,usuarioId, id });
 
             return existe == 1;
@@ -65,7 +65,7 @@ namespace ManejoPresupuestos.Servicios
             using var connection = new SqlConnection(connectionString);
 
             return await connection.QueryAsync<TipoCuenta>(
-                                @"SELECT id,Nombre, Orden  FROM TiposCuentas WHERE UsuarioId = @UsuarioId ORDER BY Orden;",
+                                @"SELECT id,Nombre, Orden  FROM TiposCuentas  ORDER BY Orden;",
                                 new { usuarioId }
                                 );
         }
@@ -87,7 +87,7 @@ namespace ManejoPresupuestos.Servicios
             return await connection.QueryFirstOrDefaultAsync<TipoCuenta>(
                                                 @"SELECT Id, Nombre, Orden
                                                     FROM TiposCuentas
-                                                    WHERE  Id = @id AND UsuarioId = @usuarioId",
+                                                    WHERE  Id = @id ",
                                                 new { id, usuarioId }
                 );
         }
@@ -95,7 +95,7 @@ namespace ManejoPresupuestos.Servicios
         public async Task Borrar(int id, int usuarioId)
         {
             using var connection = new SqlConnection(connectionString);
-            await connection.ExecuteAsync(@"DELETE TiposCuentas WHERE Id = @Id AND UsuarioId = @usuarioId", new { id, usuarioId });
+            await connection.ExecuteAsync(@"DELETE TiposCuentas WHERE Id = @Id ", new { id, usuarioId });
         }
 
         public async Task Ordenar(IEnumerable<TipoCuenta> tipoCuentaOrdenados)

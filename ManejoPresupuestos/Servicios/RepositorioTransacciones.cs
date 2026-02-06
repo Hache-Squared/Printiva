@@ -58,7 +58,7 @@ namespace ManejoPresupuestos.Servicios
                     ON t.CategoriaId = c.Id
                     INNER JOIN Cuentas cu
                     ON cu.Id = t.CuentaId
-                    WHERE t.CuentaId = @CuentaId AND t.UsuarioId = @UsuarioId
+                    WHERE t.CuentaId = @CuentaId
                     AND FechaTransaccion BETWEEN @FechaInicio AND @FechaFin
                 ",
                 modelo
@@ -78,8 +78,7 @@ namespace ManejoPresupuestos.Servicios
                     ON t.CategoriaId = c.Id
                     INNER JOIN Cuentas cu
                     ON cu.Id = t.CuentaId
-                    WHERE t.UsuarioId = @UsuarioId
-                    AND FechaTransaccion BETWEEN @FechaInicio AND @FechaFin
+                    WHERE FechaTransaccion BETWEEN @FechaInicio AND @FechaFin
                     ORDER BY t.FechaTransaccion DESC
                 ",
                 modelo
@@ -115,7 +114,7 @@ namespace ManejoPresupuestos.Servicios
                         FROM Transacciones
                         INNER JOIN Categorias cat on
                         cat.Id = Transacciones.CategoriaId
-                        WHERE Transacciones.Id = @Id AND Transacciones.UsuarioId = @UsuarioId
+                        WHERE Transacciones.Id = @Id
                     ",
                     new { id, usuarioId }
                 );
@@ -130,7 +129,7 @@ namespace ManejoPresupuestos.Servicios
                         FROM Transacciones
                         INNER JOIN Categorias cat
                         ON cat.Id = Transacciones.CategoriaId
-                        WHERE Transacciones.UsuarioId = @usuarioId AND	
+                        WHERE 
                         FechaTransaccion BETWEEN @fechaInicio AND @fechaFin
                         GROUP BY DATEDIFF(d, @fechaInicio, FechaTransaccion) / 7, cat.TipoOperacionId
                 ",modelo);
@@ -146,7 +145,7 @@ namespace ManejoPresupuestos.Servicios
                 FROM Transacciones
                 INNER JOIN Categorias cat
                 ON cat.Id = Transacciones.CategoriaId
-                WHERE Transacciones.UsuarioId = @usuarioId AND YEAR(FechaTransaccion) = @Año
+                WHERE YEAR(FechaTransaccion) = @Año
                 GROUP BY MONTH(FechaTransaccion), cat.TipoOperacionId
              ",new {  usuarioId, año }
              );

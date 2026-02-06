@@ -45,7 +45,6 @@ namespace ManejoPresupuestos.Servicios
                             FROM
                             Cuentas INNER JOIN TiposCuentas 
                             tc ON tc.Id = Cuentas.TipoCuentaId
-                            WHERE tc.UsuarioId = @usuarioId
                             ORDER BY tc.Orden;
                      ",
                     new { usuarioId }
@@ -61,7 +60,7 @@ namespace ManejoPresupuestos.Servicios
                             FROM
                             Cuentas INNER JOIN TiposCuentas 
                             tc ON tc.Id = Cuentas.TipoCuentaId
-                            WHERE tc.UsuarioId = @UsuarioId AND Cuentas.Id = @Id;
+                            WHERE Cuentas.Id = @Id;
                      ",
                     new { id, usuarioId}
                 );
