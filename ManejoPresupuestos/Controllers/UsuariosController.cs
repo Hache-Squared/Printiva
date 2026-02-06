@@ -41,7 +41,7 @@ namespace ManejoPresupuestos.Controllers
             if(resultado.Succeeded)
             {
                 await signInManager.SignInAsync(usuario, isPersistent: true);
-                return RedirectToAction("Index", "Transacciones");
+                return RedirectToAction("Index", "Reportes");
 
             }
             else
@@ -59,7 +59,7 @@ namespace ManejoPresupuestos.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            return RedirectToAction("Index", "Transacciones");
+            return RedirectToAction("Index", "Reportes");
         }
 
         [HttpGet]
@@ -83,7 +83,7 @@ namespace ManejoPresupuestos.Controllers
 
             if (resultado.Succeeded)
             {
-                return RedirectToAction("Index", "Transacciones");
+                return RedirectToAction("Index", "Reportes");
             }
             else
             {
