@@ -132,6 +132,7 @@
     <Build Include="dbo\StoredProcedures\procAlteraCotizacionItemsRelacion.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraImpresora.sql" />
     <Build Include="dbo\StoredProcedures\procAlteraPago.sql" />
+    <Build Include="dbo\StoredProcedures\procAlteraUsuarios.sql" />
     <Build Include="dbo\StoredProcedures\procBorrarPedido.sql" />
     <Build Include="dbo\StoredProcedures\procCrearPedido.sql" />
     <Build Include="dbo\StoredProcedures\procDesactivarReceta.sql" />
@@ -145,6 +146,8 @@
     <Build Include="dbo\StoredProcedures\procObtenerPedidoItems.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerPedidos.sql" />
     <Build Include="dbo\StoredProcedures\procObtenerPedidosKanban.sql" />
+    <Build Include="dbo\StoredProcedures\procObtenerUsuarioDetalle.sql" />
+    <Build Include="dbo\StoredProcedures\procObtenerUsuarios.sql" />
     <Build Include="dbo\StoredProcedures\procPedidoAccionesDisponibles.sql" />
     <Build Include="dbo\StoredProcedures\procPedidoCambiarEstatus.sql" />
     <Build Include="dbo\StoredProcedures\procPedidoOcultarEnKanban.sql" />
@@ -214,6 +217,7 @@
     <Build Include="dbo\Tables\TblTarifas.sql" />
     <Build Include="dbo\Tables\TblTarifasLog.sql" />
     <Build Include="dbo\Tables\TblTransaccionesCompras.sql" />
+    <Build Include="dbo\Tables\TblUsuariosPermisos.sql" />
     <Build Include="dbo\Tables\TiposOperaciones.sql">
       <AnsiNulls>On</AnsiNulls>
       <QuotedIdentifier>On</QuotedIdentifier>

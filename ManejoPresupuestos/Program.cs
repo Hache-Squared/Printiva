@@ -68,6 +68,11 @@ builder.Services.AddTransient<IRepositorioCompraTiposV2, RepositorioCompraTiposV
 builder.Services.AddTransient<IRepositorioClientes, RepositorioClientes>();
 builder.Services.AddTransient<ITransformToReport, TransformToReport>();
 
+builder.Services.AddMemoryCache();
+
+builder.Services.AddScoped<IRepositorioUsuariosAdmin, RepositorioUsuariosAdmin>();
+builder.Services.AddScoped<IServicioPermisos, ServicioPermisos>();
+
 //configuramos Identity
 builder.Services.AddTransient<SignInManager<Usuario>>();
 
@@ -129,7 +134,7 @@ app.UseAuthorization();
  */
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Reportes}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 //pattern: "{controller=Home}/{action=Index}/{id?}/{extra?}/{full?}");
 
 app.Run();

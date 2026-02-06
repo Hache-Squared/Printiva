@@ -1,0 +1,123 @@
+@model IEnumerable<ManejoPresupuestos.Models.UsuarioListaVm>
+
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<h2 class="mb-3">Usuarios</h2>
+
+<button class="btn btn-primary mb-3" onclick="openUsuarioModal(null)">
+    <i class="bi bi-plus-circle"></i> Nuevo usuario
+</button>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Estado</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Permisos</th>
+            <th style="width:200px;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>
+                    <span class="badge @(u.EstaActivo ? "bg-success" : "bg-secondary")">
+                        @(u.EstaActivo ? "Activo" : "Inactivo")
+                    </span>
+                    @if (u.EsAdmin)
+                    {
+                        <span class="badge bg-dark ms-1">Admin</span>
+                    }
+                </td>
+                <td>@u.Nombre</td>
+                <td>@u.Email</td>
+                <td>
+                    @foreach (var p in u.PermisosList)
+                    {
+                        <span class="badge bg-light text-dark border me-1">@p</span>
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openUsuarioModal(@u.Id)">
+                        Editar
+                    </button>
+
+                    @if (u.EstaActivo)
+                    {
+                        <button class="btn btn-sm btn-outline-danger" onclick="toggleUsuario(@u.Id,false)">
+                            Desactivar
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-outline-success" onclick="toggleUsuario(@u.Id,true)">
+                            Activar
+                        </button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div id="usuarioModalHost"></div>
+
+@section Scripts {
+<script>
+    async function openUsuarioModal(id){
+        const url = id ? `/Usuarios/Form?id=${id}` : `/Usuarios/Form`;
+        const html = await fetch(url).then(r => r.text());
+        document.getElementById('usuarioModalHost').innerHTML = html;
+
+        const modalEl = document.getElementById('usuarioModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    async function submitUsuarioForm(ev){
+        ev.preventDefault();
+        const form = ev.target;
+        const data = new FormData(form);
+
+        const resp = await fetch(form.action, {
+            method: 'POST',
+            body: data
+        });
+
+        const res = await resp.json();
+        if(res.result === 'success'){
+            location.reload();
+            return;
+        }
+        alert(res.message || 'Error');
+    }
+
+    async function toggleUsuario(id, activar){
+        if(!confirm(activar ? '¿Activar usuario?' : '¿Desactivar usuario?')) return;
+
+        const token = document.querySelector('#usuarioAntiForgery input[name="__RequestVerificationToken"]').value;
+        const data = new FormData();
+        data.append('__RequestVerificationToken', token);
+        data.append('id', id);
+        data.append('activar', activar);
+
+        const resp = await fetch('/Usuarios/CambiarEstado', { method:'POST', body:data });
+        const res = await resp.json();
+
+        if(res.result === 'success'){
+            location.reload();
+            return;
+        }
+        alert(res.message || 'Error');
+    }
+</script>
+
+<!-- token global para botones fuera del modal -->
+<form id="usuarioAntiForgery" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+}

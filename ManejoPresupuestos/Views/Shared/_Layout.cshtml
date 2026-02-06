@@ -1,4 +1,27 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@inject ManejoPresupuestos.Servicios.IServicioPermisos PermSvc
+
+@{
+    var esAdmin = false;
+    var permisos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    if (User?.Identity?.IsAuthenticated == true)
+    {
+        var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (idClaim != null && int.TryParse(idClaim.Value, out var uid))
+        {
+            esAdmin = await PermSvc.EsAdminAsync(uid);
+            if (!esAdmin)
+            {
+                permisos = await PermSvc.ObtenerPermisosAsync(uid);
+            }
+        }
+    }
+
+    bool Can(string key) => esAdmin || permisos.Contains(key);
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,57 +46,88 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @* <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Transacciones" asp-action="Index">Dashboard</a>
-                        </li> *@
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Reportes" asp-action="Index">Reportes</a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Pedidos" asp-action="Kanban">Kanban Pedidos</a>
-                        </li>
+                        @if (Can("Reportes"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Reportes" asp-action="Index">Reportes</a>
+                            </li>
+                        }
 
+                        @* Kanban lo amarro a Pedidos (si quieres permiso separado me dices) *@
+                        @if (Can("Pedidos"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Pedidos" asp-action="Kanban">Kanban Pedidos</a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Pedidos" asp-action="Index">Pedidos</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Pedidos" asp-action="Index">Pedidos</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Cotizaciones" asp-action="Index">Cotizaciones</a>
-                        </li>
+                        @if (Can("Cotizaciones"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Cotizaciones" asp-action="Index">Cotizaciones</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Productos" asp-action="Index">Productos</a>
-                        </li>
+                        @if (Can("Productos"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Productos" asp-action="Index">Productos</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Recetas" asp-action="Index">Recetas</a>
-                        </li>
+                        @if (Can("Recetas"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Recetas" asp-action="Index">Recetas</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inventarios" asp-action="Index">Inventarios</a>
-                        </li>
+                        @if (Can("Inventarios"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Inventarios" asp-action="Index">Inventarios</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Impresoras" asp-action="Index">Impresoras</a>
-                        </li>
+                        @if (Can("Impresoras"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Impresoras" asp-action="Index">Impresoras</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Tarifas" asp-action="Index">Tarifas</a>
-                        </li>
+                        @if (Can("Tarifas"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Tarifas" asp-action="Index">Tarifas</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Compras" asp-action="Index">Compras</a>
-                        </li>
+                        @if (Can("Compras"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Compras" asp-action="Index">Compras</a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Clientes" asp-action="Index">Clientes</a>
-                        </li>
+                        @if (Can("Clientes"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Clientes" asp-action="Index">Clientes</a>
+                            </li>
+                        }
 
+                        @if (Can("Usuarios"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                            </li>
+                        }
 
-                        
-                        
                     </ul>
                     <partial name="_LinksLogin" />
                 </div>
@@ -87,9 +141,9 @@
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
+        @* <div class="container">
             &copy; 2025 - Printiva - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
+        </div> *@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,5 +1,7 @@
 ﻿@model RegistroViewModel;
-
+@{
+    Layout = "~/Views/Usuarios/_LayoutAuth.cshtml";
+}
 @{
     ViewData["Title"] = "Registro";
 }
@@ -25,14 +27,6 @@
                 <input asp-for="Password" class="form-control"></input>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-
-
-            <button class="btn btn-primary">
-                Registrarse
-            </button>
-            <a class="btn btn-success" asp-action="Login">
-                Login
-            </a>
 
         </form>
 

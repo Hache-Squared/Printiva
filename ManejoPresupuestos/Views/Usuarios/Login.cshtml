@@ -1,6 +1,10 @@
 ﻿@model LoginViewModel;
 
 @{
+    Layout = "~/Views/Usuarios/_LayoutAuth.cshtml";
+}
+
+@{
     ViewData["Title"] = "Login";
 }
 
@@ -35,9 +39,6 @@
             <button class="btn btn-primary">
                 Login
             </button>
-            <a class="btn btn-success" asp-action="Registro">
-                Registrarse
-            </a>
 
         </form>
 

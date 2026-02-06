@@ -1,0 +1,68 @@
+@model ManejoPresupuestos.Models.UsuarioFormVm
+
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">@((Model.EsEdicion) ? "Editar usuario" : "Nuevo usuario")</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="post" action="/Usuarios/Guardar" onsubmit="submitUsuarioForm(event)" autocomplete="off">
+        @Html.AntiForgeryToken()
+        <div class="modal-body">
+
+          <input type="hidden" name="Id" value="@Model.Id" />
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nombre</label>
+              <input class="form-control" name="Nombre" value="@Model.Nombre" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email</label>
+              <input class="form-control" autocomplete="off" name="Email" value="@Model.Email" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Password @(Model.EsEdicion ? "(solo si quieres cambiarla)" : "")
+            </label>
+            <input class="form-control" autocomplete="new-password" type="password" name="Password" />
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="EsAdmin" value="true" @(Model.EsAdmin ? "checked" : "") />
+            <label class="form-check-label">Administrador (tiene acceso a todo)</label>
+          </div>
+
+          <hr />
+          <h6>Permisos por módulo (Controller)</h6>
+
+          <div class="row">
+            @foreach (var p in Model.PermisosDisponibles)
+            {
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                         name="PermisosSeleccionados" value="@p.Key"
+                         @(p.Selected ? "checked" : "") />
+                  <label class="form-check-label">@p.Key</label>
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
