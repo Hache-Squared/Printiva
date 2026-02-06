@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ManejoPresupuestos.Controllers
 {
+    [Permiso("Reportes")]
     public class ReportesController : Controller
     {
         private readonly IServicioUsuarios servicioUsuarios;

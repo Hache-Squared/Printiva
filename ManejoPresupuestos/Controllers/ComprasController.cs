@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ManejoPresupuestos.Controllers
 {
+    [Permiso("Compras")]
     public class ComprasController : Controller
     {
         private readonly IServicioUsuarios servicioUsuarios;

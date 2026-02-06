@@ -13,21 +13,6 @@ CREATE TABLE [dbo].[Usuarios] (
 
 
 GO
-ALTER TABLE [dbo].[Usuarios]
-    ADD CONSTRAINT [DF_Usuarios_EsAdmin] DEFAULT ((0)) FOR [EsAdmin];
-GO
-
-
-ALTER TABLE [dbo].[Usuarios]
-    ADD CONSTRAINT [DF_Usuarios_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
-GO
-
-
-ALTER TABLE [dbo].[Usuarios]
-    ADD CONSTRAINT [DF_Usuarios_FechaCreacion] DEFAULT (sysutcdatetime()) FOR [FechaCreacion];
-GO
-
-
 CREATE UNIQUE NONCLUSTERED INDEX [UX_Usuarios_EmailNormalizado]
     ON [dbo].[Usuarios]([EmailNormalizado] ASC);
 GO

@@ -10,6 +10,7 @@ using System.Reflection;
 
 namespace ManejoPresupuestos.Controllers
 {
+    [Permiso("Recetas")]
     public class RecetasController : Controller
     {
         private readonly IServicioUsuarios servicioUsuarios;

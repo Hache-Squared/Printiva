@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ManejoPresupuestos.Controllers
 {
+    [Permiso("Tarifas")]
     public class TarifasController : Controller
     {
         private readonly IServicioUsuarios servicioUsuarios;
