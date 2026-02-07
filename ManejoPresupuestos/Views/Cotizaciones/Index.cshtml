@@ -2,67 +2,246 @@
 @{
     ViewData["Title"] = "Cotizaciones";
     var pedidoId = (int)(ViewBag.PedidoId ?? 0);
+
+    string StatusClass(string? s)
+    {
+        var v = (s ?? "").Trim().ToLowerInvariant();
+        if (v.Contains("acept")) return "st-blue";
+        if (v.Contains("pend") || v.Contains("revision")) return "st-amber";
+        if (v.Contains("cancel")) return "st-red";
+        return "st-gray";
+    }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="mb-0">Cotizaciones</h1>
-        <div class="text-muted">Modelado y producción se cotizan por separado, los pagos se registran por tipo.</div>
-    </div>
-    <a asp-action="Crear" asp-route-pedidoId="@pedidoId" class="btn btn-primary">Crear nueva</a>
-</div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+    }
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-sm-4">
-        <input name="pedidoId" value="@pedidoId" class="form-control" placeholder="Filtrar por PedidoId (opcional)" />
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-outline-secondary w-100" type="submit">Filtrar</button>
-    </div>
-</form>
+    body{ background: var(--pg-bg); }
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Acciones</th>
-                        <th>Cotización</th>
-                        <th>Pedido</th>
-                        <th>Estatus</th>
-                        <th>Creación</th>
-                        <th class="text-end">Modelado</th>
-                        <th class="text-end">Producción</th>
-                        <th class="text-end">Total</th>
-                        <th class="text-end">Pagado</th>
-                        <th class="text-end">Saldo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var c in Model)
-                {
-                    <tr>
-                        <td style="white-space:nowrap;">
-                            <a class="btn btn-outline-primary btn-sm" asp-action="Detalles" asp-route-id="@c.CotizacionId">Ver</a>
-                            <a class="btn btn-primary btn-sm" asp-action="Editar" asp-route-id="@c.CotizacionId">Editar</a>
-                            <a class="btn btn-outline-secondary btn-sm" asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId">Pagos</a>
-                        </td>
-                        <td>#@c.CotizacionId</td>
-                        <td>#@c.PedidoId</td>
-                        <td>
-                            <span class="badge bg-secondary">@c.CotizacionEstatus</span>
-                        </td>
-                        <td>@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
-                        <td class="text-end">@c.TotalModelado.ToString("0.00")</td>
-                        <td class="text-end">@c.TotalProduccion.ToString("0.00")</td>
-                        <td class="text-end fw-semibold">@c.TotalCotizado.ToString("0.00")</td>
-                        <td class="text-end">@c.TotalPagado.ToString("0.00")</td>
-                        <td class="text-end @(c.Saldo > 0 ? "text-danger" : "text-success") fw-semibold">@c.Saldo.ToString("0.00")</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+    /* MÁS ANCHO */
+    .pg-wrap{ max-width: 1240px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.45rem + 1.3vw, 2.85rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .7rem;
+        padding-bottom: .7rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .table-clean{
+        margin: 0;
+        min-width: 1060px; /* si la pantalla es chica, fuerza scroll horizontal */
+    }
+
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .9rem .9rem;
+        border-bottom: 1px solid rgba(15,23,42,.08);
+        white-space: nowrap;
+    }
+
+    .table-clean tbody td{
+        padding: .85rem .9rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .95rem;
+    }
+
+    .st-pill{
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .38rem .75rem;
+        font-weight: 850;
+        font-size: .82rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .st-blue{ background: rgba(29,78,216,.14); color: #1D4ED8; border-color: rgba(29,78,216,.22); }
+    .st-amber{ background: rgba(245,158,11,.16); color: #92400E; border-color: rgba(245,158,11,.22); }
+    .st-red{ background: rgba(239,68,68,.14); color: #991B1B; border-color: rgba(239,68,68,.20); }
+    .st-gray{ background: rgba(148,163,184,.20); color: #334155; border-color: rgba(148,163,184,.22); }
+
+    .act-wrap{
+        display: flex;
+        gap: .45rem;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+    .act-btn{
+        border-radius: 999px;
+        padding: .38rem .72rem;
+        font-weight: 800;
+        font-size: .84rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+    .act-view{
+        background: rgba(15,23,42,.05);
+        color: #334155;
+        border-color: rgba(15,23,42,.06);
+    }
+    .act-edit{
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 10px 18px rgba(29,78,216,.14);
+    }
+    .act-pay{
+        background: rgba(255,255,255,.75);
+        color: #0F172A;
+        border-color: rgba(100,116,139,.35);
+    }
+    .act-pay:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .money{ white-space: nowrap; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Cotizaciones</h1>
+                <div class="pg-subtitle">Modelado y producción se cotizan por separado, los pagos se registran por tipo.</div>
+            </div>
+
+            <a asp-action="Crear" asp-route-pedidoId="@pedidoId" class="btn btn-primary btn-pill btn-primary-pill">Crear nueva</a>
         </div>
+
+        <form method="get" class="mb-3">
+            <div class="card card-soft">
+                <div class="card-body p-3 p-md-4">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-sm-7 col-md-6">
+                            <input name="pedidoId" value="@pedidoId" class="form-control control-soft" placeholder="Filtrar por PedidoId (opcional)" />
+                        </div>
+                        <div class="col-sm-4 col-md-3">
+                            <button class="btn btn-pill btn-soft w-100" type="submit">Filtrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle">
+                        <thead>
+                            <tr>
+                                <th>Cotización</th>
+                                <th>Pedido</th>
+                                <th>Estatus</th>
+                                <th>Creación</th>
+                                <th class="text-end">Modelado</th>
+                                <th class="text-end">Producción</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Pagado</th>
+                                <th class="text-end">Saldo</th>
+                                <th style="width: 230px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">#@c.CotizacionId</td>
+                                <td class="fw-semibold">#@c.PedidoId</td>
+
+                                <td>
+                                    <span class="st-pill @StatusClass(c.CotizacionEstatus)">@c.CotizacionEstatus</span>
+                                </td>
+
+                                <td style="white-space:nowrap;">@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
+
+                                <td class="text-end money">@c.TotalModelado.ToString("0.00")</td>
+                                <td class="text-end money">@c.TotalProduccion.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money">@c.TotalCotizado.ToString("0.00")</td>
+                                <td class="text-end money">@c.TotalPagado.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</td>
+                                <td style="white-space:nowrap;">
+                                    <div class="act-wrap">
+                                        <a class="btn act-btn act-view" asp-action="Detalles" asp-route-id="@c.CotizacionId">Ver</a>
+                                        <a class="btn act-btn act-edit" asp-action="Editar" asp-route-id="@c.CotizacionId">Editar</a>
+                                        <a class="btn act-btn act-pay" asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId">Pagos</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>

@@ -1,12 +1,186 @@
 @model ManejoPresupuestos.Models.CotizacionIndexRow
 @{
     ViewData["Title"] = "Borrar Cotización";
+
+    string StatusClass(string? s)
+    {
+        var v = (s ?? "").Trim().ToLowerInvariant();
+        if (v.Contains("acept")) return "st-blue";
+        if (v.Contains("pend") || v.Contains("revision")) return "st-amber";
+        if (v.Contains("cancel")) return "st-red";
+        return "st-gray";
+    }
 }
 
-<h3>¿Deseas borrar la cotización #@Model.CotizacionId?</h3>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
 
-<form asp-action="BorrarCotizacion" method="post">
-    <input type="hidden" name="cotizacionId" value="@Model.CotizacionId" />
-    <button class="btn btn-danger" type="submit">Borrar</button>
-    <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-secondary">Cancelar</a>
-</form>
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 920px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(1.8rem, 1.35rem + 1.15vw, 2.55rem);
+        line-height: 1.08;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .card-soft .card-body{ padding: 1.25rem; }
+    @@media (min-width: 768px){
+        .card-soft .card-body{ padding: 1.4rem; }
+    }
+
+    .st-pill{
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .36rem .72rem;
+        font-weight: 850;
+        font-size: .82rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .st-blue{ background: rgba(29,78,216,.14); color: #1D4ED8; border-color: rgba(29,78,216,.22); }
+    .st-amber{ background: rgba(245,158,11,.16); color: #92400E; border-color: rgba(245,158,11,.22); }
+    .st-red{ background: rgba(239,68,68,.14); color: #991B1B; border-color: rgba(239,68,68,.20); }
+    .st-gray{ background: rgba(148,163,184,.20); color: #334155; border-color: rgba(148,163,184,.22); }
+
+    .kv{
+        background: rgba(15,23,42,.02);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        padding: .95rem 1rem;
+    }
+    .kv .k{
+        color: var(--muted);
+        font-size: .78rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        font-weight: 850;
+        margin-bottom: .35rem;
+        white-space: nowrap;
+    }
+    .kv .v{
+        color: var(--text);
+        font-weight: 850;
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .danger-soft{
+        border: 1px solid rgba(239,68,68,.22) !important;
+        background: rgba(239,68,68,.08) !important;
+        color: #991B1B !important;
+        box-shadow: 0 10px 22px rgba(239,68,68,.10);
+    }
+    .danger-soft:hover{
+        background: rgba(239,68,68,.11) !important;
+        border-color: rgba(239,68,68,.28) !important;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Borrar cotización</h1>
+                <div class="pg-subtitle">
+                    Estás por eliminar la cotización <span class="fw-semibold">#@Model.CotizacionId</span>.
+                </div>
+            </div>
+
+            <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-pill btn-soft">Volver</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="k">Cotización</div>
+                            <div class="v">#@Model.CotizacionId</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="k">Pedido</div>
+                            <div class="v">#@Model.PedidoId</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="k">Estatus</div>
+                            <div class="v">
+                                <span class="st-pill @StatusClass(Model.CotizacionEstatus)">@Model.CotizacionEstatus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 kv">
+                    <div class="k">Confirmación</div>
+                    <div class="v" style="font-weight:800;">
+                        ¿Deseas borrar la cotización #@Model.CotizacionId?
+                    </div>
+                </div>
+
+                <form asp-action="BorrarCotizacion" method="post" class="d-flex gap-2 flex-wrap mt-3">
+                    <input type="hidden" name="cotizacionId" value="@Model.CotizacionId" />
+                    <button class="btn btn-pill danger-soft" type="submit">Borrar</button>
+                    <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-pill btn-soft">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

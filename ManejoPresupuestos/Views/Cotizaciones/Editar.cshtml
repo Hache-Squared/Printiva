@@ -4,145 +4,382 @@
     ViewData["Title"] = "Editar cotización";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="mb-0">Editar cotización</h1>
-        <div class="text-muted">Edita la cotización y sus items. Los totales se recalculan por items.</div>
-    </div>
-    <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-outline-secondary">Volver</a>
-</div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
 
-<form asp-action="Editar" method="post" id="frmCotizacion">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <input type="hidden" asp-for="CotizacionId" />
+    body{ background: var(--pg-bg); }
 
-    <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label asp-for="PedidoId" class="form-label"></label>
-                        <input asp-for="PedidoId" class="form-control" />
-                        <span asp-validation-for="PedidoId" class="text-danger"></span>
-                    </div>
+    .pg-wrap{ max-width: 1280px; }
 
-                    <div class="mb-3">
-                        <label asp-for="CotizacionEstatusId" class="form-label"></label>
-                        <select asp-for="CotizacionEstatusId" asp-items="@Model.Estatus" class="form-select"></select>
-                        <span asp-validation-for="CotizacionEstatusId" class="text-danger"></span>
-                    </div>
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height: 1.05;
+        margin: 0;
+    }
 
-                    <div class="mb-3">
-                        <label asp-for="FechaVigencia" class="form-label"></label>
-                        <input asp-for="FechaVigencia" class="form-control" />
-                        <span asp-validation-for="FechaVigencia" class="text-danger"></span>
-                    </div>
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
 
-                    <div class="mb-3">
-                        <label asp-for="Notas" class="form-label"></label>
-                        <textarea asp-for="Notas" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="Notas" class="text-danger"></span>
-                    </div>
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
 
-                    <div class="border-top pt-3">
-                        <div class="d-flex justify-content-between">
-                            <div class="text-muted">Total modelado</div>
-                            <div class="fw-semibold" id="lblTotalModelado">0.00</div>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <div class="text-muted">Total producción</div>
-                            <div class="fw-semibold" id="lblTotalProduccion">0.00</div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-2">
-                            <div class="fw-semibold">Total cotizado</div>
-                            <div class="fw-bold fs-5" id="lblTotalCotizado">0.00</div>
-                        </div>
-                    </div>
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
 
-                    <button class="btn btn-primary w-100 mt-3" type="submit">Guardar</button>
-                    <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-outline-secondary w-100 mt-2">Cancelar</a>
-                </div>
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .card-soft .card-body{ padding: 1.25rem; }
+    @@media (min-width: 768px){
+        .card-soft .card-body{ padding: 1.4rem; }
+    }
+
+    .section-title{
+        color: var(--text);
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .form-label{
+        color: var(--text);
+        font-weight: 750;
+        margin-bottom: .45rem;
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .72rem;
+        padding-bottom: .72rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .control-soft-sm{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+    }
+    .control-soft-sm:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.10);
+        background: #fff;
+    }
+
+    .totals-box{
+        background: rgba(15,23,42,.02);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        padding: .95rem 1rem;
+    }
+    .totals-box .lbl{
+        color: var(--muted);
+        font-weight: 650;
+    }
+    .totals-box .val{
+        color: var(--text);
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .totals-box .grand{
+        font-size: 1.25rem;
+        font-weight: 900;
+    }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .9rem .9rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .table-clean tbody td{
+        padding: .85rem .9rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .94rem;
+    }
+    .table-clean .js-subtotal{
+        color: var(--text);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .input-group .btn{ border-radius: 12px; font-weight: 800; }
+    .input-group .form-control{ border-radius: 12px; }
+
+    .product-group{
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+    .product-group .form-control{
+        flex: 1 1 auto;
+        min-width: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .product-group .btn{
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .product-group .btn.js-buscar{
+        border-radius: 0;
+        padding-left: .75rem;
+        padding-right: .75rem;
+        background: rgba(29,78,216,.10);
+        border-color: rgba(29,78,216,.18);
+        color: #1D4ED8;
+    }
+    .product-group .btn.js-buscar:hover{
+        background: rgba(29,78,216,.14);
+        border-color: rgba(29,78,216,.22);
+    }
+    .product-group .btn.js-limpiar{
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        width: 44px;
+        background: rgba(15,23,42,.05);
+        border-color: rgba(15,23,42,.08);
+        color: #334155;
+    }
+
+    #cardTarifas{
+        background: rgba(15,23,42,.02);
+        border: 1px solid var(--border2);
+        border-radius: 16px;
+        box-shadow: none;
+    }
+    #cardTarifas .card-body{ padding: 1rem; }
+    #tblTarifas thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .12em;
+        font-size: .7rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    #tblTarifas tbody td{
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .92rem;
+    }
+
+    .modal-content{
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 18px 60px rgba(2,6,23,.25);
+    }
+    .modal-header{
+        border-bottom: 1px solid var(--border);
+    }
+    .modal-title{
+        font-weight: 850;
+        color: var(--text);
+    }
+    .modal-body .form-control{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+    }
+    .modal-body .form-control:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Editar cotización</h1>
+                <div class="pg-subtitle">Edita la cotización y sus items. Los totales se recalculan por items.</div>
             </div>
+            <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-pill btn-soft">Volver</a>
         </div>
 
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">Items de la cotización</h5>
-                        <button type="button" class="btn btn-outline-primary" id="btnAddItem">Agregar item</button>
-                    </div>
+        <form asp-action="Editar" method="post" id="frmCotizacion">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="CotizacionId" />
 
-                    <div class="table-responsive">
-                        <table class="table align-middle" id="tblItems">
-                            <thead>
-                                <tr>
-                                    <th style="width:140px;">Tipo</th>
-                                    <th style="width:240px;">Producto</th>
-                                    <th>Concepto</th>
-                                    <th style="width:120px;">Cantidad</th>
-                                    <th style="width:140px;">Precio</th>
-                                    <th style="width:140px;">Subtotal</th>
-                                    <th style="width:180px;">Notas</th>
-                                    <th style="width:90px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="text-muted">
-                        Modelado y Producción se capturan como items separados para cobrar por etapa.
-                    </div>
-
-                    <div class="card shadow-sm border-0 mt-3" id="cardTarifas">
+            <div class="row g-3">
+                <div class="col-lg-3">
+                    <div class="card card-soft">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">Estimación basada en recetas y tarifas configuradas; úsalo como referencia para tu cotización.</h6>
-                                <small class="text-muted" id="tarifasStatus">—</small>
+                            <div class="mb-3">
+                                <label asp-for="PedidoId" class="form-label"></label>
+                                <input asp-for="PedidoId" class="form-control control-soft" />
+                                <span asp-validation-for="PedidoId" class="text-danger"></span>
                             </div>
 
-                            <div id="tarifasWarn" class="alert alert-warning py-2 px-3 mt-2 d-none"></div>
+                            <div class="mb-3">
+                                <label asp-for="CotizacionEstatusId" class="form-label"></label>
+                                <select asp-for="CotizacionEstatusId" asp-items="@Model.Estatus" class="form-select control-soft"></select>
+                                <span asp-validation-for="CotizacionEstatusId" class="text-danger"></span>
+                            </div>
 
-                            <div class="table-responsive mt-2">
-                                <table class="table table-sm align-middle mb-0" id="tblTarifas">
+                            <div class="mb-3">
+                                <label asp-for="FechaVigencia" class="form-label"></label>
+                                <input asp-for="FechaVigencia" class="form-control control-soft" />
+                                <span asp-validation-for="FechaVigencia" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Notas" class="form-label"></label>
+                                <textarea asp-for="Notas" class="form-control control-soft" rows="4"></textarea>
+                                <span asp-validation-for="Notas" class="text-danger"></span>
+                            </div>
+
+                            <div class="totals-box">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="lbl">Total modelado</div>
+                                    <div class="val" id="lblTotalModelado">0.00</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <div class="lbl">Total producción</div>
+                                    <div class="val" id="lblTotalProduccion">0.00</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-end mt-2 pt-2" style="border-top:1px solid var(--border2);">
+                                    <div class="val">Total</div>
+                                    <div class="val grand" id="lblTotalCotizado">0.00</div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary btn-pill btn-primary-pill w-100 mt-3" type="submit">Guardar</button>
+                            <a asp-action="Detalles" asp-route-id="@Model.CotizacionId" class="btn btn-pill btn-soft w-100 mt-2">Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="card card-soft">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="section-title">Items de la cotización</h5>
+                                <button type="button" class="btn btn-pill btn-soft" id="btnAddItem">Agregar item</button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-clean align-middle" id="tblItems">
                                     <thead>
                                         <tr>
+                                            <th style="width:140px;">Tipo</th>
+                                            <th style="width:260px;">Producto</th>
                                             <th>Concepto</th>
-                                            <th>Nombre</th>
-                                            <th class="text-end">Monto</th>
-                                            <th class="text-end">Cant</th>
-                                            <th class="text-end">Subtotal</th>
-                                            <th>Aplica a</th>
+                                            <th style="width:120px;">Cantidad</th>
+                                            <th style="width:140px;">Precio</th>
+                                            <th style="width:140px;" class="text-end">Subtotal</th>
+                                            <th style="width:200px;">Notas</th>
+                                            <th style="width:90px;"></th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tarifasBody">
-                                        <tr>
-                                            <td colspan="6" class="text-muted">Selecciona un producto para ver el desglose.</td>
-                                        </tr>
-                                    </tbody>
+                                    <tbody></tbody>
                                 </table>
                             </div>
 
-                            <div class="border-top pt-2 mt-2 d-flex justify-content-between">
-                                <div class="fw-semibold">Total costos extra</div>
-                                <div class="fw-bold" id="lblTotalTarifas">0.00</div>
+                            <div class="text-muted small">
+                                Modelado y Producción se capturan como items separados para cobrar por etapa.
                             </div>
 
-                            <div class="text-muted small mt-1">
-                                Se calcula desde recetas y tarifas. No modifica el precio de tus items.
+                            <div class="card mt-3" id="cardTarifas">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                        <h6 class="mb-0" style="font-weight:800;color:var(--text);">
+                                            Estimación basada en recetas y tarifas configuradas; 
+                                            úsalo como referencia para tu cotización.
+                                        </h6>
+                                        <small class="text-muted" id="tarifasStatus">—</small>
+                                    </div>
+
+                                    <div id="tarifasWarn" class="alert alert-warning py-2 px-3 mt-2 d-none"></div>
+
+                                    <div class="table-responsive mt-2">
+                                        <table class="table table-sm align-middle mb-0" id="tblTarifas">
+                                            <thead>
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th>Nombre</th>
+                                                    <th class="text-end">Monto</th>
+                                                    <th class="text-end">Cant</th>
+                                                    <th class="text-end">Subtotal</th>
+                                                    <th>Aplica a</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tarifasBody">
+                                                <tr>
+                                                    <td colspan="6" class="text-muted">Selecciona un producto para ver el desglose.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="border-top pt-2 mt-2 d-flex justify-content-between">
+                                        <div class="fw-semibold">Total costos extra</div>
+                                        <div class="fw-bold" id="lblTotalTarifas">0.00</div>
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        Se calcula desde recetas y tarifas. No modifica el precio de tus items.
+                                    </div>
+                                </div>
                             </div>
+
                         </div>
                     </div>
-                    @* /Panel *@
                 </div>
             </div>
-        </div>
+        </form>
     </div>
-</form>
+</div>
 
 <div class="modal fade" id="mdlProductos" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Seleccionar producto</h5>
@@ -151,7 +388,7 @@
             <div class="modal-body">
                 <input class="form-control mb-3" id="txtBuscarProducto" placeholder="Buscar..." />
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-clean align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Producto</th>
@@ -364,34 +601,34 @@
             tr.innerHTML = `
                 <td>
                     <input type="hidden" data-name="Items[__i__].CotizacionItemId" value="${item?.cotizacionItemId || 0}" />
-                    <select class="form-select form-select-sm js-tipo" data-name="Items[__i__].ConceptoTipoId">
+                    <select class="form-select form-select-sm control-soft-sm js-tipo" data-name="Items[__i__].ConceptoTipoId">
                         <option value="1" ${(item?.conceptoTipoId || 1) === 1 ? 'selected' : ''}>Modelado</option>
                         <option value="2" ${(item?.conceptoTipoId || 1) === 2 ? 'selected' : ''}>Producción</option>
                     </select>
                 </td>
                 <td>
                     <input type="hidden" class="js-producto-id" data-name="Items[__i__].ProductoId" value="${item?.productoId || ''}" />
-                    <div class="input-group input-group-sm">
-                        <input type="text" class="form-control js-producto-nombre" value="${item?.productoNombre || ''}" placeholder="Opcional" readonly />
-                        <button type="button" class="btn btn-outline-primary js-buscar">Buscar</button>
-                        <button type="button" class="btn btn-outline-secondary js-limpiar">X</button>
+                    <div class="input-group input-group-sm product-group">
+                        <input type="text" class="form-control control-soft-sm js-producto-nombre" value="${item?.productoNombre || ''}" placeholder="Opcional" readonly />
+                        <button type="button" class="btn js-buscar">Buscar</button>
+                        <button type="button" class="btn js-limpiar">X</button>
                     </div>
                 </td>
                 <td>
-                    <input class="form-control form-control-sm js-concepto" data-name="Items[__i__].Concepto" value="${item?.concepto || ''}" />
+                    <input class="form-control form-control-sm control-soft-sm js-concepto" data-name="Items[__i__].Concepto" value="${item?.concepto || ''}" />
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control form-control-sm js-cantidad" data-name="Items[__i__].Cantidad" value="${item?.cantidad || 1}" />
+                    <input type="number" step="0.01" class="form-control form-control-sm control-soft-sm js-cantidad" data-name="Items[__i__].Cantidad" value="${item?.cantidad || 1}" />
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control form-control-sm js-precio" data-name="Items[__i__].PrecioUnitario" value="${item?.precioUnitario || ''}" />
+                    <input type="number" step="0.01" class="form-control form-control-sm control-soft-sm js-precio" data-name="Items[__i__].PrecioUnitario" value="${item?.precioUnitario || ''}" />
                 </td>
-                <td class="text-end fw-semibold js-subtotal">0.00</td>
+                <td class="text-end js-subtotal">0.00</td>
                 <td>
-                    <input class="form-control form-control-sm" data-name="Items[__i__].Notas" value="${item?.notas || ''}" />
+                    <input class="form-control form-control-sm control-soft-sm" data-name="Items[__i__].Notas" value="${item?.notas || ''}" />
                 </td>
                 <td class="text-end">
-                    <button type="button" class="btn btn-outline-danger btn-sm js-remove">Quitar</button>
+                    <button type="button" class="btn btn-pill btn-soft p-0 px-3 py-1 js-remove">Quitar</button>
                 </td>
             `;
 
@@ -446,11 +683,11 @@
                     const tr = document.createElement('tr');
                     const precio = p.precioSugerido ?? '';
                     tr.innerHTML = `
-                        <td>${p.nombre || ''}</td>
+                        <td class="fw-semibold">${p.nombre || ''}</td>
                         <td>${p.productoCategoria || ''}</td>
                         <td class="text-end">${precio === '' ? '' : money(precio)}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-primary btn-sm">Seleccionar</button>
+                            <button type="button" class="btn btn-primary btn-pill btn-primary-pill p-0 px-3 py-1">Seleccionar</button>
                         </td>
                     `;
                     tr.querySelector('button').addEventListener('click', () => {
@@ -466,7 +703,7 @@
                         if (!precioInput.value && p.precioSugerido != null) precioInput.value = p.precioSugerido;
 
                         recalcTotals();
-                        schedulePreviewTarifas(); 
+                        schedulePreviewTarifas();
                         mdlProductos.hide();
                     });
                     tbody.appendChild(tr);
@@ -476,7 +713,6 @@
         document.getElementById('btnAddItem').addEventListener('click', () => addRow(null));
         document.getElementById('txtBuscarProducto').addEventListener('input', e => renderProductos(e.target.value));
 
-        
         const serverItems = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
             (Model.Items ?? new List<ManejoPresupuestos.Models.CotizacionItemEdicionViewModel>())
             .Select(x => new {

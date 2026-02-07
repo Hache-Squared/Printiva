@@ -2,147 +2,343 @@
 @{
     ViewData["Title"] = "Detalle cotización";
     var c = Model.Cotizacion;
+
+    string StatusClass(string? s)
+    {
+        var v = (s ?? "").Trim().ToLowerInvariant();
+        if (v.Contains("acept")) return "st-blue";
+        if (v.Contains("pend") || v.Contains("revision")) return "st-amber";
+        if (v.Contains("cancel")) return "st-red";
+        return "st-gray";
+    }
+
+    string TipoPillClass(string? s)
+    {
+        var v = (s ?? "").Trim().ToLowerInvariant();
+        if (v.Contains("model")) return "st-blue";
+        if (v.Contains("produc")) return "st-amber";
+        return "st-gray";
+    }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="mb-0">Cotización #@c.CotizacionId</h1>
-        <div class="text-muted">Pedido #@c.PedidoId · @c.CotizacionEstatus</div>
-    </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
-        <a asp-action="Editar" asp-route-id="@c.CotizacionId" class="btn btn-primary">Editar</a>
-        <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-outline-secondary">Pagos</a>
-    </div>
-</div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
 
-<div class="row g-3">
-    <div class="col-lg-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <div class="mb-2">
-                    <div class="text-muted">Creación</div>
-                    <div class="fw-semibold">@c.FechaCreacion.ToString("dd/MM/yyyy")</div>
-                </div>
-                <div class="mb-2">
-                    <div class="text-muted">Vigencia</div>
-                    <div class="fw-semibold">@((c.FechaVigencia?.ToString("dd/MM/yyyy")) ?? "-")</div>
-                </div>
-                <div class="mb-3">
-                    <div class="text-muted">Notas</div>
-                    <div class="fw-semibold">@((string.IsNullOrWhiteSpace(c.Notas)) ? "-" : c.Notas)</div>
-                </div>
+    body{ background: var(--pg-bg); }
 
-                <div class="border-top pt-3">
-                    <div class="d-flex justify-content-between">
-                        <div class="text-muted">Modelado</div>
-                        <div class="fw-semibold">@c.TotalModelado.ToString("0.00")</div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <div class="text-muted">Producción</div>
-                        <div class="fw-semibold">@c.TotalProduccion.ToString("0.00")</div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <div class="fw-semibold">Total</div>
-                        <div class="fw-bold fs-5">@c.TotalCotizado.ToString("0.00")</div>
-                    </div>
+    .pg-wrap{ max-width: 1220px; }
 
-                    <div class="d-flex justify-content-between mt-3">
-                        <div class="text-muted">Pagado</div>
-                        <div class="fw-semibold">@c.TotalPagado.ToString("0.00")</div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <div class="text-muted">Saldo</div>
-                        <div class="fw-bold @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</div>
-                    </div>
-                </div>
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height: 1.05;
+        margin: 0;
+    }
 
-                <div class="border-top mt-3 pt-3">
-                    <a asp-controller="Pagos" asp-action="Crear" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-primary w-100">Registrar pago</a>
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .card-soft .card-body{ padding: 1.25rem; }
+    @@media (min-width: 768px){
+        .card-soft .card-body{ padding: 1.4rem; }
+    }
+
+    .section-title{
+        color: var(--text);
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .kv .k{
+        color: var(--muted);
+        font-size: .78rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        font-weight: 850;
+        margin-bottom: .35rem;
+        white-space: nowrap;
+    }
+    .kv .v{
+        color: var(--text);
+        font-weight: 800;
+        font-size: .98rem;
+        line-height: 1.2;
+    }
+    .kv + .kv{ margin-top: .85rem; }
+
+    .totals-box{
+        background: rgba(15,23,42,.02);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        padding: .95rem 1rem;
+        margin-top: 1rem;
+    }
+    .totals-box .lbl{
+        color: var(--muted);
+        font-weight: 650;
+    }
+    .totals-box .val{
+        color: var(--text);
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .totals-box .grand{
+        font-size: 1.35rem;
+        font-weight: 900;
+    }
+
+    .st-pill{
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .36rem .72rem;
+        font-weight: 850;
+        font-size: .82rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .st-blue{ background: rgba(29,78,216,.14); color: #1D4ED8; border-color: rgba(29,78,216,.22); }
+    .st-amber{ background: rgba(245,158,11,.16); color: #92400E; border-color: rgba(245,158,11,.22); }
+    .st-red{ background: rgba(239,68,68,.14); color: #991B1B; border-color: rgba(239,68,68,.20); }
+    .st-gray{ background: rgba(148,163,184,.20); color: #334155; border-color: rgba(148,163,184,.22); }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .9rem .9rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .table-clean tbody td{
+        padding: .85rem .9rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .94rem;
+    }
+
+    .money{ white-space: nowrap; }
+
+    .danger-soft{
+        border: 1px solid rgba(239,68,68,.20) !important;
+        background: rgba(239,68,68,.06) !important;
+        color: #991B1B !important;
+    }
+    .danger-soft:hover{
+        background: rgba(239,68,68,.09) !important;
+        border-color: rgba(239,68,68,.25) !important;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Cotización #@c.CotizacionId</h1>
+                <div class="pg-subtitle">
+                    Pedido #@c.PedidoId · <span class="st-pill @StatusClass(c.CotizacionEstatus)">@c.CotizacionEstatus</span>
                 </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="Index" class="btn btn-pill btn-soft">Volver</a>
+                <a asp-action="Editar" asp-route-id="@c.CotizacionId" class="btn btn-primary btn-pill btn-primary-pill">Editar</a>
+                <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-pill btn-soft">Pagos</a>
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mt-3">
-            <div class="card-body">
-                <form asp-action="BorrarCotizacion" method="post">
-                    <input type="hidden" name="cotizacionId" value="@c.CotizacionId" />
-                    <button type="submit" class="btn btn-outline-danger w-100">Borrar cotización</button>
-                </form>
-            </div>
-        </div>
-    </div>
+        <div class="row g-3">
+            <div class="col-lg-3">
+                <div class="card card-soft">
+                    <div class="card-body">
+                        <div class="kv">
+                            <div class="k">Estatus</div>
+                            <div class="v"><span class="st-pill @StatusClass(c.CotizacionEstatus)">@c.CotizacionEstatus</span></div>
+                        </div>
 
-    <div class="col-lg-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <h5 class="mb-3">Items</h5>
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Tipo</th>
-                                <th>Producto</th>
-                                <th>Concepto</th>
-                                <th class="text-end">Cantidad</th>
-                                <th class="text-end">Precio</th>
-                                <th class="text-end">Subtotal</th>
-                                <th>Notas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var i in Model.Items)
-                        {
-                            <tr>
-                                <td><span class="badge bg-secondary">@i.ConceptoTipo</span></td>
-                                <td>@(string.IsNullOrWhiteSpace(i.ProductoNombre) ? "-" : i.ProductoNombre)</td>
-                                <td class="fw-semibold">@i.Concepto</td>
-                                <td class="text-end">@i.Cantidad.ToString("0.00")</td>
-                                <td class="text-end">@i.PrecioUnitario.ToString("0.00")</td>
-                                <td class="text-end fw-semibold">@((i.Cantidad * i.PrecioUnitario).ToString("0.00"))</td>
-                                <td>@(string.IsNullOrWhiteSpace(i.Notas) ? "-" : i.Notas)</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+                        <div class="kv">
+                            <div class="k">Creación</div>
+                            <div class="v">@c.FechaCreacion.ToString("dd/MM/yyyy")</div>
+                        </div>
 
-        <div class="card shadow-sm border-0 mt-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="mb-0">Pagos recientes</h5>
-                    <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId" class="btn btn-outline-secondary btn-sm">Ver todos</a>
-                </div>
+                        <div class="kv">
+                            <div class="k">Vigencia</div>
+                            <div class="v">@((c.FechaVigencia?.ToString("dd/MM/yyyy")) ?? "-")</div>
+                        </div>
 
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Tipo</th>
-                                <th>Método</th>
-                                <th>Referencia</th>
-                                <th class="text-end">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var p in Model.Pagos.Take(5))
-                        {
-                            <tr>
-                                <td>@p.FechaPago.ToString("dd/MM/yyyy")</td>
-                                <td><span class="badge bg-secondary">@p.PagoTipo</span></td>
-                                <td>@(string.IsNullOrWhiteSpace(p.Metodo) ? "-" : p.Metodo)</td>
-                                <td>@(string.IsNullOrWhiteSpace(p.Referencia) ? "-" : p.Referencia)</td>
-                                <td class="text-end fw-semibold">@p.Monto.ToString("0.00")</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                        <div class="kv">
+                            <div class="k">Notas</div>
+                            <div class="v">@((string.IsNullOrWhiteSpace(c.Notas)) ? "-" : c.Notas)</div>
+                        </div>
+
+                        <div class="totals-box">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="lbl">Modelado</div>
+                                <div class="val money">@c.TotalModelado.ToString("0.00")</div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div class="lbl">Producción</div>
+                                <div class="val money">@c.TotalProduccion.ToString("0.00")</div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-end mt-2 pt-2" style="border-top:1px solid var(--border2);">
+                                <div class="val">Total</div>
+                                <div class="val grand money">@c.TotalCotizado.ToString("0.00")</div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="lbl">Pagado</div>
+                                <div class="val money">@c.TotalPagado.ToString("0.00")</div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="lbl">Saldo</div>
+                                <div class="val money @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <a asp-controller="Pagos" asp-action="Crear" asp-route-cotizacionId="@c.CotizacionId"
+                               class="btn btn-primary btn-pill btn-primary-pill w-100">
+                                Registrar pago
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
+                <div class="card card-soft mt-3">
+                    <div class="card-body">
+                        <a asp-action="Borrar" asp-route-id="@c.CotizacionId" 
+                            class="btn btn-pill w-100 danger-soft">
+                            Borrar cotización
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="card card-soft">
+                    <div class="card-body">
+                        <h5 class="section-title mb-3">Items</h5>
+                        <div class="table-responsive">
+                            <table class="table table-clean align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Producto</th>
+                                        <th>Concepto</th>
+                                        <th class="text-end">Cant.</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">Subtotal</th>
+                                        <th>Notas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var i in Model.Items)
+                                {
+                                    <tr>
+                                        <td><span class="st-pill @TipoPillClass(i.ConceptoTipo)">@i.ConceptoTipo</span></td>
+                                        <td class="fw-semibold">@(string.IsNullOrWhiteSpace(i.ProductoNombre) ? "-" : i.ProductoNombre)</td>
+                                        <td class="fw-semibold">@i.Concepto</td>
+                                        <td class="text-end money">@i.Cantidad.ToString("0.00")</td>
+                                        <td class="text-end money">@i.PrecioUnitario.ToString("0.00")</td>
+                                        <td class="text-end fw-semibold money">@((i.Cantidad * i.PrecioUnitario).ToString("0.00"))</td>
+                                        <td>@(string.IsNullOrWhiteSpace(i.Notas) ? "-" : i.Notas)</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-soft mt-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="section-title mb-0">Pagos recientes</h5>
+                            <a asp-controller="Pagos" asp-action="Index" asp-route-cotizacionId="@c.CotizacionId"
+                               class="btn btn-pill btn-soft p-0 px-3 py-1">
+                                Ver todos
+                            </a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-clean align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Método</th>
+                                        <th>Referencia</th>
+                                        <th class="text-end">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var p in Model.Pagos.Take(5))
+                                {
+                                    <tr>
+                                        <td style="white-space:nowrap;">@p.FechaPago.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="st-pill @TipoPillClass(p.PagoTipo)">@p.PagoTipo</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(p.Metodo) ? "-" : p.Metodo)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(p.Referencia) ? "-" : p.Referencia)</td>
+                                        <td class="text-end fw-semibold money">@p.Monto.ToString("0.00")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
 </div>
