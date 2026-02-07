@@ -2,47 +2,188 @@
     ViewData["Title"] = "Panel de Control";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="mb-4">
-                <i class="bi bi-printer" style="font-size: 4rem; color: #0d6efd;"></i>
-            </div>
-            
-            <h1 class="display-5 fw-bold">Bienvenido al Sistema de Gestión Print3D</h1>
-            <p class="lead text-muted mt-3">
-                Tu centro de comando para la gestión de proyectos, monitoreo de impresoras, 
-                control de inventario de filamentos y flujo de trabajo de producción.
-            </p>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+        --success: #16A34A;
+        --warning: #F59E0B;
+    }
 
-            <div class="row mt-5 g-3">
-                <div class="col-sm-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-primary">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary">Pedidos</h5>
-                            <p class="card-text small">Gestiona los pedidos y productos.</p>
-                        </div>
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 1180px; }
+
+    .hero{
+        background: linear-gradient(135deg, rgba(29,78,216,.10), rgba(99,102,241,.06));
+        border: 1px solid rgba(15,23,42,.08);
+        border-radius: 22px;
+        box-shadow: 0 14px 34px rgba(2,6,23,.08);
+        overflow: hidden;
+    }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 950;
+        letter-spacing: -.03em;
+        font-size: clamp(2.1rem, 1.55rem + 1.35vw, 3.1rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: 1.02rem;
+        margin-top: .75rem;
+        max-width: 85ch;
+    }
+
+    .hero-icon{
+        width: 74px;
+        height: 74px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(29,78,216,.12);
+        border: 1px solid rgba(29,78,216,.18);
+        color: var(--primary);
+        box-shadow: 0 12px 26px rgba(29,78,216,.14);
+    }
+    .hero-icon i{ font-size: 2.1rem; }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .62rem 1.06rem;
+        font-weight: 850;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .card-soft:hover{
+        transform: translateY(-1px);
+        box-shadow: 0 14px 40px rgba(2,6,23,.10);
+    }
+
+    .kicker{
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        font-size: .72rem;
+        color: rgba(100,116,139,.95);
+    }
+
+    .card-title{
+        font-weight: 950;
+        letter-spacing: -.01em;
+        margin-bottom: .35rem;
+        color: var(--text);
+        font-size: 1.05rem;
+    }
+    .card-text{
+        color: var(--muted);
+        margin: 0;
+        font-size: .95rem;
+        line-height: 1.35;
+    }
+
+    .tone{
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-right: .5rem;
+        vertical-align: middle;
+    }
+    .tone.primary{ background: var(--primary); box-shadow: 0 0 0 4px rgba(29,78,216,.10); }
+    .tone.success{ background: var(--success); box-shadow: 0 0 0 4px rgba(22,163,74,.10); }
+    .tone.warning{ background: var(--warning); box-shadow: 0 0 0 4px rgba(245,158,11,.12); }
+
+    .grid-gap{ row-gap: 14px; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="hero p-4 p-md-5">
+            <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="hero-icon">
+                        <i class="bi bi-printer"></i>
+                    </div>
+                    <div>
+                        <div class="kicker">Panel de control</div>
+                        <h1 class="pg-title mt-1">Bienvenido al Sistema de Gestión Print3D</h1>
+                        <p class="pg-subtitle">
+                            Tu centro de comando para la gestión de proyectos, monitoreo de impresoras,
+                            control de inventario de filamentos y flujo de trabajo de producción.
+                        </p>
                     </div>
                 </div>
-                
+            </div>
+
+            <div class="row mt-4 mt-md-5 grid-gap g-3">
                 <div class="col-sm-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-success">
-                        <div class="card-body">
-                            <h5 class="card-title text-success">Producción</h5>
-                            <p class="card-text small">Monitorea el estado de los materiales y la gestión de procesos.</p>
+                    <div class="card card-soft h-100">
+                        <div class="card-body p-4">
+                            <div class="kicker mb-2">
+                                <span class="tone primary"></span>Sección
+                            </div>
+                            <div class="card-title">Pedidos</div>
+                            <p class="card-text">Gestiona los pedidos y productos.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-sm-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-warning">
-                        <div class="card-body">
-                            <h5 class="card-title text-warning">Inventario</h5>
-                            <p class="card-text small">Control de stock de filamentos y materiales.</p>
+                    <div class="card card-soft h-100">
+                        <div class="card-body p-4">
+                            <div class="kicker mb-2">
+                                <span class="tone success"></span>Sección
+                            </div>
+                            <div class="card-title">Producción</div>
+                            <p class="card-text">Monitorea el estado de los materiales y la gestión de procesos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card card-soft h-100">
+                        <div class="card-body p-4">
+                            <div class="kicker mb-2">
+                                <span class="tone warning"></span>Sección
+                            </div>
+                            <div class="card-title">Inventario</div>
+                            <p class="card-text">Control de stock de filamentos y materiales.</p>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
+
     </div>
 </div>
