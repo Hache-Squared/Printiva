@@ -3,15 +3,125 @@
     ViewData["Title"] = "Borrar Producto";
 }
 
-<h3>¿Esta seguro de querer borrar el producto @Model.Nombre?</h3>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+    }
 
-<form asp-action="BorrarProducto">
-    <input type="hidden" asp-for="ProductoId" />
+    body{ background: var(--pg-bg); }
 
-    <button class="btn btn-danger" type="submit">
-        Borrar
-    </button>
-    <a asp-action="Index" class="btn btn-secondary">
-        Cancelar
-    </a>
-</form>
+    .pg-wrap{ max-width: 920px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.45rem + 1.2vw, 2.6rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .danger-box{
+        background: rgba(239,68,68,.06);
+        border: 1px solid rgba(239,68,68,.14);
+        border-radius: 14px;
+        padding: .95rem 1rem;
+        color: var(--text);
+    }
+
+    .danger-title{
+        font-weight: 900;
+        margin: 0;
+        color: var(--text);
+        letter-spacing: -.01em;
+    }
+
+    .danger-hint{
+        color: var(--muted);
+        margin-top: .4rem;
+        margin-bottom: 0;
+    }
+
+    .name-pill{
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .35rem .75rem;
+        font-weight: 850;
+        background: rgba(15,23,42,.05);
+        border: 1px solid rgba(15,23,42,.08);
+        color: #0F172A;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+            <div>
+                <h1 class="pg-title">Borrar producto</h1>
+                <div class="pg-subtitle">Confirma la eliminacion del producto seleccionado.</div>
+            </div>
+            <a asp-action="Index" class="btn btn-pill btn-soft">Volver</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-3 p-md-4">
+                <div class="danger-box mb-3">
+                    <p class="danger-title">¿Esta seguro de querer borrar este producto?</p>
+                    <p class="danger-hint">
+                        Producto:
+                        <span class="name-pill">@Model.Nombre</span>
+                    </p>
+                </div>
+
+                <form asp-action="BorrarProducto">
+                    <input type="hidden" asp-for="ProductoId" />
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-danger btn-pill" type="submit">Borrar</button>
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,11 +1,47 @@
 ﻿@model SubMenuProductos;
 
-<ul class="nav nav-pills nav-fill mb-3">
+<style>
+    :root{
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+    }
+
+    .pg-tabs{
+        border-bottom: 1px solid var(--border);
+        gap: 1.25rem;
+        padding-bottom: .35rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .pg-tabs .nav-link{
+        padding: .55rem 0;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 800;
+        font-size: .92rem;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+    }
+
+    .pg-tabs .nav-link:hover{
+        color: var(--text);
+    }
+
+    .pg-tabs .nav-link.active{
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+</style>
+
+<ul class="nav pg-tabs">
     <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuProductos.Productos ? "active" : null) " asp-action="Index">Productos</a>
+        <a class="nav-link @(Model == SubMenuProductos.Productos ? "active" : null)" asp-action="Index">Productos</a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuProductos.Categorias ? "active" : null) " asp-action="Categorias">Categorias</a>
+        <a class="nav-link @(Model == SubMenuProductos.Categorias ? "active" : null)" asp-action="Categorias">Categorias</a>
     </li>
 </ul>

@@ -1,30 +1,120 @@
 ﻿@model ProductoCategoria;
 @{
-	ViewData["Title"] = "Crear Categoría de Producto";
+    ViewData["Title"] = "Crear Categoría de Producto";
 }
 
-<h1>Crear categoría de producto</h1>
-<h5>
-    Una categoría de producto sirve para dividir el tipo de producto que se vende.
-</h5>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+    }
 
-<form asp-action="CrearCategoria" class="">
-    <div asp-validation-summary="ModelOnly" class="text-danger">
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 920px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.45rem + 1.2vw, 2.7rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .form-label{
+        color: var(--text);
+        font-weight: 750;
+        margin-bottom: .45rem;
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .72rem;
+        padding-bottom: .72rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+            <div>
+                <h1 class="pg-title">Crear categoria</h1>
+                <div class="pg-subtitle">Una categoria de producto sirve para dividir el tipo de producto que se vende.</div>
+            </div>
+            <a asp-action="Categorias" class="btn btn-pill btn-soft">Volver</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-3 p-md-4">
+                <form asp-action="CrearCategoria" class="">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control control-soft" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-primary btn-pill btn-primary-pill" type="submit">Enviar</button>
+                        <a asp-action="Categorias" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
-    </div>
-
-    <button class="btn btn-primary" type="submit">
-        Enviar
-    </button>
-    <a asp-action="Categorias" class="btn btn-secondary">
-        Cancelar
-    </a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

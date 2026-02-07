@@ -3,40 +3,168 @@
     ViewData["Title"] = "Productos";
 }
 
-<partial name="_Submenu" model="SubMenuProductos.Productos" />
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+        --danger: #EF4444;
+    }
 
-<h1>Productos</h1>
-<h5>
-    Un producto es el objeto que vendemos al público.
-</h5>
+    body{ background: var(--pg-bg); }
 
-<a asp-action="Crear" class="btn btn-primary mb-3">Crear Nuevo</a>
+    .pg-wrap{ max-width: 1120px; }
 
-<table class="table">
-    <thead>
-    <th>Acciones</th>
-    <th>Nombre</th>
-    <th>Categoría</th>
-    <th>Precio sugerido</th>
-    </thead>
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.45rem + 1.3vw, 2.85rem);
+        line-height: 1.05;
+        margin: 0;
+    }
 
-    <tbody>
-        @foreach (var producto in Model)
-        {
-            <tr>
-                <td>
-                    <a class="btn btn-primary" asp-action="Editar" asp-route-id="@producto.ProductoId">Editar</a>
-                    <a class="btn btn-danger" asp-action="Borrar" asp-route-id="@producto.ProductoId">Borrar</a>
-                </td>
-                <td>
-                    @producto.Nombre
-                </td>
-                <td>
-                    @producto.ProductoCategoria
-                </td>
-                <td>@((producto.PrecioSugerido ?? 0).ToString("0.00"))</td>
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 70ch;
+    }
 
-            </tr>
-        }
-    </tbody>
-</table>
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .85rem .95rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .table-clean tbody td{
+        padding: .72rem .95rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .95rem;
+    }
+
+    .act-wrap{
+        display:flex;
+        gap:.5rem;
+        justify-content:flex-end;
+        flex-wrap:wrap;
+        white-space:nowrap;
+    }
+    .act-btn{
+        border-radius: 999px;
+        padding: .42rem .85rem;
+        font-weight: 850;
+        font-size: .88rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+    .act-edit{
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+        box-shadow: 0 10px 18px rgba(29,78,216,.14);
+    }
+    .act-del{
+        background: rgba(239,68,68,.10);
+        border-color: rgba(239,68,68,.22);
+        color: #B91C1C;
+    }
+    .act-del:hover{
+        background: rgba(239,68,68,.14);
+        border-color: rgba(239,68,68,.28);
+        color: #991B1B;
+    }
+
+    .money{ white-space: nowrap; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+            <div>
+                <h1 class="pg-title">Productos</h1>
+                <div class="pg-subtitle">Un producto es el objeto que vendemos al publico.</div>
+            </div>
+
+            <a asp-action="Crear" class="btn btn-primary btn-pill btn-primary-pill">Crear nuevo</a>
+        </div>
+
+        <partial name="_Submenu" model="SubMenuProductos.Productos" />
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoria</th>
+                                <th class="text-end">Precio sugerido</th>
+                                <th class="text-end" style="width: 220px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in Model)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@producto.Nombre</td>
+                                    <td class="text-muted">@producto.ProductoCategoria</td>
+                                    <td class="text-end money">@((producto.PrecioSugerido ?? 0).ToString("0.00"))</td>
+                                    <td class="text-end">
+                                        <div class="act-wrap">
+                                            <a class="btn act-btn act-edit" asp-action="Editar" asp-route-id="@producto.ProductoId">Editar</a>
+                                            <a class="btn act-btn act-del" asp-action="Borrar" asp-route-id="@producto.ProductoId">Borrar</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
