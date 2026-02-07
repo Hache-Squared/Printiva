@@ -236,6 +236,12 @@
                            asp-route-pedidoId="@Model.PedidoId">
                             Exportar Excel
                         </a>
+                        <a class="btn btn-outline-secondary"
+                           asp-controller="Pedidos"
+                           asp-action="Detalles"
+                           asp-route-id="@Model.PedidoId">
+                            Acciones
+                        </a>
                     }
                     <a class="btn btn-outline-secondary" href="/Reportes/Pedido360">Limpiar</a>
                 </div>
