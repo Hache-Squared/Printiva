@@ -3,132 +3,306 @@
     ViewData["Title"] = "Editar Pedido";
 }
 
-<div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h1 class="mb-1">Editar pedido</h1>
-            <div class="text-muted">Actualiza datos generales e items del pedido.</div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+    }
+
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 1200px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        font-size: clamp(1.9rem, 1.2rem + 1.4vw, 2.8rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .45rem;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .55rem 1rem;
+        font-weight: 750;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .section-title{
+        color: var(--text);
+        font-weight: 850;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .form-label{
+        color: var(--text);
+        font-weight: 700;
+        margin-bottom: .5rem;
+        font-size: .92rem;
+    }
+
+    .ctrl{
+        border-radius: 14px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding: .62rem .85rem;
+        font-size: .95rem;
+    }
+    .ctrl:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .textarea{
+        min-height: 140px;
+        resize: vertical;
+    }
+
+    .btn-action{
+        border-radius: 999px;
+        padding: .8rem 1rem;
+        font-weight: 800;
+        font-size: .95rem;
+    }
+
+    .hint{
+        color: var(--muted);
+        font-size: .9rem;
+        font-weight: 650;
+    }
+
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 800;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .9rem 1rem;
+        border-bottom: 1px solid rgba(15,23,42,.08);
+        white-space: nowrap;
+    }
+
+    .table-clean tbody td{
+        padding: .85rem 1rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .92rem;
+    }
+
+    .btn-mini{
+        border-radius: 999px;
+        padding: .45rem .85rem;
+        font-weight: 750;
+        font-size: .88rem;
+        white-space: nowrap;
+    }
+
+    .btn-danger-soft{
+        background: rgba(239,68,68,.08);
+        color: #DC2626;
+        border-color: rgba(239,68,68,.14);
+    }
+
+    .table-responsive{
+        scrollbar-width: thin;
+        scrollbar-color: rgba(15,23,42,.14) transparent;
+    }
+    .table-responsive::-webkit-scrollbar{ height: 6px; }
+    .table-responsive::-webkit-scrollbar-track{ background: transparent; }
+    .table-responsive::-webkit-scrollbar-thumb{
+        background: rgba(15,23,42,.12);
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+    .table-responsive:hover::-webkit-scrollbar-thumb{
+        background: rgba(15,23,42,.20);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .modal-content{
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 18px 60px rgba(2,6,23,.25);
+    }
+    .modal-header{
+        border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .modal-title{
+        font-weight: 850;
+        color: var(--text);
+    }
+
+    .products-search{
+        max-width: 560px;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Editar pedido</h1>
+                <div class="pg-subtitle">Actualiza datos generales e items del pedido.</div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-pill btn-soft" asp-action="Detalles" asp-route-id="@Model.PedidoId">Volver</a>
+                <a class="btn btn-pill btn-soft" asp-action="Index">Lista</a>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" asp-action="Detalles" asp-route-id="@Model.PedidoId">Volver</a>
-            <a class="btn btn-outline-secondary" asp-action="Index">Lista</a>
-        </div>
-    </div>
 
-    <form asp-action="Editar" method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        <input type="hidden" asp-for="PedidoId" />
-        <input type="hidden" asp-for="PedidoEstatusId" />
+        <form asp-action="Editar" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="PedidoId" />
+            <input type="hidden" asp-for="PedidoEstatusId" />
 
-        <div class="row g-3">
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label asp-for="ClienteId" class="form-label"></label>
-                            <select asp-for="ClienteId" asp-items="@Model.Clientes" class="form-select"></select>
-                            <span asp-validation-for="ClienteId" class="text-danger"></span>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card card-soft">
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label asp-for="ClienteId" class="form-label"></label>
+                                <select asp-for="ClienteId" asp-items="@Model.Clientes" class="form-select ctrl"></select>
+                                <span asp-validation-for="ClienteId" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Estatus</label>
+                                @{
+                                    var estatusNombre = Model.Estatus?
+                                        .FirstOrDefault(x => x.Value == Model.PedidoEstatusId.ToString())
+                                        ?.Text ?? "";
+                                }
+
+                                <input class="form-control ctrl" value="@estatusNombre" disabled />
+                                <div class="form-text hint">El estatus se cambia desde Acciones / Kanban.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="FechaEntregaEstimada" class="form-label"></label>
+                                <input asp-for="FechaEntregaEstimada" class="form-control ctrl" />
+                                <span asp-validation-for="FechaEntregaEstimada" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="TotalEstimado" class="form-label"></label>
+                                <input asp-for="TotalEstimado" class="form-control ctrl" />
+                                <span asp-validation-for="TotalEstimado" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Notas" class="form-label"></label>
+                                <textarea asp-for="Notas" class="form-control ctrl textarea" rows="4"></textarea>
+                                <span asp-validation-for="Notas" class="text-danger"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-action btn-primary-pill w-100">Guardar cambios</button>
+                            <a asp-action="Detalles" asp-route-id="@Model.PedidoId" class="btn btn-action btn-soft w-100 mt-2">Cancelar</a>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Estatus</label>
-                            @{
-                                var estatusNombre = Model.Estatus?
-                                    .FirstOrDefault(x => x.Value == Model.PedidoEstatusId.ToString())
-                                    ?.Text ?? "";
-                            }
-
-                            <input class="form-control" value="@estatusNombre" disabled />
-                            <div class="form-text">El estatus se cambia desde Acciones / Kanban.</div>
-                        </div>
-
-
-                        <div class="mb-3">
-                            <label asp-for="FechaEntregaEstimada" class="form-label"></label>
-                            <input asp-for="FechaEntregaEstimada" class="form-control" />
-                            <span asp-validation-for="FechaEntregaEstimada" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="TotalEstimado" class="form-label"></label>
-                            <input asp-for="TotalEstimado" class="form-control" />
-                            <span asp-validation-for="TotalEstimado" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Notas" class="form-label"></label>
-                            <textarea asp-for="Notas" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="Notas" class="text-danger"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Guardar cambios</button>
-                        <a asp-action="Detalles" asp-route-id="@Model.PedidoId" class="btn btn-outline-secondary w-100 mt-2">Cancelar</a>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="mb-0">Items del pedido</h5>
-                            <button type="button" class="btn btn-outline-primary" id="btnAddRow">Agregar item</button>
-                        </div>
+                <div class="col-lg-8">
+                    <div class="card card-soft">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+                                <h5 class="section-title">Items del pedido</h5>
+                                <button type="button" class="btn btn-pill btn-soft" id="btnAddRow">Agregar item</button>
+                            </div>
 
-                        <div class="table-responsive">
-                            <table class="table align-middle" id="itemsTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 240px;">Producto</th>
-                                        <th>Seleccionado</th>
-                                        <th style="width: 120px;">Cantidad</th>
-                                        <th style="width: 170px;">Precio unit.</th>
-                                        <th>Notas</th>
-                                        <th style="width: 80px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @for (int i = 0; i < Model.Items.Count; i++)
-                                    {
+                            <div class="table-responsive">
+                                <table class="table table-clean align-middle" id="itemsTable">
+                                    <thead>
                                         <tr>
-                                            <td>
-                                                <div class="d-flex gap-2">
-                                                    <input asp-for="Items[@i].ProductoId" class="form-control" readonly />
-                                                    <button type="button" class="btn btn-outline-primary btnPickProduct" data-row="@i">Buscar</button>
-                                                </div>
-                                                <span asp-validation-for="Items[@i].ProductoId" class="text-danger"></span>
-                                            </td>
-                                            <td>
-                                                <input asp-for="Items[@i].ProductoNombre" class="form-control" readonly />
-                                            </td>
-                                            <td>
-                                                <input asp-for="Items[@i].Cantidad" class="form-control" />
-                                                <span asp-validation-for="Items[@i].Cantidad" class="text-danger"></span>
-                                            </td>
-                                            <td>
-                                                <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control" />
-                                                <span asp-validation-for="Items[@i].PrecioUnitarioEstimado" class="text-danger"></span>
-                                            </td>
-                                            <td>
-                                                <input asp-for="Items[@i].Notas" class="form-control" />
-                                            </td>
-                                            <td class="text-end">
-                                                <button type="button" class="btn btn-outline-danger btnRemoveRow">Quitar</button>
-                                            </td>
+                                            <th style="width: 220px;">Producto</th>
+                                            <th>Seleccionado</th>
+                                            <th style="width: 110px;">Cantidad</th>
+                                            <th style="width: 150px;">Precio unit.</th>
+                                            <th>Notas</th>
+                                            <th style="width: 90px;"></th>
                                         </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.Items.Count; i++)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex gap-2">
+                                                        <input asp-for="Items[@i].ProductoId" class="form-control ctrl" readonly />
+                                                        <button type="button" class="btn btn-mini btn-soft btnPickProduct" data-row="@i">Buscar</button>
+                                                    </div>
+                                                    <span asp-validation-for="Items[@i].ProductoId" class="text-danger"></span>
+                                                </td>
+                                                <td>
+                                                    <input asp-for="Items[@i].ProductoNombre" class="form-control ctrl" readonly />
+                                                </td>
+                                                <td>
+                                                    <input asp-for="Items[@i].Cantidad" class="form-control ctrl" />
+                                                    <span asp-validation-for="Items[@i].Cantidad" class="text-danger"></span>
+                                                </td>
+                                                <td>
+                                                    <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control ctrl" />
+                                                    <span asp-validation-for="Items[@i].PrecioUnitarioEstimado" class="text-danger"></span>
+                                                </td>
+                                                <td>
+                                                    <input asp-for="Items[@i].Notas" class="form-control ctrl" />
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-mini btn-danger-soft btnRemoveRow">Quitar</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        <div class="text-muted small">
-                            Si vas a cargar el nombre a mano aquí, es solo visual; lo válido es el ProductoId.
+                            <div class="hint mt-2">
+                                Si vas a cargar el nombre a mano aquí, es solo visual; lo válido es el ProductoId.
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 <div class="modal fade" id="modalProductos" tabindex="-1">
@@ -138,16 +312,18 @@
                 <h5 class="modal-title">Seleccionar producto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input class="form-control mb-3" id="txtBuscarProducto" placeholder="Buscar por nombre o categoría..." />
+            <div class="modal-body p-4">
+                <div class="products-search mx-auto">
+                    <input class="form-control ctrl mb-3" id="txtBuscarProducto" placeholder="Buscar por nombre o categoría..." />
+                </div>
                 <div class="table-responsive">
-                    <table class="table align-middle">
+                    <table class="table table-clean align-middle">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
                                 <th>Categoría</th>
                                 <th class="text-end">Precio sugerido</th>
-                                <th style="width: 120px;"></th>
+                                <th style="width: 140px;"></th>
                             </tr>
                         </thead>
                         <tbody id="tbodyProductos"></tbody>
@@ -157,7 +333,6 @@
         </div>
     </div>
 </div>
-
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -196,7 +371,7 @@
                         <td>${escapeHtml(p.categoria || '')}</td>
                         <td class="text-end">${Number(p.precioSugerido || 0).toFixed(2)}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-success btnSelectProduct"
+                            <button type="button" class="btn btn-success btn-mini btnSelectProduct"
                                 data-id="${p.productoId}"
                                 data-nombre="${escapeAttr(p.nombre)}"
                                 data-precio="${p.precioSugerido}">
@@ -301,27 +476,27 @@
                 tr.innerHTML = `
                     <td>
                         <div class="d-flex gap-2">
-                            <input class="form-control" name="Items[${idx}].ProductoId" readonly />
-                            <button type="button" class="btn btn-outline-primary btnPickProduct" data-row="${idx}">Buscar</button>
+                            <input class="form-control ctrl" name="Items[${idx}].ProductoId" readonly />
+                            <button type="button" class="btn btn-mini btn-soft btnPickProduct" data-row="${idx}">Buscar</button>
                         </div>
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].ProductoId" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <input class="form-control" name="Items[${idx}].ProductoNombre" readonly />
+                        <input class="form-control ctrl" name="Items[${idx}].ProductoNombre" readonly />
                     </td>
                     <td>
-                        <input class="form-control" name="Items[${idx}].Cantidad" value="1" />
+                        <input class="form-control ctrl" name="Items[${idx}].Cantidad" value="1" />
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].Cantidad" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <input class="form-control" name="Items[${idx}].PrecioUnitarioEstimado" />
+                        <input class="form-control ctrl" name="Items[${idx}].PrecioUnitarioEstimado" />
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].PrecioUnitarioEstimado" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <input class="form-control" name="Items[${idx}].Notas" />
+                        <input class="form-control ctrl" name="Items[${idx}].Notas" />
                     </td>
                     <td class="text-end">
-                        <button type="button" class="btn btn-outline-danger btnRemoveRow">Quitar</button>
+                        <button type="button" class="btn btn-mini btn-danger-soft btnRemoveRow">Quitar</button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
@@ -339,5 +514,4 @@
             });
         })();
     </script>
-
 }

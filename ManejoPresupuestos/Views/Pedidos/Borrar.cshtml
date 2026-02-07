@@ -3,30 +3,124 @@
     ViewData["Title"] = "Borrar Pedido";
 }
 
-<div class="container py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <h1 class="mb-2">Borrar pedido</h1>
-            <div class="text-muted mb-4">Esta acción elimina el pedido y sus items.</div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --danger: #DC2626;
+    }
 
-            <div class="mb-3">
-                <div class="text-muted small">Cliente</div>
-                <div class="fw-semibold">@Model.ClienteNombre</div>
-            </div>
-            <div class="mb-3">
-                <div class="text-muted small">Estatus</div>
-                <div class="fw-semibold">@Model.EstatusNombre</div>
-            </div>
-            <div class="mb-3">
-                <div class="text-muted small">Fecha creación</div>
-                <div class="fw-semibold">@Model.FechaCreacion.ToString("dd/MM/yyyy")</div>
-            </div>
+    body{ background: var(--pg-bg); }
 
-            <form asp-action="BorrarPedido" method="post" class="d-flex gap-2">
-                <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
-                <button class="btn btn-danger" type="submit">Borrar</button>
-                <a class="btn btn-outline-secondary" asp-action="Detalles" asp-route-id="@Model.PedidoId">Cancelar</a>
-            </form>
+    .pg-wrap{ max-width: 920px; }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(1.9rem, 1.3rem + 1.2vw, 2.6rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .5rem;
+    }
+
+    .kv{
+        padding: .9rem 1rem;
+        border: 1px solid rgba(15,23,42,.08);
+        border-radius: 14px;
+        background: rgba(15,23,42,.02);
+    }
+
+    .kv-label{
+        color: var(--muted);
+        font-weight: 750;
+        font-size: .78rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+
+    .kv-value{
+        color: var(--text);
+        font-weight: 850;
+        font-size: .98rem;
+        margin: 0;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .7rem 1.05rem;
+        font-weight: 800;
+        font-size: .95rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-danger-pill{
+        background: var(--danger);
+        border-color: var(--danger);
+        box-shadow: 0 12px 24px rgba(220,38,38,.14);
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <div class="card card-soft">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="pg-title mb-2">Borrar pedido</h1>
+                <div class="pg-subtitle mb-4">Esta acción elimina el pedido y sus items.</div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="kv-label">Cliente</div>
+                            <div class="kv-value">@Model.ClienteNombre</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="kv-label">Estatus</div>
+                            <div class="kv-value">@Model.EstatusNombre</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="kv">
+                            <div class="kv-label">Fecha creacion</div>
+                            <div class="kv-value">@Model.FechaCreacion.ToString("dd/MM/yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="BorrarPedido" method="post" class="d-flex gap-2 flex-wrap">
+                    <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                    <button class="btn btn-danger btn-pill btn-danger-pill" type="submit">Borrar</button>
+                    <a class="btn btn-pill btn-soft" asp-action="Detalles" asp-route-id="@Model.PedidoId">Cancelar</a>
+                </form>
+            </div>
         </div>
     </div>
 </div>

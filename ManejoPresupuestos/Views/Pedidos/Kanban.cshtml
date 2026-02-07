@@ -76,6 +76,8 @@
         border-radius: 12px;
         border-color: rgba(15,23,42,.10);
         background: rgba(15,23,42,.03);
+        font-size: .98rem;
+        padding: .65rem .9rem;
     }
     .kb-control:focus{
         border-color: rgba(29,78,216,.40);
@@ -84,8 +86,8 @@
     }
 
     .kb-check .form-check-input{
-        width: 1.1rem;
-        height: 1.1rem;
+        width: 1.05rem;
+        height: 1.05rem;
         border-color: rgba(15,23,42,.18);
     }
     .kb-check .form-check-label{
@@ -95,7 +97,7 @@
 
     .kb-btn-update{
         border-radius: 12px;
-        padding: .95rem 1rem;
+        padding: .85rem 1rem;
         font-weight: 750;
         background: var(--kb-primary);
         border-color: var(--kb-primary);
@@ -183,6 +185,10 @@
         box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
         background: #fff;
     }
+
+    .kb-filters{
+        max-width: 920px;
+    }
 </style>
 
 <div class="container-xxl kb-page py-4">
@@ -200,34 +206,36 @@
 
     <div class="card kb-card mb-4">
         <div class="card-body p-4 p-md-5">
-            <div class="row g-4">
-                <div class="col-12">
-                    <label class="form-label kb-form-label">Buscar</label>
-                    <input id="kbSearch" class="form-control form-control-lg kb-control" placeholder="Cliente, notas o #Pedido" />
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label kb-form-label">Cliente</label>
-                    <select id="kbClienteId" class="form-select form-select-lg kb-control">
-                        <option value="0">Todos</option>
-                        @foreach (var c in Model.Clientes)
-                        {
-                            <option value="@c.Value">@c.Text</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="col-12">
-                    <div class="form-check kb-check">
-                        <input class="form-check-input" type="checkbox" id="kbSoloPendientes" />
-                        <label class="form-check-label" for="kbSoloPendientes">
-                            Solo con saldo pendiente
-                        </label>
+            <div class="kb-filters mx-auto">
+                <div class="row g-3 align-items-end justify-content-center">
+                    <div class="col-12 col-md-7">
+                        <label class="form-label kb-form-label">Buscar</label>
+                        <input id="kbSearch" class="form-control kb-control" placeholder="Cliente, notas o #Pedido" />
                     </div>
-                </div>
 
-                <div class="col-12">
-                    <button id="kbReload" class="btn btn-primary w-100 kb-btn-update">Actualizar</button>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label kb-form-label">Cliente</label>
+                        <select id="kbClienteId" class="form-select kb-control">
+                            <option value="0">Todos</option>
+                            @foreach (var c in Model.Clientes)
+                            {
+                                <option value="@c.Value">@c.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-7">
+                        <div class="form-check kb-check">
+                            <input class="form-check-input" type="checkbox" id="kbSoloPendientes" />
+                            <label class="form-check-label" for="kbSoloPendientes">
+                                Solo con saldo pendiente
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-5">
+                        <button id="kbReload" class="btn btn-primary w-100 kb-btn-update">Actualizar</button>
+                    </div>
                 </div>
             </div>
         </div>
