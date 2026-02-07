@@ -3,29 +3,212 @@
     ViewData["Title"] = "Kanban de Pedidos";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+<style>
+    :root{
+        --kb-bg: #F6F7FB;
+        --kb-card: rgba(255,255,255,.96);
+        --kb-text: #0F172A;
+        --kb-muted: #64748B;
+        --kb-border: rgba(15, 23, 42, .08);
+        --kb-primary: #1D4ED8;
+    }
+
+    body{
+        background: var(--kb-bg);
+    }
+
+    .kb-page{
+        max-width: 1400px;
+    }
+
+    .kb-title{
+        color: var(--kb-text);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.4rem + 1.6vw, 3rem);
+        line-height: 1.05;
+    }
+
+    .kb-subtitle{
+        color: var(--kb-muted);
+        font-size: 1.05rem;
+    }
+
+    .kb-top-actions .btn{
+        border-radius: 999px;
+        padding: .6rem 1.05rem;
+        font-weight: 650;
+    }
+
+    .kb-top-actions .btn-outline-secondary{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .kb-top-actions .btn-outline-secondary:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .kb-top-actions .btn-primary{
+        background: var(--kb-primary);
+        border-color: var(--kb-primary);
+        box-shadow: 0 10px 22px rgba(29,78,216,.18);
+    }
+    .kb-top-actions .btn-primary:hover{
+        filter: brightness(.98);
+    }
+
+    .kb-card{
+        background: var(--kb-card);
+        border: 1px solid var(--kb-border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2, 6, 23, .08);
+    }
+
+    .kb-form-label{
+        color: var(--kb-text);
+        font-weight: 700;
+        margin-bottom: .5rem;
+    }
+
+    .kb-control{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+    }
+    .kb-control:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .kb-check .form-check-input{
+        width: 1.1rem;
+        height: 1.1rem;
+        border-color: rgba(15,23,42,.18);
+    }
+    .kb-check .form-check-label{
+        color: var(--kb-text);
+        font-weight: 600;
+    }
+
+    .kb-btn-update{
+        border-radius: 12px;
+        padding: .95rem 1rem;
+        font-weight: 750;
+        background: var(--kb-primary);
+        border-color: var(--kb-primary);
+        box-shadow: 0 12px 26px rgba(29,78,216,.16);
+    }
+
+    .kb-board{
+        scrollbar-width: thin;
+        scrollbar-color: rgba(15,23,42,.14) transparent;
+    }
+    .kb-board::-webkit-scrollbar{ height: 6px; }
+    .kb-board::-webkit-scrollbar-track{ background: transparent; }
+    .kb-board::-webkit-scrollbar-thumb{
+        background: rgba(15,23,42,.12);
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+    .kb-board:hover::-webkit-scrollbar-thumb{
+        background: rgba(15,23,42,.20);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .kb-col{
+        background: var(--kb-card);
+        border: 1px solid var(--kb-border);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(2, 6, 23, .06);
+    }
+
+    .kb-col-title{
+        color: var(--kb-text);
+        font-weight: 800;
+    }
+
+    .kb-count{
+        background: rgba(15,23,42,.04) !important;
+        color: var(--kb-text) !important;
+        border: 1px solid rgba(15,23,42,.08);
+        padding: .35rem .6rem;
+        font-weight: 750;
+    }
+
+    #kbBoard [data-col] .card{
+        border-radius: 16px !important;
+        border: 1px solid rgba(15,23,42,.06) !important;
+        background: rgba(255,255,255,.98);
+        box-shadow: 0 10px 24px rgba(2, 6, 23, .06) !important;
+        transition: transform .08s ease, box-shadow .15s ease;
+    }
+    #kbBoard [data-col] .card:hover{
+        transform: translateY(-1px);
+        box-shadow: 0 14px 32px rgba(2, 6, 23, .10) !important;
+    }
+
+    #kbBoard [data-col] .btn-sm{
+        border-radius: 999px;
+        padding: .35rem .65rem;
+        font-weight: 650;
+    }
+
+    .modal-content{
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 18px 60px rgba(2, 6, 23, .25);
+    }
+
+    .modal-header{
+        border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+
+    .modal-title{
+        font-weight: 800;
+        color: var(--kb-text);
+    }
+
+    .modal-body .form-control{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+    }
+    .modal-body .form-control:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+</style>
+
+<div class="container-xxl kb-page py-4">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
         <div>
-            <h1 class="mb-1">Kanban</h1>
-            <div class="text-muted">Vista operativa: mueve pedidos con acciones permitidas y ve cotización/pagos al vuelo.</div>
+            <div class="kb-title mb-2">Kanban</div>
+            <div class="kb-subtitle">Vista operativa: mueve pedidos con acciones permitidas y ve cotización/pagos al vuelo.</div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap kb-top-actions">
             <a class="btn btn-outline-secondary" asp-action="Index">Lista</a>
             <a class="btn btn-primary" asp-action="Crear">Crear pedido</a>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label">Buscar</label>
-                    <input id="kbSearch" class="form-control" placeholder="Cliente, notas o #Pedido" />
+    <div class="card kb-card mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-4">
+                <div class="col-12">
+                    <label class="form-label kb-form-label">Buscar</label>
+                    <input id="kbSearch" class="form-control form-control-lg kb-control" placeholder="Cliente, notas o #Pedido" />
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Cliente</label>
-                    <select id="kbClienteId" class="form-select">
+
+                <div class="col-12">
+                    <label class="form-label kb-form-label">Cliente</label>
+                    <select id="kbClienteId" class="form-select form-select-lg kb-control">
                         <option value="0">Todos</option>
                         @foreach (var c in Model.Clientes)
                         {
@@ -33,43 +216,43 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <div class="form-check mt-4">
+
+                <div class="col-12">
+                    <div class="form-check kb-check">
                         <input class="form-check-input" type="checkbox" id="kbSoloPendientes" />
                         <label class="form-check-label" for="kbSoloPendientes">
                             Solo con saldo pendiente
                         </label>
                     </div>
                 </div>
-                <div class="col-md-2 text-end">
-                    <button id="kbReload" class="btn btn-outline-primary w-100">Actualizar</button>
+
+                <div class="col-12">
+                    <button id="kbReload" class="btn btn-primary w-100 kb-btn-update">Actualizar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- anti-forgery token para AJAX -->
     <form id="afForm" method="post">
         @Html.AntiForgeryToken()
     </form>
 
-    <div class="d-flex gap-3 overflow-auto pb-3" id="kbBoard" style="min-height: 65vh;">
+    <div class="d-flex gap-4 overflow-auto pb-3 kb-board" id="kbBoard" style="min-height: 65vh;">
         @foreach (var e in Model.Estatus)
         {
-            <div class="card shadow-sm border-0" style="min-width: 320px; max-width: 320px;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="fw-semibold">@e.Nombre</div>
-                        <span class="badge bg-light text-dark" id="count-@e.PedidoEstatusId">0</span>
+            <div class="card kb-col" style="min-width: 320px; max-width: 320px;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="kb-col-title">@e.Nombre</div>
+                        <span class="badge rounded-pill kb-count" id="count-@e.PedidoEstatusId">0</span>
                     </div>
-                    <div class="d-grid gap-2" data-col="@e.PedidoEstatusId" style="min-height: 40px;"></div>
+                    <div class="d-grid gap-3" data-col="@e.PedidoEstatusId" style="min-height: 40px;"></div>
                 </div>
             </div>
         }
     </div>
 </div>
 
-<!-- Modal acciones -->
 <div class="modal fade" id="kbModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -86,18 +269,14 @@
                     <textarea id="kbNotas" class="form-control" rows="3" placeholder="Qué cambió / por qué..."></textarea>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="text-muted small" id="kbModalHint"></div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <a id="kbVerDetalles" class="btn btn-outline-secondary">Ver</a>
-                        
                         <a id="kbVerProd" class="btn btn-outline-secondary">Producción</a>
-
                         <a id="kbVerCot" class="btn btn-outline-secondary d-none">Cotización</a>
-
                         <a id="kbCrearCot" class="btn btn-primary d-none">Crear cotización</a>
                     </div>
-
                 </div>
 
                 <hr />
@@ -139,7 +318,6 @@
     function badge(html){ return `<span class="badge rounded-pill ${html}"></span>`; }
 
     function buildBadges(c){
-        // Cotización
         let b1 = '';
         if(!c.tieneCotizacion){
             b1 = `<span class="badge bg-secondary">Sin cotización</span>`;
@@ -148,7 +326,6 @@
             b1 = `<span class="badge ${cls}">Cotización: ${escapeHtml(c.cotizacionEstatusNombre || '—')}</span>`;
         }
 
-        // Saldo
         let b2 = '';
         if(c.tieneCotizacion){
             if(Number(c.saldo) > 0){
@@ -254,12 +431,11 @@
                         return;
                         }
 
-                        await loadData(); // refresca columnas
+                        await loadData();
                     });
                 }
 
                 div.addEventListener('click', (ev) => {
-                    // evita que el click en el botón "Ver" dispare el modal
                     if (ev.target.closest('a') || ev.target.closest('button')) return;
                     openModal(c);
                 });
@@ -295,19 +471,15 @@
         const crearCotBtn = document.getElementById('kbCrearCot');
 
         if (c.tieneCotizacion && Number(c.cotizacionId) > 0) {
-            // Mostrar "Cotización"
             cotBtn.classList.remove('d-none');
             cotBtn.href = `/Cotizaciones/Detalles/${c.cotizacionId}`;
 
-            // Ocultar "Crear cotización"
             crearCotBtn.classList.add('d-none');
             crearCotBtn.removeAttribute('href');
         } else {
-            // Ocultar "Cotización"
             cotBtn.classList.add('d-none');
             cotBtn.removeAttribute('href');
 
-            // Mostrar "Crear cotización"
             crearCotBtn.classList.remove('d-none');
             crearCotBtn.href = `/Cotizaciones/Crear?pedidoId=${c.pedidoId}`;
         }
@@ -363,7 +535,6 @@
         }
 
         for(const a of acciones){
-            // soporta camelCase y PascalCase
             const texto =
                 a.accionTexto ?? a.AccionTexto ??
                 a.nombreAccion ?? a.NombreAccion ??
@@ -385,7 +556,6 @@
             const btn = document.createElement('button');
             btn.type = 'button';
 
-            // Si está bloqueada: se ve “apagada” y con tooltip del motivo
             if (bloqueada) {
                 btn.className = 'btn btn-outline-secondary';
                 btn.disabled = true;
@@ -412,7 +582,6 @@
         }
     }
 
-
     async function ejecutarAccion(pedidoId, haciaEstatusId, notas){
         const payload = new URLSearchParams();
         payload.set('PedidoId', String(pedidoId));
@@ -438,7 +607,6 @@
         await loadData();
     }
 
-    // events
     document.getElementById('kbReload').addEventListener('click', loadData);
 
     let t = null;
@@ -450,7 +618,6 @@
     document.getElementById('kbClienteId').addEventListener('change', loadData);
     document.getElementById('kbSoloPendientes').addEventListener('change', loadData);
 
-    // init
     loadData();
 })();
 </script>
