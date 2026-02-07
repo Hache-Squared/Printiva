@@ -4,264 +4,555 @@
     ViewData["Title"] = "Reportes";
 }
 
-<div class="container py-4">
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
 
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <div>
-            <h1 class="mb-1">Reportes</h1>
-            <div class="text-muted">Resumen operativo y accesos rápidos.</div>
-        </div>
-        <div class="text-muted small">
-            @DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") UTC
-        </div>
-    </div>
+        --primary: #1D4ED8;
+        --success: #16A34A;
+        --warning: #F59E0B;
+        --danger:  #EF4444;
 
-    @* Menú / accesos a reportes *@
-    <div class="card mb-4">
-        <div class="card-header fw-semibold"> Reportes disponibles</div>
-        <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-outline-primary" href="/Reportes/Produccion">Dashboard producción</a>
-                <a class="btn btn-outline-primary" href="/Reportes/Pedido360">Pedido 360</a>
-                <a class="btn btn-outline-primary" href="/Reportes/PedidosOperativos">Pedidos operativos</a>
-                <a class="btn btn-outline-primary" href="/Reportes/Cxc">Pagos y CxC (Aging)</a>
-                <a class="btn btn-outline-primary" href="/Reportes/Cotizaciones">Cotizaciones: conversión y seguimiento</a>
-                <a class="btn btn-outline-primary" href="/Reportes/ProduccionUtilizacion">Producción: Utilización por impresora</a>
-                <a class="btn btn-outline-primary" href="/Reportes/InventarioConsumoMejorado">Inventario - Consumo</a>
-                <a class="btn btn-outline-primary" href="/Reportes/ComprasHistorico">Compras Histórico</a>
+        --shadow: 0 10px 30px rgba(2,6,23,.08);
+        --shadow2: 0 16px 44px rgba(2,6,23,.12);
+    }
+
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 950;
+        letter-spacing: -.03em;
+        font-size: clamp(2rem, 1.45rem + 1.25vw, 2.75rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        margin-top: .55rem;
+        font-size: .98rem;
+        max-width: 92ch;
+    }
+
+    .card{
+        border-color: var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        background: var(--card-bg);
+    }
+    .card-header{
+        background: transparent;
+        border-bottom: 1px solid var(--border);
+        padding: .95rem 1.1rem;
+    }
+    .card-body{ padding: 1.1rem; }
+    .card-footer{
+        background: transparent;
+        border-top: 1px solid var(--border);
+        padding: .85rem 1.1rem;
+    }
+
+    /* ======== Report cards (sin tocar links / href) ======== */
+    .report-grid{
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: .75rem;
+    }
+    .report-item{
+        grid-column: span 12;
+        position: relative;
+    }
+    @@media (min-width: 768px){
+        .report-item{ grid-column: span 6; }
+    }
+    @@media (min-width: 1200px){
+        .report-item{ grid-column: span 4; }
+    }
+
+    .report-card{
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        box-shadow: var(--shadow);
+        transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+        padding: 1rem 1rem;
+        min-height: 118px;
+    }
+    .report-card:hover{
+        transform: translateY(-2px);
+        box-shadow: var(--shadow2);
+        border-color: rgba(15,23,42,.14);
+    }
+
+    .report-top{
+        display:flex;
+        gap:.85rem;
+        align-items:flex-start;
+    }
+    .report-ico{
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+        color: var(--accent);
+        flex: 0 0 auto;
+    }
+    .report-ico i{
+        font-size: 1.35rem;
+        line-height: 1;
+    }
+    .report-title{
+        color: var(--text);
+        font-weight: 950;
+        letter-spacing: -.015em;
+        margin: 0;
+        font-size: 1.02rem;
+    }
+    .report-detail{
+        color: var(--muted);
+        margin: .25rem 0 0 0;
+        font-size: .92rem;
+        max-width: 72ch;
+    }
+    .report-link{
+        position:absolute;
+        inset:0;
+        border-radius: 18px;
+        text-decoration:none;
+        outline:none;
+    }
+    .report-card:has(.report-link:focus-visible){
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12), var(--shadow2);
+        border-color: rgba(29,78,216,.35);
+    }
+
+    /* ======== Tablas más “finas” (sin cambiar contenido) ======== */
+    .table-sm.table-hover tbody tr{ transition: background-color .12s ease; }
+    .table thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--border);
+        padding-top: .6rem !important;
+        padding-bottom: .6rem !important;
+    }
+    .table tbody td{
+        border-top: 1px solid var(--border2);
+        padding-top: .55rem !important;
+        padding-bottom: .55rem !important;
+        vertical-align: middle;
+        font-size: .95rem;
+    }
+
+    /* Pills / badges un poco más modernos */
+    .badge{
+        border-radius: 999px;
+        font-weight: 850;
+        letter-spacing: .01em;
+        padding: .34rem .55rem;
+    }
+    .badge.bg-light.text-dark{
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03) !important;
+        color: var(--text) !important;
+    }
+
+    /* Botones outline del menú: estilo “pill” y compacto */
+    .btn-outline-primary{
+        border-radius: 999px;
+        padding: .5rem .9rem;
+        font-weight: 850;
+    }
+
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="pg-title mb-1">Reportes</h1>
+                <div class="pg-subtitle">Resumen operativo y accesos rápidos.</div>
+            </div>
+            <div class="text-muted small">
+                @DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") UTC
             </div>
         </div>
-    </div>
 
-    @* KPIs *@
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Pedidos activos</div>
-                    <div class="fs-3 fw-bold">@Model.Kpis.PedidosActivos</div>
-                    @if (Model.Kpis.PedidosVencidos > 0)
-                    {
-                        <span class="badge bg-danger">Vencidos: @Model.Kpis.PedidosVencidos</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Sin vencidos</span>
-                    }
+        @* Menú / accesos a reportes *@
+        <div class="card mb-4">
+            <div class="card-header fw-semibold"> Reportes disponibles</div>
+            <div class="card-body">
+
+                <div class="report-grid">
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#F97316;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-speedometer2"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Dashboard producción</h3>
+                                    <div class="report-detail">Resumen de avance, cuellos de botella y estatus de items.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/Produccion" aria-label="Dashboard producción"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#22C55E;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-box-seam"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Pedido 360</h3>
+                                    <div class="report-detail">Vista integral del pedido: items, consumo, pagos y totales.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/Pedido360" aria-label="Pedido 360"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#1D4ED8;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-kanban"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Pedidos operativos</h3>
+                                    <div class="report-detail">Listado operativo: entregas, prioridad y estatus clave.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/PedidosOperativos" aria-label="Pedidos operativos"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#EF4444;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-cash-stack"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Pagos y CxC (Aging)</h3>
+                                    <div class="report-detail">Estatus de cobranza, pagos y saldo por antigüedad.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/Cxc" aria-label="Pagos y CxC"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#A855F7;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-file-earmark-text"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Cotizaciones: conversión y seguimiento</h3>
+                                    <div class="report-detail">Seguimiento de cotizaciones y métricas de conversión.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/Cotizaciones" aria-label="Cotizaciones"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#0EA5E9;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-printer"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Producción: Utilización por impresora</h3>
+                                    <div class="report-detail">Carga de trabajo y utilización por impresora.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/ProduccionUtilizacion" aria-label="Utilización por impresora"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#F59E0B;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-stack"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Inventario - Consumo</h3>
+                                    <div class="report-detail">Consumo por recetas y producción pendiente.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/InventarioConsumoMejorado" aria-label="Inventario consumo"></a>
+                        </div>
+                    </div>
+
+                    <div class="report-item">
+                        <div class="report-card" style="--accent:#64748B;">
+                            <div class="report-top">
+                                <div class="report-ico"><i class="bi bi-receipt"></i></div>
+                                <div class="flex-grow-1">
+                                    <h3 class="report-title">Compras Histórico</h3>
+                                    <div class="report-detail">Histórico de compras y totales por periodo.</div>
+                                </div>
+                            </div>
+                            <a class="report-link" href="/Reportes/ComprasHistorico" aria-label="Compras histórico"></a>
+                        </div>
+                    </div>
+                </div>
+
+                @* Mantengo tu menú original (NO lo quito) pero oculto visualmente para que no duplique UI *@
+                <div class="d-none">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-primary" href="/Reportes/Produccion">Dashboard producción</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/Pedido360">Pedido 360</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/PedidosOperativos">Pedidos operativos</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/Cxc">Pagos y CxC (Aging)</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/Cotizaciones">Cotizaciones: conversión y seguimiento</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/ProduccionUtilizacion">Producción: Utilización por impresora</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/InventarioConsumoMejorado">Inventario - Consumo</a>
+                        <a class="btn btn-outline-primary" href="/Reportes/ComprasHistorico">Compras Histórico</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        @* KPIs *@
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Pedidos activos</div>
+                        <div class="fs-3 fw-bold">@Model.Kpis.PedidosActivos</div>
+                        @if (Model.Kpis.PedidosVencidos > 0)
+                        {
+                            <span class="badge bg-danger">Vencidos: @Model.Kpis.PedidosVencidos</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Sin vencidos</span>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Producción pendiente</div>
-                    <div class="fs-3 fw-bold">@Model.Kpis.ProduccionPendiente</div>
-                    <span class="badge bg-secondary">Items sin finalizar</span>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Producción pendiente</div>
+                        <div class="fs-3 fw-bold">@Model.Kpis.ProduccionPendiente</div>
+                        <span class="badge bg-secondary">Items sin finalizar</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Inventario faltante (por recetas)</div>
-                    <div class="fs-3 fw-bold">@Model.Kpis.InventarioFaltante</div>
-                    @if (Model.Kpis.InventarioFaltante > 0)
-                    {
-                        <span class="badge bg-warning text-dark">Revisar faltantes</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">OK</span>
-                    }
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Inventario faltante (por recetas)</div>
+                        <div class="fs-3 fw-bold">@Model.Kpis.InventarioFaltante</div>
+                        @if (Model.Kpis.InventarioFaltante > 0)
+                        {
+                            <span class="badge bg-warning text-dark">Revisar faltantes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">OK</span>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Compras últimos 30 días</div>
-                    <div class="fs-3 fw-bold">@Model.Kpis.ComprasUlt30Dias</div>
-                    <div class="text-muted">
-                        Gasto: <span class="fw-semibold">$@Model.Kpis.GastoComprasUlt30Dias.ToString("N2")</span>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Compras últimos 30 días</div>
+                        <div class="fs-3 fw-bold">@Model.Kpis.ComprasUlt30Dias</div>
+                        <div class="text-muted">
+                            Gasto: <span class="fw-semibold">$@Model.Kpis.GastoComprasUlt30Dias.ToString("N2")</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        @* Alertas / Tablas *@
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="fw-semibold"> Inventario faltante para producción</div>
+                        <span class="badge bg-light text-dark">Top 10</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!Model.InventarioFaltante.Any())
+                        {
+                            <div class="p-3 text-muted">No hay faltantes detectados (según recetas vs producción pendiente).</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Insumo</th>
+                                            <th class="text-end">Disponible</th>
+                                            <th class="text-end">Requerido</th>
+                                            <th class="text-end">Faltante</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var r in Model.InventarioFaltante)
+                                    {
+                                        <tr>
+                                            <td class="align-middle">
+                                                <div class="fw-semibold">@r.InventarioNombre</div>
+                                                <div class="text-muted small">@r.UnidadNombre</div>
+                                            </td>
+                                            <td class="text-end align-middle">@r.Disponible.ToString("N2")</td>
+                                            <td class="text-end align-middle">@r.Requerido.ToString("N2")</td>
+                                            <td class="text-end align-middle">
+                                                <span class="badge bg-warning text-dark">@r.Faltante.ToString("N2")</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Calculado con producción pendiente (InventarioAplicado = 0) × receta.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="fw-semibold"> Pedidos urgentes</div>
+                        <span class="badge bg-light text-dark">≤ 3 días / vencidos</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!Model.PedidosUrgentes.Any())
+                        {
+                            <div class="p-3 text-muted">No hay pedidos urgentes en el rango configurado.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Pedido</th>
+                                            <th>Cliente</th>
+                                            <th>Entrega</th>
+                                            <th class="text-end">Días</th>
+                                            <th>Estatus</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var p in Model.PedidosUrgentes)
+                                    {
+                                        <tr>
+                                            <td class="align-middle fw-semibold">#@p.PedidoId</td>
+                                            <td class="align-middle">@p.ClienteNombre</td>
+                                            <td class="align-middle">@p.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end align-middle">
+                                                @if (p.EsVencido)
+                                                {
+                                                    <span class="badge bg-danger">@p.DiasParaEntrega</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">@p.DiasParaEntrega</span>
+                                                }
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="badge bg-secondary">@p.EstatusNombre</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="fw-semibold"> Producción pendiente</div>
+                        <span class="badge bg-light text-dark">Top 10</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!Model.ProduccionPendiente.Any())
+                        {
+                            <div class="p-3 text-muted">No hay producción pendiente.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Pedido</th>
+                                            <th>Cliente</th>
+                                            <th>Producto</th>
+                                            <th class="text-end">Cant.</th>
+                                            <th>Estatus</th>
+                                            <th>Entrega</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var x in Model.ProduccionPendiente)
+                                    {
+                                        <tr>
+                                            <td class="align-middle">#@x.ProduccionItemId</td>
+                                            <td class="align-middle fw-semibold">#@x.PedidoId</td>
+                                            <td class="align-middle">@x.ClienteNombre</td>
+                                            <td class="align-middle">@x.ProductoNombre</td>
+                                            <td class="text-end align-middle">@x.Cantidad</td>
+                                            <td class="align-middle">
+                                                <span class="badge bg-secondary">@x.ProduccionEstatus</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                @if (x.FechaEntregaEstimada is null)
+                                                {
+                                                    <span class="text-muted">—</span>
+                                                }
+                                                else if (x.DiasParaEntrega < 0)
+                                                {
+                                                    <span class="badge bg-danger">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
+                                                }
+                                                else if (x.DiasParaEntrega <= 3)
+                                                {
+                                                    <span class="badge bg-warning text-dark">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-dark">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    @* Alertas / Tablas *@
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-xl-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="fw-semibold"> Inventario faltante para producción</div>
-                    <span class="badge bg-light text-dark">Top 10</span>
-                </div>
-                <div class="card-body p-0">
-                    @if (!Model.InventarioFaltante.Any())
-                    {
-                        <div class="p-3 text-muted">No hay faltantes detectados (según recetas vs producción pendiente).</div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Insumo</th>
-                                        <th class="text-end">Disponible</th>
-                                        <th class="text-end">Requerido</th>
-                                        <th class="text-end">Faltante</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var r in Model.InventarioFaltante)
-                                {
-                                    <tr>
-                                        <td class="align-middle">
-                                            <div class="fw-semibold">@r.InventarioNombre</div>
-                                            <div class="text-muted small">@r.UnidadNombre</div>
-                                        </td>
-                                        <td class="text-end align-middle">@r.Disponible.ToString("N2")</td>
-                                        <td class="text-end align-middle">@r.Requerido.ToString("N2")</td>
-                                        <td class="text-end align-middle">
-                                            <span class="badge bg-warning text-dark">@r.Faltante.ToString("N2")</span>
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-                <div class="card-footer text-muted small">
-                    Calculado con producción pendiente (InventarioAplicado = 0) × receta.
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-xl-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="fw-semibold"> Pedidos urgentes</div>
-                    <span class="badge bg-light text-dark">≤ 3 días / vencidos</span>
-                </div>
-                <div class="card-body p-0">
-                    @if (!Model.PedidosUrgentes.Any())
-                    {
-                        <div class="p-3 text-muted">No hay pedidos urgentes en el rango configurado.</div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Pedido</th>
-                                        <th>Cliente</th>
-                                        <th>Entrega</th>
-                                        <th class="text-end">Días</th>
-                                        <th>Estatus</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var p in Model.PedidosUrgentes)
-                                {
-                                    <tr>
-                                        <td class="align-middle fw-semibold">#@p.PedidoId</td>
-                                        <td class="align-middle">@p.ClienteNombre</td>
-                                        <td class="align-middle">@p.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</td>
-                                        <td class="text-end align-middle">
-                                            @if (p.EsVencido)
-                                            {
-                                                <span class="badge bg-danger">@p.DiasParaEntrega</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-warning text-dark">@p.DiasParaEntrega</span>
-                                            }
-                                        </td>
-                                        <td class="align-middle">
-                                            <span class="badge bg-secondary">@p.EstatusNombre</span>
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="fw-semibold"> Producción pendiente</div>
-                    <span class="badge bg-light text-dark">Top 10</span>
-                </div>
-                <div class="card-body p-0">
-                    @if (!Model.ProduccionPendiente.Any())
-                    {
-                        <div class="p-3 text-muted">No hay producción pendiente.</div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Item</th>
-                                        <th>Pedido</th>
-                                        <th>Cliente</th>
-                                        <th>Producto</th>
-                                        <th class="text-end">Cant.</th>
-                                        <th>Estatus</th>
-                                        <th>Entrega</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var x in Model.ProduccionPendiente)
-                                {
-                                    <tr>
-                                        <td class="align-middle">#@x.ProduccionItemId</td>
-                                        <td class="align-middle fw-semibold">#@x.PedidoId</td>
-                                        <td class="align-middle">@x.ClienteNombre</td>
-                                        <td class="align-middle">@x.ProductoNombre</td>
-                                        <td class="text-end align-middle">@x.Cantidad</td>
-                                        <td class="align-middle">
-                                            <span class="badge bg-secondary">@x.ProduccionEstatus</span>
-                                        </td>
-                                        <td class="align-middle">
-                                            @if (x.FechaEntregaEstimada is null)
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
-                                            else if (x.DiasParaEntrega < 0)
-                                            {
-                                                <span class="badge bg-danger">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
-                                            }
-                                            else if (x.DiasParaEntrega <= 3)
-                                            {
-                                                <span class="badge bg-warning text-dark">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-light text-dark">@x.FechaEntregaEstimada?.ToString("dd/MM/yyyy")</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
