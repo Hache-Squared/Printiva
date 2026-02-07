@@ -3,71 +3,186 @@
     ViewData["Title"] = "Editar Compra";
 }
 
-<partial name="_Submenu" model="SubMenuCompras.Compras" />
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
 
-<h1>Editar compra</h1>
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 980px; }
 
-<form asp-action="Editar">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(1.9rem, 1.45rem + 1.1vw, 2.6rem);
+        line-height: 1.08;
+        margin: 0;
+    }
 
-    <input type="hidden" asp-for="CompraId" />
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
 
-    <div class="mb-3">
-        <label asp-for="Descripcion" class="form-label"></label>
-        <textarea asp-for="Descripcion" class="form-control"></textarea>
-        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    .subnav{ padding: .65rem .75rem; }
+    .subnav .nav{ gap: .35rem; }
+    .subnav .nav-link{
+        border-radius: 999px;
+        padding: .5rem .95rem;
+        font-weight: 800;
+        font-size: .92rem;
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .subnav .nav-link:hover{
+        color: var(--text);
+        background: rgba(15,23,42,.03);
+        border-color: rgba(15,23,42,.06);
+    }
+    .subnav .nav-link.active{
+        color: var(--primary);
+        background: rgba(29,78,216,.10);
+        border-color: rgba(29,78,216,.18);
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .72rem;
+        padding-bottom: .72rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .section-sep{
+        border-top: 1px solid var(--border2);
+        margin: 1.15rem 0 1.1rem;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="card card-soft subnav mb-4">
+            <partial name="_Submenu" model="SubMenuCompras.Compras" />
+        </div>
+
+        <div class="mb-4">
+            <h1 class="pg-title">Editar compra</h1>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-4">
+                <form asp-action="Editar">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="CompraId" />
+
+                    <div class="mb-3">
+                        <label asp-for="Descripcion" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Descripcion" class="form-control control-soft" rows="3"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CompraCategoriaId" class="form-label fw-semibold"></label>
+                            <select asp-for="CompraCategoriaId" asp-items="@Model.Categorias" class="form-select control-soft"></select>
+                            <span asp-validation-for="CompraCategoriaId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="CompraTipoId" class="form-label fw-semibold"></label>
+                            <select asp-for="CompraTipoId" asp-items="@Model.Tipos" class="form-select control-soft"></select>
+                            <span asp-validation-for="CompraTipoId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="section-sep"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="InventarioId" class="form-label fw-semibold"></label>
+                        <select asp-for="InventarioId" asp-items="@Model.Inventarios" class="form-select control-soft">
+                            <option value="">(Opcional / según tipo)</option>
+                        </select>
+                        <span asp-validation-for="InventarioId" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Cantidad" class="form-label fw-semibold"></label>
+                            <input asp-for="Cantidad" class="form-control control-soft" />
+                            <span asp-validation-for="Cantidad" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="CostoUnitario" class="form-label fw-semibold"></label>
+                            <input asp-for="CostoUnitario" class="form-control control-soft" />
+                            <span asp-validation-for="CostoUnitario" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="CostoTotal" class="form-label fw-semibold"></label>
+                            <input asp-for="CostoTotal" class="form-control control-soft" />
+                            <span asp-validation-for="CostoTotal" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <label asp-for="FechaCreacion" class="form-label fw-semibold"></label>
+                            <input asp-for="FechaCreacion" class="form-control control-soft" />
+                            <span asp-validation-for="FechaCreacion" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary btn-pill btn-primary-pill" type="submit">Guardar</button>
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
-
-    <div class="mb-3">
-        <label asp-for="CompraCategoriaId" class="form-label"></label>
-        <select asp-for="CompraCategoriaId" asp-items="@Model.Categorias" class="form-select"></select>
-        <span asp-validation-for="CompraCategoriaId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="CompraTipoId" class="form-label"></label>
-        <select asp-for="CompraTipoId" asp-items="@Model.Tipos" class="form-select"></select>
-        <span asp-validation-for="CompraTipoId" class="text-danger"></span>
-    </div>
-
-
-    <hr />
-
-    <div class="mb-3">
-        <label asp-for="InventarioId" class="form-label"></label>
-        <select asp-for="InventarioId" asp-items="@Model.Inventarios" class="form-select">
-            <option value="">(Opcional / según tipo)</option>
-        </select>
-        <span asp-validation-for="InventarioId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Cantidad" class="form-label"></label>
-        <input asp-for="Cantidad" class="form-control" />
-        <span asp-validation-for="Cantidad" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="CostoUnitario" class="form-label"></label>
-        <input asp-for="CostoUnitario" class="form-control" />
-        <span asp-validation-for="CostoUnitario" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="CostoTotal" class="form-label"></label>
-        <input asp-for="CostoTotal" class="form-control" />
-        <span asp-validation-for="CostoTotal" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="FechaCreacion" class="form-label"></label>
-        <input asp-for="FechaCreacion" class="form-control" />
-        <span asp-validation-for="FechaCreacion" class="text-danger"></span>
-    </div>
-
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

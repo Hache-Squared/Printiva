@@ -1,18 +1,68 @@
 @model SubMenuCompras
 
-<ul class="nav nav-pills mb-3">
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuCompras.Compras ? "active" : "")"
-           asp-controller="Compras" asp-action="Index">Compras</a>
-    </li>
+<style>
+    :root{
+        --pg-bg:#F6F7FB;
+        --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.08);
+        --border2:rgba(15,23,42,.06);
+        --primary:#1D4ED8;
+    }
 
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuCompras.Categorias ? "active" : "")"
-           asp-controller="Compras" asp-action="Categorias">Categorías</a>
-    </li>
+    @* .subnav-wrap{
+        background: rgba(255,255,255,.70);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 10px 26px rgba(2,6,23,.06);
+        padding: .65rem .85rem;
+    } *@
 
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuCompras.Tipos ? "active" : "")"
-           asp-controller="Compras" asp-action="Tipos">Tipos</a>
-    </li>
-</ul>
+    .subnav{
+        gap: .25rem .25rem;
+        border-bottom: 0;
+    }
+
+    .subnav .nav-link{
+        position: relative;
+        border: 0;
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: -.01em;
+        padding: .65rem .9rem;
+        border-radius: 999px;
+        background: transparent;
+        white-space: nowrap;
+    }
+
+    .subnav .nav-link:hover{
+        color: var(--text);
+        background: rgba(15,23,42,.03);
+    }
+
+    .subnav .nav-link.active{
+        color: var(--primary);
+        background: rgba(29,78,216,.08);
+        box-shadow: inset 0 0 0 1px rgba(29,78,216,.18);
+    }
+</style>
+
+<div class="subnav-wrap">
+    <ul class="nav subnav flex-wrap">
+        <li class="nav-item">
+            <a class="nav-link @(Model == SubMenuCompras.Compras ? "active" : "")"
+               asp-controller="Compras" asp-action="Index">Compras</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link @(Model == SubMenuCompras.Categorias ? "active" : "")"
+               asp-controller="Compras" asp-action="Categorias">Categorías</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link @(Model == SubMenuCompras.Tipos ? "active" : "")"
+               asp-controller="Compras" asp-action="Tipos">Tipos</a>
+        </li>
+    </ul>
+</div>

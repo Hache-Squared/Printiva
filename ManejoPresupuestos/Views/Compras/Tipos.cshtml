@@ -3,34 +3,180 @@
     ViewData["Title"] = "Tipos de Compra";
 }
 
-<partial name="_Submenu" model="SubMenuCompras.Tipos" />
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
 
-<h1>Tipos de compra</h1>
-<h5>Un tipo de compra define si la compra afecta inventario o no.</h5>
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 1180px; }
 
-<a asp-action="CrearTipo" class="btn btn-primary mb-3">Crear nuevo</a>
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height: 1.05;
+        margin: 0;
+    }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Acciones</th>
-            <th>Nombre</th>
-            <th>Afecta inventario</th>
-            <th>Activo</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var tipo in Model)
-        {
-            <tr>
-                <td>
-                    <a class="btn btn-primary btn-sm" asp-action="EditarTipo" asp-route-id="@tipo.CompraTipoId">Editar</a>
-                    <a class="btn btn-danger btn-sm" asp-action="BorrarTipoForm" asp-route-id="@tipo.CompraTipoId">Borrar</a>
-                </td>
-                <td>@tipo.Nombre</td>
-                <td>@(tipo.EsInventario ? "Sí" : "No")</td>
-                <td>@(tipo.EstaActivo ? "Sí" : "No")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 80ch;
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .subnav{ padding: .65rem .75rem; }
+    .subnav .nav{ gap: .35rem; }
+    .subnav .nav-link{
+        border-radius: 999px;
+        padding: .5rem .95rem;
+        font-weight: 800;
+        font-size: .92rem;
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .subnav .nav-link:hover{
+        color: var(--text);
+        background: rgba(15,23,42,.03);
+        border-color: rgba(15,23,42,.06);
+    }
+    .subnav .nav-link.active{
+        color: var(--primary);
+        background: rgba(29,78,216,.10);
+        border-color: rgba(29,78,216,.18);
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding: .38rem .78rem;
+        font-size: .84rem;
+    }
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .btn-danger-soft{
+        background: rgba(239,68,68,.10);
+        border-color: rgba(239,68,68,.18);
+        color: #B91C1C;
+    }
+    .btn-danger-soft:hover{
+        background: rgba(239,68,68,.14);
+        border-color: rgba(239,68,68,.22);
+        color: #991B1B;
+    }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .72rem .85rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .table-clean tbody td{
+        padding: .52rem .85rem;
+        border-top: 1px solid var(--border2);
+        vertical-align: middle;
+        font-size: .93rem;
+        line-height: 1.15;
+    }
+
+    .act-col{
+        display:flex;
+        flex-direction:row;
+        gap:.35rem;
+        align-items:flex-start;
+        justify-content: flex-start;
+        white-space: nowrap;
+    }
+
+    .text-yes{ color: #047857; font-weight: 800; }
+    .text-no{ color: var(--muted); font-weight: 800; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="card card-soft subnav mb-4">
+            <partial name="_Submenu" model="SubMenuCompras.Tipos" />
+        </div>
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Tipos</h1>
+                <div class="pg-subtitle">Un tipo de compra define si la compra afecta inventario o no.</div>
+            </div>
+
+            <a asp-action="CrearTipo" class="btn btn-primary btn-pill btn-primary-pill">Crear nuevo</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th class="text-end" style="width:170px;">Afecta inventario</th>
+                                <th class="text-end" style="width:120px;">Activo</th>
+                                <th style="width:250px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var tipo in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@tipo.Nombre</td>
+                                <td class="text-end">
+                                    <span class="@(tipo.EsInventario ? "text-yes" : "text-no")">@(tipo.EsInventario ? "Sí" : "No")</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="@(tipo.EstaActivo ? "text-yes" : "text-no")">@(tipo.EstaActivo ? "Sí" : "No")</span>
+                                </td>
+                                <td>
+                                    <div class="act-col">
+                                        <a class="btn btn-primary btn-pill btn-primary-pill btn-sm"
+                                           asp-action="EditarTipo" asp-route-id="@tipo.CompraTipoId">Editar</a>
+                                        <a class="btn btn-pill btn-danger-soft btn-sm"
+                                           asp-action="BorrarTipoForm" asp-route-id="@tipo.CompraTipoId">Borrar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

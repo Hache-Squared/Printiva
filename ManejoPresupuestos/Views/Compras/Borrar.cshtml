@@ -3,15 +3,145 @@
     ViewData["Title"] = "Borrar Compra";
 }
 
-<partial name="_Submenu" model="SubMenuCompras.Compras" />
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+        --danger: #EF4444;
+    }
 
-<h3>¿Seguro que quieres borrar (lógico) la compra del día @Model.FechaCreacion.ToString("dd/MM/yyyy")?</h3>
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 920px; }
 
-<p><strong>Descripción:</strong> @Model.Descripcion</p>
-<p><strong>Total:</strong> @Model.CostoTotal.ToString("0.00")</p>
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
 
-<form asp-action="BorrarCompra">
-    <input type="hidden" name="compraId" value="@Model.CompraId" />
-    <button class="btn btn-danger" type="submit">Borrar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+    .subnav{ padding: .65rem .75rem; }
+    .subnav .nav{ gap: .35rem; }
+    .subnav .nav-link{
+        border-radius: 999px;
+        padding: .5rem .95rem;
+        font-weight: 800;
+        font-size: .92rem;
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .subnav .nav-link:hover{
+        color: var(--text);
+        background: rgba(15,23,42,.03);
+        border-color: rgba(15,23,42,.06);
+    }
+    .subnav .nav-link.active{
+        color: var(--primary);
+        background: rgba(29,78,216,.10);
+        border-color: rgba(29,78,216,.18);
+    }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 900;
+        letter-spacing: -.02em;
+        font-size: clamp(1.65rem, 1.25rem + 1vw, 2.25rem);
+        line-height: 1.08;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        margin-top: .45rem;
+        font-size: .98rem;
+        max-width: 80ch;
+    }
+
+    .danger-panel{
+        border: 1px solid rgba(239,68,68,.22);
+        background: rgba(239,68,68,.06);
+        border-radius: 16px;
+        padding: 1rem 1rem;
+    }
+    .kv{
+        border-top: 1px solid var(--border2);
+        padding-top: .85rem;
+        margin-top: .85rem;
+    }
+    .kv .k{ color: var(--muted); font-weight: 800; font-size: .86rem; text-transform: uppercase; letter-spacing: .12em; }
+    .kv .v{ color: var(--text); font-weight: 700; margin-top: .25rem; }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 850;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-danger-soft{
+        background: rgba(239,68,68,.12);
+        border-color: rgba(239,68,68,.22);
+        color: #B91C1C;
+    }
+    .btn-danger-soft:hover{
+        background: rgba(239,68,68,.16);
+        border-color: rgba(239,68,68,.26);
+        color: #991B1B;
+    }
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="card card-soft subnav mb-4">
+            <partial name="_Submenu" model="SubMenuCompras.Compras" />
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-4">
+                <div class="danger-panel">
+                    <h3 class="pg-title">
+                        ¿Seguro que quieres borrar (lógico) la compra del día @Model.FechaCreacion.ToString("dd/MM/yyyy")?
+                    </h3>
+                    <div class="pg-subtitle">
+                        Esta acción solo desactiva la compra. No se elimina físicamente.
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Descripción</div>
+                        <div class="v">@Model.Descripcion</div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Total</div>
+                        <div class="v">@Model.CostoTotal.ToString("0.00")</div>
+                    </div>
+                </div>
+
+                <form asp-action="BorrarCompra" class="mt-4">
+                    <input type="hidden" name="compraId" value="@Model.CompraId" />
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-pill btn-danger-soft" type="submit">Borrar</button>
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
