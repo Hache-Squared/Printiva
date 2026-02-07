@@ -3,71 +3,186 @@
     ViewData["Title"] = "Impresoras";
 }
 
-<div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h1 class="mb-1">Impresoras</h1>
-            <div class="text-muted">Administra tus impresoras activas e históricas.</div>
+<style>
+    :root{
+        --pg-bg:#F6F7FB;
+        --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.08);
+        --border2:rgba(15,23,42,.06);
+        --primary:#1D4ED8;
+    }
+
+    body{ background:var(--pg-bg); }
+
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color:var(--text);
+        font-weight:850;
+        letter-spacing:-.02em;
+        font-size:clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height:1.05;
+        margin:0;
+    }
+
+    .pg-subtitle{
+        color:var(--muted);
+        font-size:.98rem;
+        margin-top:.55rem;
+        max-width:80ch;
+    }
+
+    .btn-pill{
+        border-radius:999px;
+        padding:.58rem 1.02rem;
+        font-weight:800;
+        font-size:.92rem;
+        white-space:nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding:.42rem .8rem;
+        font-size:.84rem;
+    }
+
+    .btn-soft{
+        border-color:rgba(100,116,139,.35);
+        color:#0F172A;
+        background:rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background:rgba(255,255,255,.92);
+        border-color:rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background:var(--primary);
+        border-color:var(--primary);
+        box-shadow:0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .btn-outline-primary.btn-sm{
+        border-radius:999px;
+        font-weight:800;
+    }
+    .btn-outline-danger.btn-sm{
+        border-radius:999px;
+        font-weight:800;
+    }
+    .btn-outline-secondary.btn-sm{
+        border-radius:999px;
+        font-weight:800;
+    }
+
+    .card-soft{
+        background:var(--card-bg);
+        border:1px solid var(--border);
+        border-radius:18px;
+        box-shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .table-clean{ margin:0; }
+    .table-clean thead th{
+        color:var(--muted);
+        font-weight:850;
+        letter-spacing:.14em;
+        font-size:.72rem;
+        text-transform:uppercase;
+        padding:.85rem .95rem;
+        border-bottom:1px solid var(--border);
+        white-space:nowrap;
+    }
+    .table-clean tbody td{
+        padding:.78rem .95rem;
+        border-top:1px solid rgba(15,23,42,.06);
+        vertical-align:middle;
+        font-size:.95rem;
+    }
+
+    .cell-truncate{
+        max-width: 520px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+
+    .act-wrap{
+        display:flex;
+        gap:.45rem;
+        justify-content:flex-end;
+        flex-wrap:wrap;
+        white-space:nowrap;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Impresoras</h1>
+                <div class="pg-subtitle">Administra tus impresoras activas e históricas.</div>
+            </div>
+            <a class="btn btn-primary btn-pill btn-primary-pill" asp-action="Crear">Nueva impresora</a>
         </div>
-        <a class="btn btn-primary" asp-action="Crear">Nueva impresora</a>
-    </div>
 
-    @if (TempData["Error"] is not null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
-    @if (TempData["Success"] is not null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+        @if (TempData["Error"] is not null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Success"] is not null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Modelo</th>
-                            <th>Notas</th>
-                            @* <th class="text-center">Activo</th> *@
-                            <th style="width:200px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var i in Model)
-                    {
-                        <tr>
-                            <td class="fw-semibold">@i.Nombre</td>
-                            <td>@(i.Modelo ?? "-")</td>
-                            <td class="text-muted">@((i.Notas ?? "").Length > 80 ? (i.Notas!.Substring(0,80) + "...") : (i.Notas ?? "-"))</td>
-                            @* <td class="text-center">
-                                @if (i.EstaActivo) { <span class="badge bg-success">Sí</span> }
-                                else { <span class="badge bg-secondary">No</span> }
-                            </td> *@
-                            <td class="text-end">
-                                <a class="btn btn-outline-primary btn-sm" asp-action="Editar" asp-route-id="@i.ImpresoraId">Editar</a>
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 280px;">Nombre</th>
+                                <th style="width: 220px;">Modelo</th>
+                                <th>Notas</th>
+                                <th style="width: 300px;" class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var i in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@i.Nombre</td>
+                                <td>@(i.Modelo ?? "-")</td>
+                                <td class="text-muted cell-truncate">@((i.Notas ?? "").Length > 80 ? (i.Notas!.Substring(0,80) + "...") : (i.Notas ?? "-"))</td>
+                                <td class="text-end">
+                                    <div class="act-wrap">
+                                        <a class="btn btn-outline-primary btn-pill btn-sm" asp-action="Editar" asp-route-id="@i.ImpresoraId">Editar</a>
 
-                                <form asp-action="Borrar" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="impresoraId" value="@i.ImpresoraId" />
-                                    <button class="btn btn-outline-danger btn-sm" type="submit"
-                                            onclick="return confirm('¿Desactivar impresora \"@i.Nombre\"?');">
-                                        Borrar
-                                    </button>
-                                </form>
-                                <a class="btn btn-outline-secondary btn-sm"
-                                    asp-controller="Tarifas"
-                                    asp-action="Impresora"
-                                    asp-route-impresoraId="@i.ImpresoraId">
-                                    Tarifas
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
+                                        <form asp-action="Borrar" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="impresoraId" value="@i.ImpresoraId" />
+                                            <button class="btn btn-outline-danger btn-pill btn-sm" type="submit"
+                                                    onclick="return confirm('¿Desea borrar la impresora @i.Nombre?');">
+                                                Borrar
+                                            </button>
+                                        </form>
+
+                                        <a class="btn btn-outline-secondary btn-pill btn-sm"
+                                           asp-controller="Tarifas"
+                                           asp-action="Impresora"
+                                           asp-route-impresoraId="@i.ImpresoraId">
+                                            Tarifas
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
     </div>
 </div>

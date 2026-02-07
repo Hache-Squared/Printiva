@@ -3,35 +3,132 @@
     ViewData["Title"] = "Nueva impresora";
 }
 
-    <h1 class="mb-3">Nueva impresora</h1>
+<style>
+    :root{
+        --pg-bg:#F6F7FB;
+        --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.08);
+        --border2:rgba(15,23,42,.06);
+        --primary:#1D4ED8;
+    }
 
-    <form asp-action="Crear" method="post"> 
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    
-        <div class="mb-3">
-            <label asp-for="Nombre" class="form-label"></label>
-            <input asp-for="Nombre" name="Nombre" class="form-control" />
-            <span asp-validation-for="Nombre" class="text-danger"></span>
+    body{ background:var(--pg-bg); }
+
+    .pg-wrap{ max-width: 860px; }
+
+    .pg-title{
+        color:var(--text);
+        font-weight:850;
+        letter-spacing:-.02em;
+        font-size:clamp(2rem, 1.5rem + 1.2vw, 2.6rem);
+        line-height:1.05;
+        margin:0;
+    }
+
+    .pg-subtitle{
+        color:var(--muted);
+        font-size:.98rem;
+        margin-top:.55rem;
+        max-width:75ch;
+    }
+
+    .btn-pill{
+        border-radius:999px;
+        padding:.58rem 1.02rem;
+        font-weight:800;
+        font-size:.92rem;
+        white-space:nowrap;
+    }
+
+    .btn-soft{
+        border-color:rgba(100,116,139,.35);
+        color:#0F172A;
+        background:rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background:rgba(255,255,255,.92);
+        border-color:rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background:var(--primary);
+        border-color:var(--primary);
+        box-shadow:0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background:var(--card-bg);
+        border:1px solid var(--border);
+        border-radius:18px;
+        box-shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .form-label{
+        color:var(--text);
+        font-weight:750;
+        margin-bottom:.45rem;
+    }
+
+    .control-soft{
+        border-radius:12px;
+        border-color:rgba(15,23,42,.10);
+        background:rgba(15,23,42,.03);
+        padding-top:.72rem;
+        padding-bottom:.72rem;
+    }
+    .control-soft:focus{
+        border-color:rgba(29,78,216,.40);
+        box-shadow:0 0 0 .25rem rgba(29,78,216,.12);
+        background:#fff;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Nueva impresora</h1>
+                <div class="pg-subtitle">Registra una impresora para administrar su información y tarifas.</div>
+            </div>
+            <a asp-action="Index" class="btn btn-pill btn-soft">Volver</a>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Modelo" class="form-label"></label>
-            <input asp-for="Modelo" name="Modelo" class="form-control" />
-            <span asp-validation-for="Modelo" class="text-danger"></span>
+        <div class="card card-soft">
+            <div class="card-body p-4 p-md-4">
+                <form asp-action="Crear" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" name="Nombre" class="form-control control-soft" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Modelo" class="form-label"></label>
+                        <input asp-for="Modelo" name="Modelo" class="form-control control-soft" />
+                        <span asp-validation-for="Modelo" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notas" class="form-label"></label>
+                        <textarea asp-for="Notas" class="form-control control-soft" rows="4"></textarea>
+                        <span asp-validation-for="Notas" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-primary btn-pill btn-primary-pill">Guardar</button>
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Notas" class="form-label"></label>
-            <textarea asp-for="Notas" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="Notas" class="text-danger"></span>
-        </div>
-
-        
-        
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-    </form>
-
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
