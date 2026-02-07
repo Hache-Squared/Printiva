@@ -8,43 +8,133 @@
     ViewData["Title"] = "Login";
 }
 
+<style>
+    :root{
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.10);
+        --primary: #1D4ED8;
+        --success: #16A34A;
+    }
 
-<h1>Login</h1>
+    .auth-card{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 14px 36px rgba(2,6,23,.12);
+        overflow: hidden;
+    }
 
-<div class="card">
+    .auth-card .card-body{
+        padding: 1.35rem 1.35rem 1.05rem 1.35rem;
+    }
+
+    .auth-title{
+        margin: 0;
+        font-weight: 950;
+        letter-spacing: -.03em;
+        font-size: 1.35rem;
+        line-height: 1.1;
+        color: var(--text);
+    }
+
+    .auth-subtitle{
+        margin-top: .35rem;
+        color: var(--muted);
+        font-size: .92rem;
+    }
+
+    .form-label{
+        font-weight: 900;
+        color: var(--text);
+        font-size: .9rem;
+    }
+
+    .form-control, .form-check-input{
+        border-color: rgba(15,23,42,.12);
+    }
+
+    .form-control{
+        border-radius: 12px;
+        padding-top: .68rem;
+        padding-bottom: .68rem;
+        background: rgba(15,23,42,.03);
+    }
+
+    .form-control:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .btn{
+        border-radius: 999px;
+        font-weight: 900;
+        padding: .68rem 1rem;
+    }
+
+    .btn-primary{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .btn-success{
+        background: rgba(22,163,74,.12);
+        border-color: rgba(22,163,74,.22);
+        color: #166534;
+    }
+
+    .btn-success:hover{
+        background: rgba(22,163,74,.16);
+        border-color: rgba(22,163,74,.26);
+        color: #14532D;
+    }
+
+    .auth-footnote{
+        margin-top: .95rem;
+        color: var(--muted);
+        font-size: .78rem;
+        text-align: center;
+    }
+</style>
+
+<div class="card auth-card">
     <div class="card-body">
+        <div class="mb-3">
+            <h1 class="auth-title">Login</h1>
+            <div class="auth-subtitle">Ingresa tu correo y contraseña para continuar.</div>
+        </div>
 
-        <form asp-action="Login">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Login" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control"></input>
+                <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
-
             </div>
 
             <div class="mb-3">
                 <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control"></input>
+                <input asp-for="Password" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
-            <div class="form-check">
-                <input asp-for="Recuerdame" class="form-check-input" type="checkbox"></input>
-                <label asp-for="Recuerdame" class="form-label"></label>
+            <div class="form-check mb-3">
+                <input asp-for="Recuerdame" class="form-check-input" type="checkbox" />
+                <label asp-for="Recuerdame" class="form-label mb-0" style="font-weight:800; color:#334155;"></label>
             </div>
 
-
-            <button class="btn btn-primary">
-                Login
-            </button>
-
+            <div class="d-grid gap-2 d-sm-flex">
+                <button class="btn btn-primary flex-fill" type="submit">Iniciar</button>
+            </div>
         </form>
 
+        <div class="auth-footnote">Al iniciar sesión aceptas el uso interno del sistema.</div>
     </div>
 </div>
-
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
