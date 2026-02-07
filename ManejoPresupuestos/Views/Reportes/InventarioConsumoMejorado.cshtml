@@ -1,364 +1,506 @@
 @model ManejoPresupuestos.Models.ReporteInventarioConsumoMejoradoViewModel
 @{
-    ViewData["Title"] = "Inventario - Consumo (Mejorado)";
+    ViewData["Title"] = "Inventario - Consumo";
     string fmtDate(DateTime? d) => d.HasValue ? d.Value.ToString("yyyy-MM-dd") : "";
     string money(decimal v) => v.ToString("C2");
     string dec4(decimal v) => v.ToString("0.####");
 }
 
-<div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h1 class="mb-0">Inventario — Consumo (Mejorado)</h1>
-            <div class="text-muted small">
-                Consumo por producto/pedido/receta e insumo. Costos por tarifas (costeo), no por Inventarios.CostoUnitario.
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+
+        --primary: #1D4ED8;
+        --success: #16A34A;
+
+        --shadow: 0 10px 30px rgba(2,6,23,.08);
+        --radius: 18px;
+    }
+
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 950;
+        letter-spacing: -.03em;
+        font-size: clamp(2rem, 1.45rem + 1.25vw, 2.75rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        margin-top: .55rem;
+        font-size: .98rem;
+        max-width: 96ch;
+    }
+
+    .card{
+        border-color: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        background: var(--card-bg);
+    }
+    .card-header{
+        background: transparent;
+        border-bottom: 1px solid var(--border);
+        padding: .95rem 1.1rem;
+        font-weight: 900;
+        color: var(--text);
+    }
+    .card-body{ padding: 1.1rem; }
+
+    .form-label{
+        font-weight: 900;
+        color: var(--text);
+    }
+    .form-control, .form-select{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .68rem;
+        padding-bottom: .68rem;
+    }
+    .form-control:focus, .form-select:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .btn{
+        border-radius: 999px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+    .btn-primary{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+    .btn-success{
+        background: rgba(22,163,74,.12);
+        border-color: rgba(22,163,74,.22);
+        color: #166534;
+        font-weight: 900;
+    }
+    .btn-success:hover{
+        background: rgba(22,163,74,.16);
+        border-color: rgba(22,163,74,.26);
+        color: #14532D;
+    }
+    .btn-outline-secondary{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-outline-secondary:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+    .btn-outline-secondary:focus,
+    .btn-primary:focus,
+    .btn-success:focus{
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+    }
+
+    .table thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--border);
+        padding-top: .6rem !important;
+        padding-bottom: .6rem !important;
+    }
+    .table tbody td{
+        border-top: 1px solid var(--border2);
+        padding-top: .55rem !important;
+        padding-bottom: .55rem !important;
+        vertical-align: middle;
+        font-size: .95rem;
+        color: var(--text);
+    }
+
+    .kpi{
+        background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.92));
+    }
+
+    .text-truncate[title]{ cursor: help; }
+
+    .collapse .bg-light{
+        background: rgba(15,23,42,.03) !important;
+    }
+
+    a{
+        color: color-mix(in srgb, var(--primary) 88%, #000);
+        font-weight: 900;
+        text-decoration: none;
+    }
+    a:hover{ text-decoration: underline; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between mb-3 flex-wrap gap-2">
+            <div>
+                <h1 class="pg-title mb-0">Inventario — Consumo</h1>
+                <div class="pg-subtitle">
+                    Consumo por producto/pedido/receta e insumo. Costos por tarifas (costeo), no por Inventarios.CostoUnitario.
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-success"
+                   asp-controller="Reportes"
+                   asp-action="InventarioConsumoMejoradoExcel"
+                   asp-route-desde="@fmtDate(Model.Desde)"
+                   asp-route-hasta="@fmtDate(Model.Hasta)"
+                   asp-route-pedidoId="@Model.PedidoId"
+                   asp-route-productoId="@Model.ProductoId"
+                   asp-route-recetaId="@Model.RecetaId"
+                   asp-route-inventarioId="@Model.InventarioId"
+                   asp-route-periodo="@Model.Periodo"
+                   asp-route-topN="@Model.TopN"
+                   asp-route-q="@Model.Q">
+                    Exportar Excel
+                </a>
+                <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
             </div>
         </div>
-        <a class="btn btn-success"
-        asp-controller="Reportes"
-        asp-action="InventarioConsumoMejoradoExcel"
-        asp-route-desde="@fmtDate(Model.Desde)"
-        asp-route-hasta="@fmtDate(Model.Hasta)"
-        asp-route-pedidoId="@Model.PedidoId"
-        asp-route-productoId="@Model.ProductoId"
-        asp-route-recetaId="@Model.RecetaId"
-        asp-route-inventarioId="@Model.InventarioId"
-        asp-route-periodo="@Model.Periodo"
-        asp-route-topN="@Model.TopN"
-        asp-route-q="@Model.Q">
-            Exportar Excel
-        </a>
-        <a class="btn btn-outline-secondary" href="/Reportes">Volver</a>
-    </div>
 
-    <!-- Filtros -->
-    <form method="get" class="card mb-3">
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label">Desde</label>
-                    <input type="date" name="desde" class="form-control" value="@fmtDate(Model.Desde)" />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Hasta</label>
-                    <input type="date" name="hasta" class="form-control" value="@fmtDate(Model.Hasta)" />
-                </div>
+        <form method="get" class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Desde</label>
+                        <input type="date" name="desde" class="form-control" value="@fmtDate(Model.Desde)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" name="hasta" class="form-control" value="@fmtDate(Model.Hasta)" />
+                    </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">PedidoId</label>
-                    <input type="number" name="pedidoId" class="form-control" value="@(Model.PedidoId?.ToString() ?? "")" placeholder="Ej: 25" />
-                </div>
+                    <div class="col-md-2">
+                        <label class="form-label">PedidoId</label>
+                        <input type="number" name="pedidoId" class="form-control" value="@(Model.PedidoId?.ToString() ?? "")" placeholder="Ej: 25" />
+                    </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Producto</label>
-                    <select class="form-select" name="productoId">
-                        <option value="">-- Todos --</option>
-                        @foreach (var p in Model.CatProductos)
-                        {
-                            <option value="@p.Id" selected="@(Model.ProductoId == p.Id)">@p.Nombre</option>
-                        }
-                    </select>
-                </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Producto</label>
+                        <select class="form-select" name="productoId">
+                            <option value="">-- Todos --</option>
+                            @foreach (var p in Model.CatProductos)
+                            {
+                                <option value="@p.Id" selected="@(Model.ProductoId == p.Id)">@p.Nombre</option>
+                            }
+                        </select>
+                    </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Receta</label>
-                    <select class="form-select" name="recetaId">
-                        <option value="">-- Todas --</option>
-                        @foreach (var r in Model.CatRecetas)
-                        {
-                            <option value="@r.Id" selected="@(Model.RecetaId == r.Id)">@r.Nombre</option>
-                        }
-                    </select>
-                </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Receta</label>
+                        <select class="form-select" name="recetaId">
+                            <option value="">-- Todas --</option>
+                            @foreach (var r in Model.CatRecetas)
+                            {
+                                <option value="@r.Id" selected="@(Model.RecetaId == r.Id)">@r.Nombre</option>
+                            }
+                        </select>
+                    </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Insumo</label>
-                    <select class="form-select" name="inventarioId">
-                        <option value="">-- Todos --</option>
-                        @foreach (var i in Model.CatInsumos)
-                        {
-                            var label = string.IsNullOrWhiteSpace(i.UnidadNombre) ? i.Nombre : $"{i.Nombre} ({i.UnidadNombre})";
-                            <option value="@i.Id" selected="@(Model.InventarioId == i.Id)">@label</option>
-                        }
-                    </select>
-                </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Insumo</label>
+                        <select class="form-select" name="inventarioId">
+                            <option value="">-- Todos --</option>
+                            @foreach (var i in Model.CatInsumos)
+                            {
+                                var label = string.IsNullOrWhiteSpace(i.UnidadNombre) ? i.Nombre : $"{i.Nombre} ({i.UnidadNombre})";
+                                <option value="@i.Id" selected="@(Model.InventarioId == i.Id)">@label</option>
+                            }
+                        </select>
+                    </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Periodo</label>
-                    <select class="form-select" name="periodo">
-                        <option value="day" selected="@(Model.Periodo == "day")">Día</option>
-                        <option value="week" selected="@(Model.Periodo == "week")">Semana</option>
-                        <option value="month" selected="@(Model.Periodo == "month")">Mes</option>
-                    </select>
-                </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Periodo</label>
+                        <select class="form-select" name="periodo">
+                            <option value="day" selected="@(Model.Periodo == "day")">Día</option>
+                            <option value="week" selected="@(Model.Periodo == "week")">Semana</option>
+                            <option value="month" selected="@(Model.Periodo == "month")">Mes</option>
+                        </select>
+                    </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Top N</label>
-                    <input type="number" name="topN" class="form-control" value="@Model.TopN" min="1" max="100" />
-                </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Top N</label>
+                        <input type="number" name="topN" class="form-control" value="@Model.TopN" min="1" max="100" />
+                    </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Buscar (cliente/producto/receta/insumo/nota)</label>
-                    <input type="text" name="q" class="form-control" value="@(Model.Q ?? "")" placeholder="Ej: goku, filamento..." />
-                </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar (cliente/producto/receta/insumo/nota)</label>
+                        <input type="text" name="q" class="form-control" value="@(Model.Q ?? "")" placeholder="Ej: goku, filamento..." />
+                    </div>
 
-                <div class="col-md-12 d-flex gap-2 justify-content-end">
-                    <button class="btn btn-primary" type="submit">Filtrar</button>
-                    <a class="btn btn-outline-secondary" href="/Reportes/InventarioConsumoMejorado">Limpiar</a>
+                    <div class="col-md-12 d-flex gap-2 justify-content-end flex-wrap">
+                        <button class="btn btn-primary" type="submit">Filtrar</button>
+                        <a class="btn btn-outline-secondary" href="/Reportes/InventarioConsumoMejorado">Limpiar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-3">
+                <div class="card card-body kpi">
+                    <div class="text-muted small">Movimientos</div>
+                    <div class="fs-4 fw-semibold">@Model.Totales.Movimientos</div>
+                    <div class="text-muted small">Items: @Model.Totales.ProduccionItems</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-body kpi">
+                    <div class="text-muted small">Costo insumos (ligado al insumo)</div>
+                    <div class="fs-4 fw-semibold">@money(Model.Totales.CostoInsumosEstimado)</div>
+                    <div class="text-muted small">Cantidad total: @dec4(Model.Totales.CantidadTotal)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-body kpi">
+                    <div class="text-muted small">Costo material total (item)</div>
+                    <div class="fs-4 fw-semibold">@money(Model.Totales.CostoMaterialTotal)</div>
+                    <div class="text-muted small">Global: @money(Model.Totales.CostoMaterialGlobal)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-body kpi">
+                    <div class="text-muted small">Venta items (estimada)</div>
+                    <div class="fs-4 fw-semibold">@money(Model.Totales.VentaItemsEstimada)</div>
+                    <div class="text-muted small">Ratio costo/venta: @(Model.Totales.RatioCostoSobreVentaItems?.ToString("0.0000") ?? "-")</div>
                 </div>
             </div>
         </div>
-    </form>
 
-    <!-- KPIs -->
-    <div class="row g-2 mb-3">
-        <div class="col-md-3">
-            <div class="card card-body">
-                <div class="text-muted small">Movimientos</div>
-                <div class="fs-4">@Model.Totales.Movimientos</div>
-                <div class="text-muted small">Items: @Model.Totales.ProduccionItems</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-body">
-                <div class="text-muted small">Costo insumos (ligado al insumo)</div>
-                <div class="fs-4">@money(Model.Totales.CostoInsumosEstimado)</div>
-                <div class="text-muted small">Cantidad total: @dec4(Model.Totales.CantidadTotal)</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-body">
-                <div class="text-muted small">Costo material total (item)</div>
-                <div class="fs-4">@money(Model.Totales.CostoMaterialTotal)</div>
-                <div class="text-muted small">Global: @money(Model.Totales.CostoMaterialGlobal)</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-body">
-                <div class="text-muted small">Venta items (estimada)</div>
-                <div class="fs-4">@money(Model.Totales.VentaItemsEstimada)</div>
-                <div class="text-muted small">Ratio costo/venta: @(Model.Totales.RatioCostoSobreVentaItems?.ToString("0.0000") ?? "-")</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TOP insumos -->
-    <div class="card mb-3">
-        <div class="card-header fw-semibold">Top insumos</div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0">
-                <thead>
-                    <tr>
-                        <th>Insumo</th>
-                        <th class="text-end">Cantidad</th>
-                        <th class="text-end">Costo (tarifas)</th>
-                        <th class="text-end">Pedidos</th>
-                        <th class="text-end">Productos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.TopInsumos.Count == 0)
-                {
-                    <tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>
-                }
-                else
-                {
-                    foreach (var x in Model.TopInsumos)
-                    {
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Top insumos</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
                         <tr>
-                            <td>@x.InsumoNombre <span class="text-muted">(@x.UnidadNombre)</span></td>
-                            <td class="text-end">@dec4(x.CantidadTotal)</td>
-                            <td class="text-end">@money(x.CostoTotalEstimado)</td>
-                            <td class="text-end">@x.Pedidos</td>
-                            <td class="text-end">@x.Productos</td>
+                            <th>Insumo</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Costo (tarifas)</th>
+                            <th class="text-end">Pedidos</th>
+                            <th class="text-end">Productos</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.TopInsumos.Count == 0)
+                    {
+                        <tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>
                     }
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- DETALLE -->
-    <div class="card">
-        <div class="card-header fw-semibold">Detalle</div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Pedido</th>
-                        <th>Cliente</th>
-                        <th>Producto</th>
-                        <th>Receta</th>
-                        <th>Insumo</th>
-                        <th class="text-end">Cant.</th>
-                        <th>Unidad</th>
-                        <th class="text-end">Costo unit (tarifa)</th>
-                        <th class="text-end">Costo (tarifa)</th>
-
-                        <th class="text-end">Costo global</th>
-                        <th class="text-end">Total + global</th>
-                        <th class="text-end">Unit + global</th>
-
-                        <th class="text-end">Venta item</th>
-                        <th>Notas</th>
-                        <th style="width:110px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.Detalle.Count == 0)
-                {
-                    <tr><td colspan="13" class="text-center text-muted py-4">Sin datos</td></tr>
-                }
-                else
-                {
-                    foreach (var x in Model.Detalle)
+                    else
                     {
-                        var rowId = $"tar_{x.ProduccionInventarioConsumoId}";
-                        var keyInsumo = $"{x.ProduccionItemId}|{x.InventarioId}";
-                        var keyGlobal = $"{x.ProduccionItemId}|0";
+                        foreach (var x in Model.TopInsumos)
+                        {
+                            <tr>
+                                <td>@x.InsumoNombre <span class="text-muted">(@x.UnidadNombre)</span></td>
+                                <td class="text-end">@dec4(x.CantidadTotal)</td>
+                                <td class="text-end">@money(x.CostoTotalEstimado)</td>
+                                <td class="text-end">@x.Pedidos</td>
+                                <td class="text-end">@x.Productos</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                        Model.TarifasPorKey.TryGetValue(keyInsumo, out var tarifasInsumo);
-                        Model.TarifasPorKey.TryGetValue(keyGlobal, out var tarifasGlobal);
-
+        <div class="card">
+            <div class="card-header fw-semibold">Detalle</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
                         <tr>
-                            <td>@x.FechaConsumo.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td><a href="/Reportes/Pedido360?pedidoId=@x.PedidoId">#@x.PedidoId</a></td>
-                            <td>@x.ClienteNombre</td>
-                            <td>@x.ProductoNombre</td>
-                            <td>@(string.IsNullOrWhiteSpace(x.RecetaNombre) ? "-" : x.RecetaNombre)</td>
-                            <td>@x.InsumoNombre</td>
-                            <td class="text-end">@dec4(x.CantidadConsumida)</td>
-                            <td>@x.UnidadNombre</td>
-                            <td class="text-end">@money(x.CostoUnitarioActual)</td>
-                            <td class="text-end">@money(x.CostoTotalEstimado)</td>
+                            <th>Fecha</th>
+                            <th>Pedido</th>
+                            <th>Cliente</th>
+                            <th>Producto</th>
+                            <th>Receta</th>
+                            <th>Insumo</th>
+                            <th class="text-end">Cant.</th>
+                            <th>Unidad</th>
+                            <th class="text-end">Costo unit (tarifa)</th>
+                            <th class="text-end">Costo (tarifa)</th>
 
-                            <td class="text-end">@money(x.CostoGlobalAplicado)</td>
-                            <td class="text-end">@money(x.CostoTotalConGlobal)</td>
-                            <td class="text-end">@money(x.CostoUnitarioConGlobal)</td>
+                            <th class="text-end">Costo global</th>
+                            <th class="text-end">Total + global</th>
+                            <th class="text-end">Unit + global</th>
 
-                            <td class="text-end">@money(x.VentaItemEstimada)</td>
-                            <td class="text-truncate" style="max-width:260px;" title="@(x.Notas ?? "")">@(x.Notas ?? "")</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#@rowId"
-                                        aria-expanded="false"
-                                        aria-controls="@rowId">
-                                    Tarifas
-                                </button>
-                            </td>
+                            <th class="text-end">Venta item</th>
+                            <th>Notas</th>
+                            <th style="width:110px;"></th>
                         </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.Detalle.Count == 0)
+                    {
+                        <tr><td colspan="13" class="text-center text-muted py-4">Sin datos</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var x in Model.Detalle)
+                        {
+                            var rowId = $"tar_{x.ProduccionInventarioConsumoId}";
+                            var keyInsumo = $"{x.ProduccionItemId}|{x.InventarioId}";
+                            var keyGlobal = $"{x.ProduccionItemId}|0";
 
-                        <tr>
-                            <td colspan="13" class="p-0 border-0">
-                                <div class="collapse" id="@rowId">
-                                    <div class="p-3 bg-light border-top">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <div class="fw-semibold">
-                                                Desglose (ProduccionItemId: @x.ProduccionItemId) — Costo material item: @money(x.CostoMaterialTotalItem)
-                                                @if (x.CostoMaterialGlobalItem > 0)
-                                                {
-                                                    <span class="text-muted">· Global: @money(x.CostoMaterialGlobalItem)</span>
-                                                }
+                            Model.TarifasPorKey.TryGetValue(keyInsumo, out var tarifasInsumo);
+                            Model.TarifasPorKey.TryGetValue(keyGlobal, out var tarifasGlobal);
+
+                            <tr>
+                                <td>@x.FechaConsumo.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td><a href="/Reportes/Pedido360?pedidoId=@x.PedidoId">#@x.PedidoId</a></td>
+                                <td>@x.ClienteNombre</td>
+                                <td>@x.ProductoNombre</td>
+                                <td>@(string.IsNullOrWhiteSpace(x.RecetaNombre) ? "-" : x.RecetaNombre)</td>
+                                <td>@x.InsumoNombre</td>
+                                <td class="text-end">@dec4(x.CantidadConsumida)</td>
+                                <td>@x.UnidadNombre</td>
+                                <td class="text-end">@money(x.CostoUnitarioActual)</td>
+                                <td class="text-end">@money(x.CostoTotalEstimado)</td>
+
+                                <td class="text-end">@money(x.CostoGlobalAplicado)</td>
+                                <td class="text-end">@money(x.CostoTotalConGlobal)</td>
+                                <td class="text-end">@money(x.CostoUnitarioConGlobal)</td>
+
+                                <td class="text-end">@money(x.VentaItemEstimada)</td>
+                                <td class="text-truncate" style="max-width:260px;" title="@(x.Notas ?? "")">@(x.Notas ?? "")</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#@rowId"
+                                            aria-expanded="false"
+                                            aria-controls="@rowId">
+                                        Tarifas
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="13" class="p-0 border-0">
+                                    <div class="collapse" id="@rowId">
+                                        <div class="p-3 bg-light border-top">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="fw-semibold">
+                                                    Desglose (ProduccionItemId: @x.ProduccionItemId) — Costo material item: @money(x.CostoMaterialTotalItem)
+                                                    @if (x.CostoMaterialGlobalItem > 0)
+                                                    {
+                                                        <span class="text-muted">· Global: @money(x.CostoMaterialGlobalItem)</span>
+                                                    }
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div class="row g-2">
-                                            <div class="col-md-6">
-                                                <div class="fw-semibold mb-1">Cargos ligados a este insumo</div>
-                                                @if (tarifasInsumo == null || tarifasInsumo.Count == 0)
-                                                {
-                                                    <div class="text-muted small">No hay cargos por tarifa ligados a este InventarioId.</div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm mb-0">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Concepto</th>
-                                                                    <th>Tarifa</th>
-                                                                    <th class="text-end">Cantidad</th>
-                                                                    <th class="text-end">Monto</th>
-                                                                    <th class="text-end">Subtotal</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                            @foreach (var t in tarifasInsumo)
-                                                            {
-                                                                <tr>
-                                                                    <td>
-                                                                        <div class="fw-semibold">@t.ConceptoCodigo</div>
-                                                                        <div class="text-muted small">@t.ConceptoNombre @(!string.IsNullOrWhiteSpace(t.ConceptoUnidad) ? $"· {t.ConceptoUnidad}" : "")</div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="fw-semibold">@t.TarifaNombre</div>
-                                                                        <div class="text-muted small">TarifaId: @t.TarifaId</div>
-                                                                    </td>
-                                                                    <td class="text-end">@dec4(t.Cantidad)</td>
-                                                                    <td class="text-end">@money(t.MontoTarifa)</td>
-                                                                    <td class="text-end">@money(t.Subtotal)</td>
-                                                                </tr>
-                                                            }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                }
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <div class="fw-semibold mb-1">Cargos ligados a este insumo</div>
+                                                    @if (tarifasInsumo == null || tarifasInsumo.Count == 0)
+                                                    {
+                                                        <div class="text-muted small">No hay cargos por tarifa ligados a este InventarioId.</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Concepto</th>
+                                                                        <th>Tarifa</th>
+                                                                        <th class="text-end">Cantidad</th>
+                                                                        <th class="text-end">Monto</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                @foreach (var t in tarifasInsumo)
+                                                                {
+                                                                    <tr>
+                                                                        <td>
+                                                                            <div class="fw-semibold">@t.ConceptoCodigo</div>
+                                                                            <div class="text-muted small">@t.ConceptoNombre @(!string.IsNullOrWhiteSpace(t.ConceptoUnidad) ? $"· {t.ConceptoUnidad}" : "")</div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="fw-semibold">@t.TarifaNombre</div>
+                                                                            <div class="text-muted small">TarifaId: @t.TarifaId</div>
+                                                                        </td>
+                                                                        <td class="text-end">@dec4(t.Cantidad)</td>
+                                                                        <td class="text-end">@money(t.MontoTarifa)</td>
+                                                                        <td class="text-end">@money(t.Subtotal)</td>
+                                                                    </tr>
+                                                                }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="fw-semibold mb-1">Cargos globales / no ligados a insumo (InventarioId=0)</div>
+                                                    @if (tarifasGlobal == null || tarifasGlobal.Count == 0)
+                                                    {
+                                                        <div class="text-muted small">No hay cargos globales/material_general para este item.</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Concepto</th>
+                                                                        <th class="text-end">Cantidad</th>
+                                                                        <th class="text-end">Monto</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                @foreach (var t in tarifasGlobal)
+                                                                {
+                                                                    <tr>
+                                                                        <td>
+                                                                            <div class="fw-semibold">@t.ConceptoCodigo</div>
+                                                                            <div class="text-muted small">@t.ConceptoNombre @(!string.IsNullOrWhiteSpace(t.ConceptoUnidad) ? $"· {t.ConceptoUnidad}" : "")</div>
+                                                                        </td>
+                                                                        <td class="text-end">@dec4(t.Cantidad)</td>
+                                                                        <td class="text-end">@money(t.MontoTarifa)</td>
+                                                                        <td class="text-end">@money(t.Subtotal)</td>
+                                                                    </tr>
+                                                                }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
 
-                                            <div class="col-md-6">
-                                                <div class="fw-semibold mb-1">Cargos globales / no ligados a insumo (InventarioId=0)</div>
-                                                @if (tarifasGlobal == null || tarifasGlobal.Count == 0)
-                                                {
-                                                    <div class="text-muted small">No hay cargos globales/material_general para este item.</div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm mb-0">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Concepto</th>
-                                                                    <th class="text-end">Cantidad</th>
-                                                                    <th class="text-end">Monto</th>
-                                                                    <th class="text-end">Subtotal</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                            @foreach (var t in tarifasGlobal)
-                                                            {
-                                                                <tr>
-                                                                    <td>
-                                                                        <div class="fw-semibold">@t.ConceptoCodigo</div>
-                                                                        <div class="text-muted small">@t.ConceptoNombre @(!string.IsNullOrWhiteSpace(t.ConceptoUnidad) ? $"· {t.ConceptoUnidad}" : "")</div>
-                                                                    </td>
-                                                                    <td class="text-end">@dec4(t.Cantidad)</td>
-                                                                    <td class="text-end">@money(t.MontoTarifa)</td>
-                                                                    <td class="text-end">@money(t.Subtotal)</td>
-                                                                </tr>
-                                                            }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                }
+                                            <div class="text-muted small mt-2">
+                                                Nota: este reporte usa el último costeo activo <b>TipoCodigo='MATERIAL'</b> del item. Si no existe costeo, verás costos en 0.
                                             </div>
-                                        </div>
-
-                                        <div class="text-muted small mt-2">
-                                            Nota: este reporte usa el último costeo activo <b>TipoCodigo='MATERIAL'</b> del item. Si no existe costeo, verás costos en 0.
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        }
                     }
-                }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
+    </div>
 </div>
