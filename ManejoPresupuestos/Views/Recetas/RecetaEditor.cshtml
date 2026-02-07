@@ -1,65 +1,196 @@
 ﻿@using Newtonsoft.Json
 @model IEnumerable<InventarioParaReceta>
 
+@{
+    ViewData["Title"] = "Editar receta";
+}
+
 <style>
-    .full-height { height: 100vh; }
-    .half-width { height: 100%; }
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+    }
+
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 850;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 85ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 800;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .section-title{
+        color: var(--text);
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .form-label{
+        color: var(--text);
+        font-weight: 750;
+        margin-bottom: .45rem;
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .72rem;
+        padding-bottom: .72rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .panel-note{
+        color: var(--muted);
+        font-size: .9rem;
+    }
+
+    .list-wrap{
+        border: 1px solid var(--border2);
+        background: rgba(15,23,42,.02);
+        border-radius: 16px;
+        padding: .85rem;
+        overflow-y: auto;
+        max-height: 64vh;
+    }
+
+    .mini-muted{
+        color: var(--muted);
+        font-size: .85rem;
+    }
 </style>
 
-<div class="container-fluid row">
-    <div class="container col-6">
-        <h2>Editor de receta para producto.</h2>
-        <span>Registrar o actualizar producto con sus materiales.</span>
-    </div>
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
 
-    <div class="container col-6 row">
-        <input id="receta-id" type="hidden" value="@(ViewBag.Receta != null ? ViewBag.Receta.Id : 0)" />
+        <div class="card card-soft mb-4">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                    <div>
+                        <h1 class="pg-title">Editar receta</h1>
+                        <div class="pg-subtitle">Define el nombre, el tiempo de impresión y selecciona los materiales de inventario.</div>
+                    </div>
 
-        <h4>Producto:</h4>
-        <input id="nombre-receta" type="text" class="form-control mb-3"
-               placeholder="Carrito/Casco Ingeniero ..."
-               value="@(ViewBag.Receta != null ? ViewBag.Receta.Nombre : "")" />
+                    <div class="d-flex gap-2">
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                        <a id="btn-guardar-receta" class="btn btn-primary btn-pill btn-primary-pill">Guardar</a>
+                    </div>
+                </div>
 
-        <div class="row mb-3">
-            <div class="col-sm-4 fw-bold">Tiempo de impresión (min):</div>
-            <div class="col-sm-8">
-                <input id="tiempo-receta" class="form-control" type="number" min="1" step="1"
-                       placeholder="40"
-                       value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoImpresionMin : 0)" />
+                <input id="receta-id" type="hidden" value="@(ViewBag.Receta != null ? ViewBag.Receta.Id : 0)" />
+
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-7">
+                        <label class="form-label">Nombre de la receta</label>
+                        <input id="nombre-receta" type="text" class="form-control control-soft"
+                               placeholder="Carrito/Casco Ingeniero ..."
+                               value="@(ViewBag.Receta != null ? ViewBag.Receta.Nombre : "")" />
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label">Tiempo de impresión (min)</label>
+                        <input id="tiempo-receta" class="form-control control-soft" type="number" min="1" step="1"
+                               placeholder="40"
+                               value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoImpresionMin : 0)" />
+                    </div>
+
+                    <div class="col-sm-6 col-lg-2">
+                        <label class="form-label">Post (min)</label>
+                        <input id="tiempo-post-receta" class="form-control control-soft" type="number" min="0" step="1"
+                               value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoPostMin : 0)" />
+                    </div>
+                </div>
+
+                @* <div class="panel-note mt-2">
+                    * Click en un material para agregarlo o quitarlo (sin drag).
+                </div> *@
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-sm-4 fw-bold">Tiempo de post-proceso (min):</div>
-            <div class="col-sm-8">
-                <input id="tiempo-post-receta" class="form-control" type="number" min="0" step="1"
-                       value="@(ViewBag.Receta != null ? ViewBag.Receta.TiempoPostMin : 0)" />
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card card-soft h-100">
+                    <div class="card-body p-3 p-md-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                            <div>
+                                <h5 class="section-title">Materiales disponibles</h5>
+                                @* <div class="mini-muted">Click para agregar</div> *@
+                            </div>
+                        </div>
+
+                        <div class="list-wrap mt-3 flex-grow-1" id="left"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-soft h-100">
+                    <div class="card-body p-3 p-md-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                            <div>
+                                <h5 class="section-title">Materiales en la receta</h5>
+                                @* <div class="mini-muted">Click para quitar</div> *@
+                            </div>
+                        </div>
+
+                        <div class="list-wrap mt-3 flex-grow-1" id="right"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <a id="btn-guardar-receta" class="btn btn-primary mt-1">Guardar</a>
-    </div>
-</div>
-
-<hr />
-
-<div class="container-fluid full-height">
-    <div class="row h-100">
-        <div style="background-color: #ecf0f1;border-top-left-radius: 1rem;border-bottom-left-radius: 1rem;"
-             class="col-6 d-flex flex-column half-width">
-            <div class="container d-flex align-items-center justify-content-center p-1">
-                <h4>Materiales de inventario</h4>
-            </div>
-            <div style="width:100%; height:100%; overflow-y: scroll" class="container" id="left"></div>
-        </div>
-
-        <div style="background-color: #ecf0f1;border-top-right-radius: 1rem;border-bottom-right-radius: 1rem;"
-             class="col-6 d-flex flex-column half-width">
-            <div class="container d-flex align-items-center justify-content-center p-1">
-                <h4>Materiales que componen al producto</h4>
-            </div>
-            <div style="width:100%; height:100%; overflow-y: scroll" class="container" id="right"></div>
-        </div>
     </div>
 </div>
 
@@ -70,7 +201,7 @@
     <script>
         const urlRecetaGuardar = '@Url.Action("RecetaEditorGuardar")';
 
-        let items = @Html.Raw(JsonConvert.SerializeObject(Model)); // inventarios disponibles
+        let items = @Html.Raw(JsonConvert.SerializeObject(Model));
         let itemsSeleccionados = @Html.Raw(JsonConvert.SerializeObject(ViewBag.MaterialesSeleccionados ?? new List<object>()));
 
         itemsSeleccionados = itemsSeleccionados?.map(x => {
