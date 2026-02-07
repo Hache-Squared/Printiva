@@ -3,113 +3,261 @@
     ViewData["Title"] = "Tarifas";
 }
 
-<h1>Tarifas</h1>
-<p class="text-muted">
-    Selecciona una impresora o un elemento de inventario para administrar sus tarifas acumulables.
-</p>
+<style>
+    :root{
+        --pg-bg:#F6F7FB;
+        --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.08);
+        --border2:rgba(15,23,42,.06);
+        --primary:#1D4ED8;
+    }
 
-<ul class="nav nav-tabs" id="tabTarifas" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-inv" data-bs-toggle="tab" data-bs-target="#panel-inv" type="button" role="tab">
-            Inventarios
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-imp" data-bs-toggle="tab" data-bs-target="#panel-imp" type="button" role="tab">
-            Impresoras
-        </button>
-    </li>
-</ul>
+    body{ background:var(--pg-bg); }
 
-<div class="tab-content border border-top-0 p-3" id="tabTarifasContent">
-    <!-- ========== Inventarios ========== -->
-    <div class="tab-pane fade show active" id="panel-inv" role="tabpanel">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <input id="buscarInv" class="form-control" placeholder="Buscar inventario por texto o ID..." />
+    .pg-wrap{ max-width:1180px; }
+
+    .pg-title{
+        color:var(--text);
+        font-weight:850;
+        letter-spacing:-.02em;
+        font-size:clamp(2rem, 1.5rem + 1.35vw, 2.9rem);
+        line-height:1.05;
+        margin:0;
+    }
+
+    .pg-subtitle{
+        color:var(--muted);
+        font-size:.98rem;
+        margin-top:.55rem;
+        max-width:85ch;
+    }
+
+    .btn-pill{
+        border-radius:999px;
+        padding:.58rem 1.02rem;
+        font-weight:800;
+        font-size:.92rem;
+        white-space:nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding:.42rem .8rem;
+        font-size:.84rem;
+    }
+
+    .btn-soft{
+        border-color:rgba(100,116,139,.35);
+        color:#0F172A;
+        background:rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background:rgba(255,255,255,.92);
+        border-color:rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background:var(--primary);
+        border-color:var(--primary);
+        box-shadow:0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background:var(--card-bg);
+        border:1px solid var(--border);
+        border-radius:18px;
+        box-shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .tabs-wrap{
+        padding: .8rem .9rem;
+        border-bottom:1px solid var(--border);
+        background:rgba(255,255,255,.65);
+        border-top-left-radius:18px;
+        border-top-right-radius:18px;
+    }
+
+    .nav-tabs{
+        border-bottom:0;
+        gap:.6rem;
+    }
+
+    .nav-tabs .nav-link{
+        border:1px solid transparent;
+        color:var(--muted);
+        font-weight:850;
+        border-radius:999px;
+        padding:.52rem 1rem;
+        background:transparent;
+    }
+    .nav-tabs .nav-link:hover{
+        color:var(--text);
+        background:rgba(15,23,42,.03);
+        border-color:rgba(15,23,42,.06);
+    }
+    .nav-tabs .nav-link.active{
+        color:var(--primary);
+        background:rgba(29,78,216,.08);
+        border-color:rgba(29,78,216,.20);
+    }
+
+    .panel-pad{ padding: 1rem 1rem 1.05rem; }
+
+    .control-soft{
+        border-radius:12px;
+        border-color:rgba(15,23,42,.10);
+        background:rgba(15,23,42,.03);
+        padding-top:.72rem;
+        padding-bottom:.72rem;
+    }
+    .control-soft:focus{
+        border-color:rgba(29,78,216,.40);
+        box-shadow:0 0 0 .25rem rgba(29,78,216,.12);
+        background:#fff;
+    }
+
+    .table-clean{ margin:0; }
+    .table-clean thead th{
+        color:var(--muted);
+        font-weight:850;
+        letter-spacing:.14em;
+        font-size:.72rem;
+        text-transform:uppercase;
+        padding:.75rem .9rem;
+        border-bottom:1px solid var(--border);
+        white-space:nowrap;
+    }
+    .table-clean tbody td{
+        padding:.68rem .9rem;
+        border-top:1px solid rgba(15,23,42,.06);
+        vertical-align:middle;
+        font-size:.95rem;
+    }
+
+    .row-muted{
+        color:var(--muted);
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="mb-4">
+            <h1 class="pg-title">Tarifas</h1>
+            <div class="pg-subtitle">
+                Selecciona una impresora o un elemento de inventario para administrar sus tarifas acumulables.
             </div>
         </div>
 
-        <table class="table table-striped align-middle" id="tablaInv">
-            <thead>
-                <tr>
-                    <th>Inventario</th>
-                    <th class="text-end">Cantidad</th>
-                    <th>Unidad</th>
-                    <th class="text-center">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Inventarios == null || Model.Inventarios.Count == 0)
-                {
-                    <tr><td colspan="4" class="text-center text-muted">Sin inventarios.</td></tr>
-                }
-                else
-                {
-                    foreach (var x in Model.Inventarios)
-                    {
-                        <tr data-text="@($"{x.InventarioId} {x.Display}".ToLower())">
-                            <td>
-                                <div class="fw-semibold">@x.Display</div>
-                            </td>
-                            <td class="text-end">@((x.Cantidad ?? 0).ToString("0.####"))</td>
-                            <td>@(x.Unidad ?? "-")</td>
-                            <td class="text-center">
-                                <a class="btn btn-outline-primary btn-sm"
-                                   asp-controller="Tarifas"
-                                   asp-action="Inventario"
-                                   asp-route-inventarioId="@x.InventarioId">
-                                    Abrir tarifas
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
+        <div class="card card-soft">
+            <div class="tabs-wrap">
+                <ul class="nav nav-tabs" id="tabTarifas" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-inv" data-bs-toggle="tab" data-bs-target="#panel-inv" type="button" role="tab">
+                            Inventarios
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-imp" data-bs-toggle="tab" data-bs-target="#panel-imp" type="button" role="tab">
+                            Impresoras
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
-    <!-- ========== Impresoras ========== -->
-    <div class="tab-pane fade" id="panel-imp" role="tabpanel">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <input id="buscarImp" class="form-control" placeholder="Buscar impresora por texto o ID..." />
+            <div class="tab-content panel-pad" id="tabTarifasContent">
+                <!-- ========== Inventarios ========== -->
+                <div class="tab-pane fade show active" id="panel-inv" role="tabpanel">
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-md-6">
+                            <input id="buscarInv" class="form-control control-soft" placeholder="Buscar inventario por texto o ID..." />
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-clean align-middle" id="tablaInv">
+                            <thead>
+                                <tr>
+                                    <th>Inventario</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th>Unidad</th>
+                                    <th class="text-center" style="width:170px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Inventarios == null || Model.Inventarios.Count == 0)
+                                {
+                                    <tr><td colspan="4" class="text-center row-muted py-4">Sin inventarios.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var x in Model.Inventarios)
+                                    {
+                                        <tr data-text="@($"{x.InventarioId} {x.Display}".ToLower())">
+                                            <td><div class="fw-semibold">@x.Display</div></td>
+                                            <td class="text-end">@((x.Cantidad ?? 0).ToString("0.####"))</td>
+                                            <td>@(x.Unidad ?? "-")</td>
+                                            <td class="text-center">
+                                                <a class="btn btn-outline-primary btn-pill btn-sm"
+                                                   asp-controller="Tarifas"
+                                                   asp-action="Inventario"
+                                                   asp-route-inventarioId="@x.InventarioId">
+                                                    Abrir tarifas
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ========== Impresoras ========== -->
+                <div class="tab-pane fade" id="panel-imp" role="tabpanel">
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-md-6">
+                            <input id="buscarImp" class="form-control control-soft" placeholder="Buscar impresora por texto o ID..." />
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-clean align-middle" id="tablaImp">
+                            <thead>
+                                <tr>
+                                    <th>Impresora</th>
+                                    <th class="text-center" style="width:170px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Impresoras == null || Model.Impresoras.Count == 0)
+                                {
+                                    <tr><td colspan="2" class="text-center row-muted py-4">Sin impresoras.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var x in Model.Impresoras)
+                                    {
+                                        <tr data-text="@($"{x.ImpresoraId} {x.Display}".ToLower())">
+                                            <td><div class="fw-semibold">@x.Display</div></td>
+                                            <td class="text-center">
+                                                <a class="btn btn-outline-primary btn-pill btn-sm"
+                                                   asp-controller="Tarifas"
+                                                   asp-action="Impresora"
+                                                   asp-route-impresoraId="@x.ImpresoraId">
+                                                    Abrir tarifas
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <table class="table table-striped align-middle" id="tablaImp">
-            <thead>
-                <tr>
-                    <th>Impresora</th>
-                    <th class="text-center">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Impresoras == null || Model.Impresoras.Count == 0)
-                {
-                    <tr><td colspan="2" class="text-center text-muted">Sin impresoras.</td></tr>
-                }
-                else
-                {
-                    foreach (var x in Model.Impresoras)
-                    {
-                        <tr data-text="@($"{x.ImpresoraId} {x.Display}".ToLower())">
-                            <td>
-                                <div class="fw-semibold">@x.Display</div>
-                            </td>
-                            <td class="text-center">
-                                <a class="btn btn-outline-primary btn-sm"
-                                   asp-controller="Tarifas"
-                                   asp-action="Impresora"
-                                   asp-route-impresoraId="@x.ImpresoraId">
-                                    Abrir tarifas
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
     </div>
 </div>
 

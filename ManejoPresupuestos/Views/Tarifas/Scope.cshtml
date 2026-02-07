@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = "Tarifas";
-    var scopeType = Model.ScopeType; // Inventario / Impresora
+    var scopeType = Model.ScopeType;
     var scopeId = Model.ScopeId;
 
     var isInventario = scopeType == ManejoPresupuestos.Models.TarifaScopeType.Inventario;
@@ -11,7 +11,6 @@
 
     var tarifasAll = Model.Tarifas ?? new List<ManejoPresupuestos.Models.TarifaListadoDto>();
 
-    // Global = no está ligada a inventario ni impresora
     var tarifasGlobales = tarifasAll
         .Where(x => x.InventarioId == null && x.ImpresoraId == null)
         .ToList();
@@ -29,139 +28,284 @@
         : "Tarifas específicas de esta impresora";
 }
 
-<h1>@Model.ScopeTitulo</h1>
-<p class="text-muted">
-    Tarifas acumulables: puedes tener múltiples tarifas por @scopeLabel y se suman en tu cálculo.
-</p>
+<style>
+    :root{
+        --pg-bg:#F6F7FB;
+        --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.08);
+        --border2:rgba(15,23,42,.06);
+        --primary:#1D4ED8;
+    }
 
-<div class="d-flex gap-2 mb-3">
-    <button class="btn btn-primary" onclick="abrirModalCrear()">+ Nueva tarifa</button>
-    <a class="btn btn-outline-secondary" href="javascript:history.back()">Regresar</a>
+    body{ background:var(--pg-bg); }
+
+    .pg-wrap{ max-width:1180px; }
+
+    .pg-title{
+        color:var(--text);
+        font-weight:850;
+        letter-spacing:-.02em;
+        font-size:clamp(2rem, 1.5rem + 1.25vw, 2.6rem);
+        line-height:1.05;
+        margin:0;
+    }
+
+    .pg-subtitle{
+        color:var(--muted);
+        font-size:.98rem;
+        margin-top:.55rem;
+        max-width:90ch;
+    }
+
+    .btn-pill{
+        border-radius:999px;
+        padding:.58rem 1.02rem;
+        font-weight:800;
+        font-size:.92rem;
+        white-space:nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding:.42rem .8rem;
+        font-size:.84rem;
+    }
+
+    .btn-soft{
+        border-color:rgba(100,116,139,.35);
+        color:#0F172A;
+        background:rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background:rgba(255,255,255,.92);
+        border-color:rgba(100,116,139,.45);
+    }
+
+    .btn-primary-pill{
+        background:var(--primary);
+        border-color:var(--primary);
+        box-shadow:0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .card-soft{
+        background:var(--card-bg);
+        border:1px solid var(--border);
+        border-radius:18px;
+        box-shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .table-clean{ margin:0; }
+    .table-clean thead th{
+        color:var(--muted);
+        font-weight:850;
+        letter-spacing:.14em;
+        font-size:.72rem;
+        text-transform:uppercase;
+        padding:.75rem .9rem;
+        border-bottom:1px solid var(--border);
+        white-space:nowrap;
+    }
+    .table-clean tbody td{
+        padding:.68rem .9rem;
+        border-top:1px solid rgba(15,23,42,.06);
+        vertical-align:middle;
+        font-size:.95rem;
+    }
+
+    .section-row td{
+        background: rgba(15,23,42,.03);
+        border-top:1px solid var(--border);
+        border-bottom:1px solid var(--border2);
+        color: var(--text);
+        font-weight:850;
+        padding:.72rem .9rem;
+    }
+
+    .badge-soft{
+        border-radius:999px;
+        font-weight:850;
+        letter-spacing:.02em;
+        padding:.38rem .6rem;
+        border:1px solid rgba(100,116,139,.25);
+        background:rgba(100,116,139,.10);
+        color:#334155;
+    }
+
+    .modal-content{
+        border:0;
+        border-radius:18px;
+        box-shadow:0 18px 60px rgba(2,6,23,.25);
+    }
+    .modal-header{
+        border-bottom:1px solid var(--border);
+        padding: 1rem 1.15rem;
+    }
+    .modal-title{
+        font-weight:850;
+        color:var(--text);
+    }
+
+    .control-soft{
+        border-radius:12px;
+        border-color:rgba(15,23,42,.10);
+        background:rgba(15,23,42,.03);
+        padding-top:.72rem;
+        padding-bottom:.72rem;
+    }
+    .control-soft:focus{
+        border-color:rgba(29,78,216,.40);
+        box-shadow:0 0 0 .25rem rgba(29,78,216,.12);
+        background:#fff;
+    }
+
+    .form-label.fw-semibold{ color:var(--text); }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">@Model.ScopeTitulo</h1>
+                <div class="pg-subtitle">Tarifas acumulables: puedes tener múltiples tarifas por @scopeLabel y se suman en tu cálculo.</div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary btn-pill btn-primary-pill" onclick="abrirModalCrear()">+ Nueva tarifa</button>
+                <a class="btn btn-pill btn-soft" href="javascript:history.back()">Regresar</a>
+            </div>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="min-width:260px;">Concepto</th>
+                                <th>Unidad</th>
+                                <th style="min-width:220px;">Nombre</th>
+                                <th class="text-end">Monto</th>
+                                <th>Moneda</th>
+                                <th class="text-end">Orden</th>
+                                <th style="white-space:nowrap;">Último cambio</th>
+                                <th class="text-end" style="width:260px;">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (tarifasEspecificas.Count == 0 && tarifasGlobales.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        No hay tarifas registradas para este @scopeLabel.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr class="section-row">
+                                    <td colspan="8">@labelLocal</td>
+                                </tr>
+
+                                if (tarifasEspecificas.Count == 0)
+                                {
+                                    <tr><td colspan="8" class="text-center text-muted">Sin tarifas específicas.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var t in tarifasEspecificas)
+                                    {
+                                        var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
+                                        <tr
+                                            data-tarifa-id="@t.TarifaId"
+                                            data-concepto-codigo="@t.ConceptoCodigo"
+                                            data-concepto-nombre="@t.ConceptoNombre"
+                                            data-unidad="@t.Unidad"
+                                            data-tarifa-nombre="@t.TarifaNombre"
+                                            data-monto="@montoInvariant"
+                                            data-moneda="@t.Moneda"
+                                            data-orden="@t.TarifaOrden"
+                                        >
+                                            <td>
+                                                <div class="fw-semibold">@t.ConceptoNombre</div>
+                                                <div class="text-muted small">@t.ConceptoCodigo</div>
+                                            </td>
+                                            <td>@t.Unidad</td>
+                                            <td class="fw-semibold">@t.TarifaNombre</td>
+                                            <td class="text-end fw-semibold">@t.Monto.ToString("0.####")</td>
+                                            <td>@t.Moneda</td>
+                                            <td class="text-end">@t.TarifaOrden</td>
+                                            <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                                    <button class="btn btn-outline-primary btn-pill btn-sm" onclick="abrirModalEditar(this)">Editar</button>
+                                                    <button class="btn btn-outline-secondary btn-pill btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
+                                                    <button class="btn btn-outline-danger btn-pill btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                                <tr class="section-row">
+                                    <td colspan="8">@labelGlobal</td>
+                                </tr>
+
+                                if (tarifasGlobales.Count == 0)
+                                {
+                                    <tr><td colspan="8" class="text-center text-muted">Sin tarifas globales.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var t in tarifasGlobales)
+                                    {
+                                        var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
+                                        <tr
+                                            data-tarifa-id="@t.TarifaId"
+                                            data-concepto-codigo="@t.ConceptoCodigo"
+                                            data-concepto-nombre="@t.ConceptoNombre"
+                                            data-unidad="@t.Unidad"
+                                            data-tarifa-nombre="@t.TarifaNombre"
+                                            data-monto="@montoInvariant"
+                                            data-moneda="@t.Moneda"
+                                            data-orden="@t.TarifaOrden"
+                                        >
+                                            <td>
+                                                <span class="badge badge-soft float-start fs-6 p-1 m-1">GLOBAL</span>
+                                                <div class="fw-semibold">
+                                                    @t.ConceptoNombre
+                                                </div>
+                                                <div class="text-muted small">@t.ConceptoCodigo</div>
+                                            </td>
+                                            <td>@t.Unidad</td>
+                                            <td class="fw-semibold">@t.TarifaNombre</td>
+                                            <td class="text-end fw-semibold">@t.Monto.ToString("0.####")</td>
+                                            <td>@t.Moneda</td>
+                                            <td class="text-end">@t.TarifaOrden</td>
+                                            <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                                    <button class="btn btn-outline-primary btn-pill btn-sm" onclick="abrirModalEditar(this)">Editar</button>
+                                                    <button class="btn btn-outline-secondary btn-pill btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
+                                                    <button class="btn btn-outline-danger btn-pill btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Concepto</th>
-            <th>Unidad</th>
-            <th>Nombre</th>
-            <th class="text-end">Monto</th>
-            <th>Moneda</th>
-            <th class="text-end">Orden</th>
-            <th>Último cambio</th>
-            <th class="text-center">Acciones</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @if (tarifasEspecificas.Count == 0 && tarifasGlobales.Count == 0)
-        {
-            <tr>
-                <td colspan="8" class="text-center text-muted py-4">
-                    No hay tarifas registradas para este @scopeLabel.
-                </td>
-            </tr>
-        }
-        else
-        {
-            <tr class="table-light">
-                <td colspan="8" class="fw-semibold">@labelLocal</td>
-            </tr>
-
-            if (tarifasEspecificas.Count == 0)
-            {
-                <tr><td colspan="8" class="text-center text-muted">Sin tarifas específicas.</td></tr>
-            }
-            else
-            {
-                foreach (var t in tarifasEspecificas)
-                {
-                    var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
-                    <tr
-                        data-tarifa-id="@t.TarifaId"
-                        data-concepto-codigo="@t.ConceptoCodigo"
-                        data-concepto-nombre="@t.ConceptoNombre"
-                        data-unidad="@t.Unidad"
-                        data-tarifa-nombre="@t.TarifaNombre"
-                        data-monto="@montoInvariant"
-                        data-moneda="@t.Moneda"
-                        data-orden="@t.TarifaOrden"
-                    >
-                        <td>
-                            <div class="fw-semibold">@t.ConceptoNombre</div>
-                            <div class="text-muted small">@t.ConceptoCodigo</div>
-                        </td>
-                        <td>@t.Unidad</td>
-                        <td>@t.TarifaNombre</td>
-                        <td class="text-end">@t.Monto.ToString("0.####")</td>
-                        <td>@t.Moneda</td>
-                        <td class="text-end">@t.TarifaOrden</td>
-                        <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-
-            <tr class="table-light">
-                <td colspan="8" class="fw-semibold">@labelGlobal</td>
-            </tr>
-
-            if (tarifasGlobales.Count == 0)
-            {
-                <tr><td colspan="8" class="text-center text-muted">Sin tarifas globales.</td></tr>
-            }
-            else
-            {
-                foreach (var t in tarifasGlobales)
-                {
-                    var montoInvariant = t.Monto.ToString("0.####", CultureInfo.InvariantCulture);
-                    <tr
-                        data-tarifa-id="@t.TarifaId"
-                        data-concepto-codigo="@t.ConceptoCodigo"
-                        data-concepto-nombre="@t.ConceptoNombre"
-                        data-unidad="@t.Unidad"
-                        data-tarifa-nombre="@t.TarifaNombre"
-                        data-monto="@montoInvariant"
-                        data-moneda="@t.Moneda"
-                        data-orden="@t.TarifaOrden"
-                    >
-                        <td>
-                            <div class="fw-semibold">
-                                @t.ConceptoNombre <span class="badge text-bg-secondary ms-2">GLOBAL</span>
-                            </div>
-                            <div class="text-muted small">@t.ConceptoCodigo</div>
-                        </td>
-                        <td>@t.Unidad</td>
-                        <td>@t.TarifaNombre</td>
-                        <td class="text-end">@t.Monto.ToString("0.####")</td>
-                        <td>@t.Moneda</td>
-                        <td class="text-end">@t.TarifaOrden</td>
-                        <td>@t.FechaUltimoCambio.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-sm" onclick="abrirModalEditar(this)">Editar</button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalHistorial(this)">Historial</button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="eliminarTarifa(this)">Eliminar</button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-        }
-    </tbody>
-</table>
-
-<!-- =======================
-     MODAL CREAR / EDITAR
-======================= -->
 <div class="modal fade" id="modalTarifa" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 id="modalTarifaTitulo" class="modal-title">Nueva tarifa</h5>
@@ -176,7 +320,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Concepto</label>
-                        <select id="concepto-codigo" class="form-select">
+                        <select id="concepto-codigo" class="form-select control-soft">
                             <option value="">-- Selecciona --</option>
                             @foreach (var c in Model.Conceptos.OrderBy(x => x.Orden).ThenBy(x => x.Nombre))
                             {
@@ -188,22 +332,22 @@
 
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Nombre (para identificar la tarifa)</label>
-                        <input id="tarifa-nombre" class="form-control" type="text" placeholder="Ej: Extra por colgante / Ajuste por desperdicio..." />
+                        <input id="tarifa-nombre" class="form-control control-soft" type="text" placeholder="Ej: Extra por colgante / Ajuste por desperdicio..." />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Monto</label>
-                        <input id="monto" class="form-control" type="number" step="0.0001" min="0" placeholder="0.00" />
+                        <input id="monto" class="form-control control-soft" type="number" step="0.0001" min="0" placeholder="0.00" />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Moneda</label>
-                        <input id="moneda" class="form-control" type="text" value="MXN" maxlength="3" />
+                        <input id="moneda" class="form-control control-soft" type="text" value="MXN" maxlength="3" />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Orden</label>
-                        <input id="orden" class="form-control" type="number" step="1" min="1" value="100" />
+                        <input id="orden" class="form-control control-soft" type="number" step="1" min="1" value="100" />
                     </div>
                 </div>
 
@@ -211,18 +355,15 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="btn-guardar" class="btn btn-primary" onclick="guardarTarifa()">Guardar</button>
+                <button class="btn btn-pill btn-soft" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btn-guardar" class="btn btn-primary btn-pill btn-primary-pill" onclick="guardarTarifa()">Guardar</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- =======================
-     MODAL HISTORIAL
-======================= -->
 <div class="modal fade" id="modalHistorial" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Historial de cambios</h5>
@@ -232,25 +373,27 @@
             <div class="modal-body">
                 <div class="text-muted mb-2" id="historial-contexto"></div>
 
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Acción</th>
-                            <th>Nombre</th>
-                            <th class="text-end">Monto</th>
-                            <th>Moneda</th>
-                            <th class="text-end">Orden</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historial-body">
-                        <tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-clean table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                                <th>Nombre</th>
+                                <th class="text-end">Monto</th>
+                                <th>Moneda</th>
+                                <th class="text-end">Orden</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historial-body">
+                            <tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-pill btn-soft" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -271,7 +414,6 @@
         sel.disabled = !!disabled;
     }
 
-    // Mostrar unidad al cambiar concepto
     document.getElementById("concepto-codigo").addEventListener("change", function () {
         const opt = this.options[this.selectedIndex];
         const unidad = opt?.getAttribute("data-unidad") || "-";
@@ -318,10 +460,8 @@
 
         document.getElementById("tarifa-id").value = tr.dataset.tarifaId;
 
-        // En editar NO cambies concepto (tu SP actualizar no lo usa).
         setConceptoDisabled(true);
 
-        // Si por filtro el concepto no existe en el select, lo agregamos temporalmente
         const sel = document.getElementById("concepto-codigo");
         const codigo = (tr.dataset.conceptoCodigo || "").trim();
         const nombreConcepto = (tr.dataset.conceptoNombre || codigo).trim();
@@ -375,7 +515,6 @@
         let body = null;
 
         if (tarifaId === 0) {
-            //  Si termina en _GLOBAL => se crea global (sin inventarioId ni impresoraId)
             const esGlobal = conceptoCodigo.toUpperCase().endsWith("_GLOBAL");
 
             body = {
@@ -388,7 +527,6 @@
                 impresoraId: esGlobal ? null : (scopeType === "impresora" ? scopeId : null)
             };
         } else {
-            // ACTUALIZAR
             url = urlActualizar;
             body = {
                 tarifaId: tarifaId,
