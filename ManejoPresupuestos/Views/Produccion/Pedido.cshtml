@@ -3,141 +3,286 @@
     ViewData["Title"] = "Producción del Pedido";
 }
 
-<div class="container py-4">
-    <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-        <div>
-            <h1 class="mb-1">Producción — Pedido #@Model.Pedido.PedidoId</h1>
-            <div class="text-muted">@Model.Pedido.ClienteNombre · @Model.Pedido.EstatusNombre</div>
-        </div>
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="/Pedidos/Detalles/@Model.Pedido.PedidoId">Volver al pedido</a>
-            <a class="btn btn-outline-secondary" href="/Pedidos/Kanban">Kanban</a>
-        </div>
-    </div>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --border2: rgba(15,23,42,.06);
+        --primary: #1D4ED8;
+        --success: #16A34A;
+        --danger: #EF4444;
+    }
 
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <div class="small text-muted">Cliente</div>
-                    <div class="fw-semibold">@Model.Pedido.ClienteNombre</div>
-                </div>
-                <div class="col-md-3">
-                    <div class="small text-muted">Entrega</div>
-                    <div class="fw-semibold">@((Model.Pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy")) ?? "-")</div>
-                </div>
-                <div class="col-md-3">
-                    <div class="small text-muted">Total estimado</div>
-                    <div class="fw-semibold">@((Model.Pedido.TotalEstimado ?? 0).ToString("N2"))</div>
+    body{ background: var(--pg-bg); }
+
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 900;
+        letter-spacing: -.02em;
+        font-size: clamp(1.9rem, 1.35rem + 1.25vw, 2.55rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 90ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .56rem 1.02rem;
+        font-weight: 850;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding: .40rem .78rem;
+        font-size: .84rem;
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .kpi-label{ color: var(--muted); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 850; }
+    .kpi-value{ color: var(--text); font-weight: 850; }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .70rem .90rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .table-clean tbody td{
+        padding: .58rem .90rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .95rem;
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+    .control-soft.control-sm{
+        padding-top: .46rem;
+        padding-bottom: .46rem;
+    }
+
+    .badge-soft{
+        border-radius: 999px;
+        padding: .34rem .62rem;
+        font-weight: 900;
+        font-size: .78rem;
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    .hint{
+        color: var(--muted);
+        font-size: .9rem;
+    }
+
+    .modal-modern .modal-content{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 18px 50px rgba(2,6,23,.16);
+    }
+    .modal-modern .modal-header{
+        border-bottom: 1px solid var(--border2);
+        padding: 1.05rem 1.15rem;
+    }
+    .modal-modern .modal-title{
+        color: var(--text);
+        font-weight: 900;
+        letter-spacing: -.02em;
+    }
+    .modal-modern .modal-body{
+        padding: 1.15rem 1.15rem 1.05rem;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Producción — Pedido #@Model.Pedido.PedidoId</h1>
+                <div class="pg-subtitle">@Model.Pedido.ClienteNombre · @Model.Pedido.EstatusNombre</div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-pill btn-soft" href="/Pedidos/Detalles/@Model.Pedido.PedidoId">Volver al pedido</a>
+                <a class="btn btn-pill btn-soft" href="/Pedidos/Kanban">Kanban</a>
+            </div>
+        </div>
+
+        <div class="card card-soft mb-3">
+            <div class="card-body py-3">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="kpi-label">Cliente</div>
+                        <div class="kpi-value">@Model.Pedido.ClienteNombre</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-label">Entrega</div>
+                        <div class="kpi-value">@((Model.Pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy")) ?? "-")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-label">Total estimado</div>
+                        <div class="kpi-value">@((Model.Pedido.TotalEstimado ?? 0).ToString("N2"))</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Anti-forgery para AJAX (UNO SOLO) -->
-    <form id="afForm" method="post">
-        @Html.AntiForgeryToken()
-    </form>
+        <!-- Anti-forgery para AJAX (UNO SOLO) -->
+        <form id="afForm" method="post">
+            @Html.AntiForgeryToken()
+        </form>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="mb-0">Items de producción</h5>
-                <div class="text-muted small">El avance del pedido se desbloquea cuando todos los items avanzan (motor).</div>
-            </div>
+        <div class="card card-soft">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+                    <div>
+                        <div class="fw-semibold" style="color: var(--text); font-weight: 900;">Items de producción</div>
+                        <div class="hint">El avance del pedido se desbloquea cuando todos los items avanzan (motor).</div>
+                    </div>
+                </div>
 
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th style="width:120px;">Cantidad</th>
-                            <th style="width:200px;">Estatus</th>
-
-                            <th style="width:220px;">Impresora</th>
-                            <th style="width:150px;">Peso real (gr)</th>
-                            <th>Notas operativas</th>
-
-                            <th style="width:120px;"></th>
-                            <th style="width:120px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var it in Model.Items)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle">
+                        <thead>
                             <tr>
-                                <td class="fw-semibold">@it.ProductoNombre</td>
-                                <td>@it.Cantidad</td>
+                                <th>Producto</th>
+                                <th style="width:120px;">Cantidad</th>
+                                <th style="width:200px;">Estatus</th>
 
-                                <td>
-                                    <span class="badge @it.BadgeClass">@it.EstatusNombre</span>
-                                </td>
+                                <th style="width:220px;">Impresora</th>
+                                <th style="width:150px;">Peso real</th>
+                                <th>Notas operativas</th>
 
-                                <td>
-                                    <select class="form-select form-select-sm kbImpresora" data-id="@it.ProduccionItemId">
-                                        <option value="">(sin asignar)</option>
-                                        @foreach (var imp in Model.Impresoras)
-                                        {
-                                            <option value="@imp.Value" selected="@(it.ImpresoraId?.ToString() == imp.Value)">
-                                                @imp.Text
-                                            </option>
-                                        }
-                                    </select>
-                                </td>
-
-                                <td>
-                                    <input type="number"
-                                           step="0.01"
-                                           class="form-control form-control-sm kbPesoReal"
-                                           data-id="@it.ProduccionItemId"
-                                           value="@(it.PesoRealGr?.ToString() ?? "")"
-                                           placeholder="0.00" />
-                                </td>
-
-                                <td>
-                                    <input class="form-control form-control-sm kbNotasOper"
-                                           data-id="@it.ProduccionItemId"
-                                           value="@(it.NotasOperativas ?? "")"
-                                           placeholder="Notas operativas..." />
-                                </td>
-
-                                <td class="text-end">
-                                    <button type="button"
-                                            class="btn btn-outline-primary btn-sm kbGuardar"
-                                            data-id="@it.ProduccionItemId">
-                                        Guardar
-                                    </button>
-                                </td>
-
-                                <td class="text-end">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-primary btnProdAcciones"
-                                            data-id="@it.ProduccionItemId"
-                                            data-producto="@it.ProductoNombre"
-                                            data-inv="@(it.InventarioAplicado ? "1" : "0")">
-                                        Más
-                                    </button>
-
-                                </td>
+                                <th style="width:140px;"></th>
+                                <th style="width:140px;"></th>
                             </tr>
-                        }
+                        </thead>
+                        <tbody>
+                            @foreach (var it in Model.Items)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@it.ProductoNombre</td>
+                                    <td>@it.Cantidad</td>
 
-                        @if (!Model.Items.Any())
-                        {
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Sin items de producción</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                    <td>
+                                        <span class="badge badge-soft @it.BadgeClass text-white">@it.EstatusNombre</span>
+                                    </td>
+
+                                    <td>
+                                        <select class="form-select form-select-sm control-soft control-sm kbImpresora" data-id="@it.ProduccionItemId">
+                                            <option value="">(sin asignar)</option>
+                                            @foreach (var imp in Model.Impresoras)
+                                            {
+                                                <option value="@imp.Value" selected="@(it.ImpresoraId?.ToString() == imp.Value)">
+                                                    @imp.Text
+                                                </option>
+                                            }
+                                        </select>
+                                    </td>
+
+                                    <td>
+                                        <input type="number"
+                                               step="0.01"
+                                               class="form-control form-control-sm control-soft control-sm kbPesoReal"
+                                               data-id="@it.ProduccionItemId"
+                                               value="@(it.PesoRealGr?.ToString() ?? "")"
+                                               placeholder="0.00" />
+                                    </td>
+
+                                    <td>
+                                        <input class="form-control form-control-sm control-soft control-sm kbNotasOper"
+                                               data-id="@it.ProduccionItemId"
+                                               value="@(it.NotasOperativas ?? "")"
+                                               placeholder="Notas operativas..." />
+                                    </td>
+
+                                    <td class="text-end">
+                                        <button type="button"
+                                                class="btn btn-pill btn-soft btn-sm kbGuardar"
+                                                data-id="@it.ProduccionItemId">
+                                            Guardar
+                                        </button>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <button type="button"
+                                                class="btn btn-primary btn-pill btn-primary-pill btn-sm btnProdAcciones"
+                                                data-id="@it.ProduccionItemId"
+                                                data-producto="@it.ProductoNombre"
+                                                data-inv="@(it.InventarioAplicado ? "1" : "0")">
+                                            Más
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+
+                            @if (!Model.Items.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">Sin items de producción</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
-
         </div>
+
     </div>
 </div>
 
 <!-- Modal Acciones -->
-<div class="modal fade" id="prodModal" tabindex="-1">
+<div class="modal fade modal-modern" id="prodModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -147,22 +292,22 @@
 
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Receta para este item</label>
-                    <div class="d-flex gap-2">
-                        <select id="prodRecetaSelect" class="form-select"></select>
-                        <button id="btnAsignarReceta" type="button" class="btn btn-outline-primary">Asignar</button>
+                    <label class="form-label fw-semibold" style="color: var(--text);">Receta para este item</label>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <select id="prodRecetaSelect" class="form-select control-soft"></select>
+                        <button id="btnAsignarReceta" type="button" class="btn btn-pill btn-soft">Asignar</button>
                     </div>
                     <div id="prodRecetaInfo" class="small text-muted mt-1"></div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Notas</label>
-                    <textarea id="prodNotas" class="form-control" rows="3" placeholder="Qué cambió / por qué..."></textarea>
+                    <label class="form-label fw-semibold" style="color: var(--text);">Notas</label>
+                    <textarea id="prodNotas" class="form-control control-soft" rows="3" placeholder="Qué cambió / por qué..."></textarea>
                 </div>
 
                 <hr />
 
-                <div class="fw-semibold mb-2">Acciones disponibles</div>
+                <div class="fw-semibold mb-2" style="color: var(--text); font-weight: 900;">Acciones disponibles</div>
                 <div id="prodAcciones" class="d-flex flex-wrap gap-2"></div>
                 <div id="prodAccionesEmpty" class="text-muted d-none">No hay acciones disponibles para este item.</div>
             </div>
@@ -354,7 +499,7 @@
                 btn.dataset.hacia = String(hacia);
 
                 if (bloqueada) {
-                    btn.className = 'btn btn-outline-secondary';
+                    btn.className = 'btn btn-outline-secondary btn-pill';
                     btn.disabled = true;
                     btn.title = motivo || 'Acción bloqueada';
 
@@ -373,7 +518,7 @@
                     continue;
                 }
 
-                btn.className = 'btn btn-primary';
+                btn.className = 'btn btn-primary btn-pill btn-primary-pill';
                 btn.addEventListener('click', async () => {
                     const haciaId = Number(btn.dataset.hacia || 0);
 
