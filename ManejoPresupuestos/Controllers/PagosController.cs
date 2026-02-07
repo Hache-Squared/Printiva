@@ -86,6 +86,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpGet]
         public async Task<IActionResult> Editar(int cotizacionId, int id)
         {
+            if (cotizacionId <= 0) return RedirectToAction("NoEncontrado", "Home");
+            if (id <= 0) return RedirectToAction("NoEncontrado", "Home");
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
             var pago = await repositorioPagos.ObtenerPorId(usuarioId, cotizacionId, id);
 
@@ -136,6 +138,8 @@ namespace ManejoPresupuestos.Controllers
         [HttpGet]
         public async Task<IActionResult> Borrar(int cotizacionId, int id)
         {
+            if (cotizacionId <= 0) return RedirectToAction("NoEncontrado", "Home");
+            if (id <= 0) return RedirectToAction("NoEncontrado", "Home");
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
             var pago = await repositorioPagos.ObtenerPorId(usuarioId, cotizacionId, id);
 
