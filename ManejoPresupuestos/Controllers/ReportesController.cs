@@ -273,6 +273,8 @@ namespace ManejoPresupuestos.Controllers
                 metodo,
                 minSaldo
             );
+            vm.Desde = desde;   
+            vm.Hasta = hasta; 
 
             return View(vm);
         }

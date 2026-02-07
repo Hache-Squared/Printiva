@@ -1202,8 +1202,8 @@ namespace ManejoPresupuestos.Servicios
             // ------------------
             r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
 
-            var desde = vm.Desde.ToString("yyyy-MM-dd");
-            var hasta = vm.Hasta.ToString("yyyy-MM-dd");
+            var desde = vm.Desde?.ToString("yyyy-MM-dd");
+            var hasta = vm.Hasta?.ToString("yyyy-MM-dd");
             var cliente = ClienteNombre();
             var pedido = vm.PedidoId?.ToString() ?? "-";
             var metodo = string.IsNullOrWhiteSpace(vm.Metodo) ? "-" : vm.Metodo.Trim();

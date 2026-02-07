@@ -59,8 +59,8 @@ namespace ManejoPresupuestos.Models
     public class ReporteCxcViewModel
     {
         // filtros
-        public DateTime Desde { get; set; }
-        public DateTime Hasta { get; set; }
+        public DateTime? Desde { get; set; }
+        public DateTime? Hasta { get; set; }
         public int? ClienteId { get; set; }
         public int? PedidoId { get; set; }
         public bool SoloVencidos { get; set; }

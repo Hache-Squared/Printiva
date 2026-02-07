@@ -146,7 +146,7 @@ namespace ManejoPresupuestos.Servicios
         {
             var vm = new ReporteConsumoViewModel
             {
-                Desde = (desde ?? DateTime.Today.AddDays(-7)).Date,
+                Desde = (desde ?? DateTime.Today.AddDays(-30)).Date,
                 Hasta = (hasta ?? DateTime.Today).Date,
                 PedidoId = pedidoId,
                 InventarioId = inventarioId,
@@ -312,7 +312,7 @@ namespace ManejoPresupuestos.Servicios
         {
             var vm = new ReportePedidosOperativosViewModel
             {
-                Desde = (desde ?? DateTime.Today.AddDays(-14)).Date,
+                Desde = (desde ?? DateTime.Today.AddDays(-30)).Date,
                 Hasta = (hasta ?? DateTime.Today).Date,
                 PedidoEstatusId = pedidoEstatusId,
                 ClienteId = clienteId,
@@ -359,10 +359,13 @@ namespace ManejoPresupuestos.Servicios
             decimal? minSaldo
         )
         {
+            var desdeQ = desde?.Date;
+            var hastaQ = hasta?.Date;
+
             var vm = new ReporteCxcViewModel
             {
-                Desde = (desde ?? DateTime.Today.AddDays(-30)).Date,
-                Hasta = (hasta ?? DateTime.Today).Date,
+                Desde = desdeQ,   
+                Hasta = hastaQ,   
                 ClienteId = clienteId,
                 PedidoId = pedidoId,
                 SoloVencidos = soloVencidos,
@@ -468,7 +471,7 @@ namespace ManejoPresupuestos.Servicios
         )
         {
             // defaults sanos para “tablero” (opcional)
-            vm.Desde ??= DateTime.Today.AddDays(-14);
+            vm.Desde ??= DateTime.Today.AddDays(-30);
             vm.Hasta ??= DateTime.Today;
 
             using var con = new SqlConnection(connectionString);
@@ -559,7 +562,7 @@ namespace ManejoPresupuestos.Servicios
             };
 
             // defaults “tablero”
-            vm.Desde ??= DateTime.Today.AddDays(-14);
+            vm.Desde ??= DateTime.Today.AddDays(-30);
             vm.Hasta ??= DateTime.Today;
 
             using var con = new SqlConnection(connectionString);
