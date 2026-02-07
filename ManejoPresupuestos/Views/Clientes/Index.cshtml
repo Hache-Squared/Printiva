@@ -4,83 +4,293 @@
     ViewData["Title"] = "Clientes";
 }
 
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h1 class="mb-1">Clientes</h1>
-        <p class="text-muted mb-0">Administra tu base de clientes y sus datos de contacto.</p>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+        --danger: #EF4444;
+        --success: #16A34A;
+        --wa: #16A34A;
+        --ig: #EC4899;
+    }
+
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 1180px; }
+
+    .pg-title{
+        color: var(--text);
+        font-weight: 900;
+        letter-spacing: -.02em;
+        font-size: clamp(2rem, 1.45rem + 1.25vw, 2.85rem);
+        line-height: 1.05;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        font-size: .98rem;
+        margin-top: .55rem;
+        max-width: 90ch;
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 850;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-pill.btn-sm{
+        padding: .40rem .78rem;
+        font-size: .84rem;
+    }
+
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .btn-danger-soft{
+        background: rgba(239,68,68,.10);
+        border-color: rgba(239,68,68,.20);
+        color: #B91C1C;
+    }
+    .btn-danger-soft:hover{
+        background: rgba(239,68,68,.14);
+        border-color: rgba(239,68,68,.24);
+        color: #991B1B;
+    }
+
+    .btn-success-soft{
+        background: rgba(22,163,74,.10);
+        border-color: rgba(22,163,74,.20);
+        color: #166534;
+    }
+    .btn-success-soft:hover{
+        background: rgba(22,163,74,.14);
+        border-color: rgba(22,163,74,.24);
+        color: #14532D;
+    }
+
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .table-clean{ margin: 0; }
+    .table-clean thead th{
+        color: var(--muted);
+        font-weight: 850;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        text-transform: uppercase;
+        padding: .70rem .90rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .table-clean tbody td{
+        padding: .62rem .90rem;
+        border-top: 1px solid rgba(15,23,42,.06);
+        vertical-align: middle;
+        font-size: .95rem;
+    }
+
+    .cell-muted{ color: var(--muted); }
+    .cell-truncate{
+        max-width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .actions-wrap{
+        display:flex;
+        flex-direction: row;
+        justify-content:flex-end;
+        gap:.45rem;
+        flex-wrap:wrap;
+        white-space: nowrap;
+    }
+
+    .avatar{
+        width: 34px; height: 34px;
+        border-radius: 999px;
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(29,78,216,.06);
+        color: #1D4ED8;
+        display:flex; align-items:center; justify-content:center;
+        font-weight: 900;
+        flex: 0 0 auto;
+    }
+
+    .mini-ico{
+        width: 16px; height: 16px;
+        opacity: .9;
+    }
+    .contact-line{
+        display:flex;
+        align-items:center;
+        gap:.45rem;
+        line-height: 1.25;
+    }
+
+    .chip{
+        display:inline-flex;
+        align-items:center;
+        gap:.45rem;
+        padding: .30rem .60rem;
+        border-radius: 999px;
+        font-weight: 850;
+        font-size: .78rem;
+        border: 1px solid rgba(15,23,42,.12);
+        background: rgba(15,23,42,.03);
+        color: var(--text);
+        max-width: 100%;
+    }
+    .chip.wa{
+        border-color: rgba(22,163,74,.22);
+        background: rgba(22,163,74,.10);
+        color: #166534;
+    }
+    .chip.ig{
+        border-color: rgba(236,72,153,.22);
+        background: rgba(236,72,153,.10);
+        color: #9D174D;
+    }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Clientes</h1>
+                <div class="pg-subtitle">Administra tu base de clientes y sus datos de contacto.</div>
+            </div>
+            <a asp-action="Crear" class="btn btn-primary btn-pill btn-primary-pill">Nuevo cliente</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 280px;">Cliente</th>
+                                <th style="min-width: 240px;">Contacto</th>
+                                <th style="min-width: 260px;">Redes</th>
+                                <th style="min-width: 280px;">Dirección</th>
+                                <th class="text-end" style="width: 260px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var c in Model)
+                        {
+                            var nombre = c?.Nombre ?? "";
+                            var ini = !string.IsNullOrWhiteSpace(nombre) ? nombre.Trim().Substring(0,1).ToUpper() : "•";
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar">@ini</div>
+                                        <div>
+                                            <div class="fw-semibold">@c.Nombre</div>
+                                            <div class="cell-muted small">ID: @c.ClienteId</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="contact-line fw-semibold">
+                                        <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M3 5.5C3 4.12 4.12 3 5.5 3h13C19.88 3 21 4.12 21 5.5v13c0 1.38-1.12 2.5-2.5 2.5h-13C4.12 21 3 19.88 3 18.5v-13Z" stroke="currentColor" stroke-width="1.6"/>
+                                            <path d="M6.5 7.5h11M6.5 12h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                        </svg>
+                                        <span>@(string.IsNullOrWhiteSpace(c.Telefono) ? "-" : c.Telefono)</span>
+                                    </div>
+                                    <div class="contact-line cell-muted small cell-truncate mt-1">
+                                        <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M4 6.5C4 5.12 5.12 4 6.5 4h11C18.88 4 20 5.12 20 6.5v11c0 1.38-1.12 2.5-2.5 2.5h-11C5.12 20 4 18.88 4 17.5v-11Z" stroke="currentColor" stroke-width="1.6"/>
+                                            <path d="M6.5 7.5 12 12l5.5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span>@(string.IsNullOrWhiteSpace(c.Email) ? "-" : c.Email)</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if (!string.IsNullOrWhiteSpace(c.WhatsApp))
+                                        {
+                                            <span class="chip wa">
+                                                <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M12 21a9 9 0 1 0-7.8-4.5L3 21l4.7-1.1A9 9 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                                    <path d="M9.2 8.8c.2-.5.4-.5.7-.5h.6c.2 0 .4 0 .5.4l.6 1.5c.1.3.1.5 0 .6l-.4.5c-.1.1-.2.3 0 .6.2.4.7 1.2 1.5 1.9.9.8 1.6 1.1 2 1.2.3.1.5 0 .6-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.7c.3.1.4.3.4.5 0 .2-.1.7-.5 1.1-.4.4-1 .7-1.8.6-.8-.1-2.7-.7-4.3-2.2-1.6-1.4-2.6-3.2-2.8-3.9-.1-.7.2-1.2.5-1.6.3-.4.6-.7.7-.9Z" fill="currentColor" opacity=".9"/>
+                                                </svg>
+                                                <span>@c.WhatsApp</span>
+                                            </span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(c.Instagram))
+                                        {
+                                            <span class="chip ig">
+                                                <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M7.5 3h9A4.5 4.5 0 0 1 21 7.5v9A4.5 4.5 0 0 1 16.5 21h-9A4.5 4.5 0 0 1 3 16.5v-9A4.5 4.5 0 0 1 7.5 3Z" stroke="currentColor" stroke-width="1.6"/>
+                                                    <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.6"/>
+                                                    <path d="M17.2 7.2h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                                                </svg>
+                                                <span>@c.Instagram</span>
+                                            </span>
+                                        }
+                                        @if (string.IsNullOrWhiteSpace(c.Instagram) && string.IsNullOrWhiteSpace(c.WhatsApp))
+                                        {
+                                            <span class="cell-muted">-</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td class="cell-truncate">
+                                    @(string.IsNullOrWhiteSpace(c.Direccion) ? "-" : c.Direccion)
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="actions-wrap">
+                                        <a asp-action="Editar" asp-route-id="@c.ClienteId" class="btn btn-pill btn-soft btn-sm">Editar</a>
+
+                                        @if (c.EstaActivo)
+                                        {
+                                            <a asp-action="Borrar" asp-route-id="@c.ClienteId" class="btn btn-pill btn-danger-soft btn-sm">Borrar</a>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="ReactivarCliente" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="clienteId" value="@c.ClienteId" />
+                                                <button type="submit" class="btn btn-pill btn-success-soft btn-sm">Reactivar</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <a asp-action="Crear" class="btn btn-primary">Nuevo cliente</a>
 </div>
-
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Cliente</th>
-            <th>Contacto</th>
-            <th>Redes</th>
-            <th>Dirección</th>
-            <th>Activo</th>
-            <th class="text-end">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>
-                    <div class="fw-semibold">@c.Nombre</div>
-                    <div class="text-muted small">ID: @c.ClienteId</div>
-                </td>
-                <td>
-                    <div>@(string.IsNullOrWhiteSpace(c.Telefono) ? "-" : c.Telefono)</div>
-                    <div class="text-muted small">@(string.IsNullOrWhiteSpace(c.Email) ? "-" : c.Email)</div>
-                </td>
-                <td>
-                    <div class="d-flex flex-wrap gap-2">
-                        @if (!string.IsNullOrWhiteSpace(c.Instagram))
-                        {
-                            <span class="badge bg-light text-dark border">Instagram: @c.Instagram</span>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(c.WhatsApp))
-                        {
-                            <span class="badge bg-light text-dark border">WhatsApp: @c.WhatsApp</span>
-                        }
-                        @if (string.IsNullOrWhiteSpace(c.Instagram) && string.IsNullOrWhiteSpace(c.WhatsApp))
-                        {
-                            <span class="text-muted">-</span>
-                        }
-                    </div>
-                </td>
-                <td>
-                    @(string.IsNullOrWhiteSpace(c.Direccion) ? "-" : c.Direccion)
-                </td>
-                <td>
-                    @if (c.EstaActivo)
-                    {
-                        <span class="badge bg-success">Sí</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">No</span>
-                    }
-                </td>
-                <td class="text-end">
-                    <a asp-action="Editar" asp-route-id="@c.ClienteId" class="btn btn-sm btn-outline-primary">Editar</a>
-
-                    @if (c.EstaActivo)
-                    {
-                        <a asp-action="Borrar" asp-route-id="@c.ClienteId" class="btn btn-sm btn-outline-danger">Borrar</a>
-                    }
-                    else
-                    {
-                        <form asp-action="ReactivarCliente" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="clienteId" value="@c.ClienteId" />
-                            <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>

@@ -4,57 +4,214 @@
     ViewData["Title"] = "Nuevo cliente";
 }
 
-<h1 class="mb-3">Nuevo cliente</h1>
-<p class="text-muted">Captura la información básica del cliente.</p>
+<style>
+    :root{
+        --pg-bg: #F6F7FB;
+        --card-bg: rgba(255,255,255,.96);
+        --text: #0F172A;
+        --muted: #64748B;
+        --border: rgba(15,23,42,.08);
+        --primary: #1D4ED8;
+        --wa: #16A34A;
+        --ig: #EC4899;
+    }
 
-<form asp-action="Crear" method="post">
-    @Html.AntiForgeryToken()
+    body{ background: var(--pg-bg); }
+    .pg-wrap{ max-width: 980px; }
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    .pg-title{
+        color: var(--text);
+        font-weight: 900;
+        letter-spacing: -.02em;
+        font-size: clamp(1.8rem, 1.35rem + 1.05vw, 2.35rem);
+        line-height: 1.08;
+        margin: 0;
+    }
+    .pg-subtitle{
+        color: var(--muted);
+        margin-top: .45rem;
+        font-size: .98rem;
+        max-width: 85ch;
+    }
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label asp-for="Nombre" class="form-label"></label>
-            <input asp-for="Nombre" class="form-control" />
-            <span asp-validation-for="Nombre" class="text-danger"></span>
+    .card-soft{
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    .btn-pill{
+        border-radius: 999px;
+        padding: .58rem 1.02rem;
+        font-weight: 850;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+    .btn-primary-pill{
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(29,78,216,.16);
+    }
+    .btn-soft{
+        border-color: rgba(100,116,139,.35);
+        color: #0F172A;
+        background: rgba(255,255,255,.75);
+    }
+    .btn-soft:hover{
+        background: rgba(255,255,255,.92);
+        border-color: rgba(100,116,139,.45);
+    }
+
+    .form-label{
+        font-weight: 850;
+        color: var(--text);
+    }
+
+    .control-soft{
+        border-radius: 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        padding-top: .72rem;
+        padding-bottom: .72rem;
+    }
+    .control-soft:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+        background: #fff;
+    }
+
+    .ig-addon{
+        color: #9D174D;
+        border-color: rgba(236,72,153,.22) !important;
+        background: rgba(236,72,153,.10) !important;
+        border-radius: 12px 0 0 12px;
+    }
+    .wa-addon{
+        color: #166534;
+        border-color: rgba(22,163,74,.22) !important;
+        background: rgba(22,163,74,.10) !important;
+        border-radius: 12px 0 0 12px;
+    }
+    .base-addon{
+        color: #334155;
+        border-color: rgba(15,23,42,.10) !important;
+        background: rgba(15,23,42,.03) !important;
+        border-radius: 12px 0 0 12px;
+    }
+
+    .input-group > .form-control.control-soft,
+    .input-group > .form-select.control-soft{
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .mini-ico{ width: 16px; height: 16px; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+
+        <div class="mb-4">
+            <h1 class="pg-title">Nuevo cliente</h1>
+            <div class="pg-subtitle">Captura la información básica del cliente.</div>
         </div>
 
-        <div class="col-md-3">
-            <label asp-for="Telefono" class="form-label"></label>
-            <input asp-for="Telefono" class="form-control" />
-            <span asp-validation-for="Telefono" class="text-danger"></span>
+        <div class="card card-soft">
+            <div class="card-body p-4">
+                <form asp-action="Crear" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Nombre" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text base-addon">
+                                    <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M20 21a8 8 0 1 0-16 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" stroke-width="1.6"/>
+                                    </svg>
+                                </span>
+                                <input asp-for="Nombre" class="form-control control-soft" placeholder="Ej. Cliente fan DBZ" />
+                            </div>
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Telefono" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text base-addon">
+                                    <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M7 3h3l1 5-2 1c1 3 3 5 6 6l1-2 5 1v3c0 1-1 2-2 2-9 0-16-7-16-16 0-1 1-2 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <input asp-for="Telefono" class="form-control control-soft" placeholder="Ej. +52 81 1234 5678" />
+                            </div>
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text base-addon">
+                                    <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M4 6.5C4 5.12 5.12 4 6.5 4h11C18.88 4 20 5.12 20 6.5v11c0 1.38-1.12 2.5-2.5 2.5h-11C5.12 20 4 18.88 4 17.5v-11Z" stroke="currentColor" stroke-width="1.6"/>
+                                        <path d="M6.5 7.5 12 12l5.5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <input asp-for="Email" class="form-control control-soft" placeholder="Ej. cliente@gmail.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="WhatsApp" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text wa-addon">
+                                    <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 21a9 9 0 1 0-7.8-4.5L3 21l4.7-1.1A9 9 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                        <path d="M9.2 8.8c.2-.5.4-.5.7-.5h.6c.2 0 .4 0 .5.4l.6 1.5c.1.3.1.5 0 .6l-.4.5c-.1.1-.2.3 0 .6.2.4.7 1.2 1.5 1.9.9.8 1.6 1.1 2 1.2.3.1.5 0 .6-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.7c.3.1.4.3.4.5 0 .2-.1.7-.5 1.1-.4.4-1 .7-1.8.6-.8-.1-2.7-.7-4.3-2.2-1.6-1.4-2.6-3.2-2.8-3.9-.1-.7.2-1.2.5-1.6.3-.4.6-.7.7-.9Z" fill="currentColor" opacity=".9"/>
+                                    </svg>
+                                </span>
+                                <input asp-for="WhatsApp" class="form-control control-soft" placeholder="Ej. +52 81 1234 5678" />
+                            </div>
+                            <span asp-validation-for="WhatsApp" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Instagram" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text ig-addon">
+                                    <svg class="mini-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M7.5 3h9A4.5 4.5 0 0 1 21 7.5v9A4.5 4.5 0 0 1 16.5 21h-9A4.5 4.5 0 0 1 3 16.5v-9A4.5 4.5 0 0 1 7.5 3Z" stroke="currentColor" stroke-width="1.6"/>
+                                        <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.6"/>
+                                        <path d="M17.2 7.2h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <input asp-for="Instagram" class="form-control control-soft" placeholder="Ej. cliente.fan" />
+                            </div>
+                            <span asp-validation-for="Instagram" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Direccion" class="form-label"></label>
+                            <textarea asp-for="Direccion" class="form-control control-soft" rows="3" placeholder="Ej. Col. Centro, Monterrey, NL. Referencias / notas de entrega."></textarea>
+                            <span asp-validation-for="Direccion" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary btn-pill btn-primary-pill" type="submit">Guardar</button>
+                        <a asp-action="Index" class="btn btn-pill btn-soft">Cancelar</a>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="col-md-3">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-
-        <div class="col-md-6">
-            <label asp-for="WhatsApp" class="form-label"></label>
-            <input asp-for="WhatsApp" class="form-control" />
-            <span asp-validation-for="WhatsApp" class="text-danger"></span>
-        </div>
-
-        <div class="col-md-6">
-            <label asp-for="Instagram" class="form-label"></label>
-            <input asp-for="Instagram" class="form-control" />
-            <span asp-validation-for="Instagram" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Direccion" class="form-label"></label>
-            <textarea asp-for="Direccion" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Direccion" class="text-danger"></span>
-        </div>
     </div>
-
-    <div class="mt-4 d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Guardar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
