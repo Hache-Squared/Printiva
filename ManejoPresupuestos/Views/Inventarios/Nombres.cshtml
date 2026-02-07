@@ -3,37 +3,79 @@
     ViewData["Title"] = "Nombres de Inventario";
 }
 
-<partial name="_Submenu" model="SubMenuInventarios.Nombres" />
+<style>
+    :root{
+        --pg-bg:#F6F7FB; --card-bg:rgba(255,255,255,.96);
+        --text:#0F172A; --muted:#64748B;
+        --border:rgba(15,23,42,.08); --primary:#1D4ED8;
+    }
+    body{ background:var(--pg-bg); }
+    .pg-wrap{ max-width:980px; }
 
-<h1>Nombres de inventario</h1>
-<h5>
-    Un nombre de inventario ayuda a identificar más fácilmente el producto a almacenar.
-</h5>
+    .pg-title{ color:var(--text); font-weight:850; letter-spacing:-.02em; font-size:clamp(2rem, 1.5rem + 1.1vw, 2.55rem); line-height:1.05; margin:0; }
+    .pg-subtitle{ color:var(--muted); font-size:.98rem; margin-top:.55rem; max-width:75ch; }
 
-<a asp-action="CrearNombre" class="btn btn-primary mb-3">Crear Nuevo</a>
+    .btn-pill{ border-radius:999px; padding:.58rem 1.02rem; font-weight:800; font-size:.92rem; white-space:nowrap; }
+    .btn-pill.btn-sm{ padding:.32rem .68rem; font-size:.80rem; line-height:1.15; }
 
-<table class="table">
-    <thead>
-    <th>Acciones</th>
-    <th>Nombre</th>
-    <th>Abreviatura</th>
-    </thead>
+    .btn-soft{ border-color:rgba(100,116,139,.35); color:#0F172A; background:rgba(255,255,255,.75); }
+    .btn-soft:hover{ background:rgba(255,255,255,.92); border-color:rgba(100,116,139,.45); }
+    .btn-primary-pill{ background:var(--primary); border-color:var(--primary); box-shadow:0 12px 24px rgba(29,78,216,.16); }
+    .btn-danger-soft{ background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.18); color:#B91C1C; }
+    .btn-danger-soft:hover{ background:rgba(239,68,68,.14); border-color:rgba(239,68,68,.22); color:#991B1B; }
 
-    <tbody>
-        @foreach (var nombre in Model)
-        {
-            <tr>
-                <td>
-                    <a class="btn btn-primary" asp-action="EditarNombre" asp-route-id="@nombre.InventarioNombreId">Editar</a>
-                    <a class="btn btn-danger" asp-action="BorrarNombreForm" asp-route-id="@nombre.InventarioNombreId">Borrar</a>
-                </td>
-                <td>
-                    @nombre.Nombre
-                </td>
-                <td>
-                    @nombre.Abreviatura
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    .card-soft{ background:var(--card-bg); border:1px solid var(--border); border-radius:18px; box-shadow:0 10px 30px rgba(2,6,23,.08); }
+
+    .table-clean{ margin:0; }
+    .table-clean thead th{ color:var(--muted); font-weight:850; letter-spacing:.14em; font-size:.70rem; text-transform:uppercase; padding:.65rem .8rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+    .table-clean tbody td{ padding:.58rem .8rem; border-top:1px solid rgba(15,23,42,.06); vertical-align:middle; font-size:.93rem; }
+
+    .act-wrap{ display:flex; gap:.4rem; flex-wrap:wrap; white-space:nowrap; }
+</style>
+
+<div class="container-xxl py-4">
+    <div class="pg-wrap mx-auto">
+        <partial name="_Submenu" model="SubMenuInventarios.Nombres" />
+
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+            <div>
+                <h1 class="pg-title">Nombres de inventario</h1>
+                <div class="pg-subtitle">Un nombre de inventario ayuda a identificar más fácilmente el producto a almacenar.</div>
+            </div>
+
+            <a asp-action="CrearNombre" class="btn btn-primary btn-pill btn-primary-pill">Crear Nuevo</a>
+        </div>
+
+        <div class="card card-soft">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-clean align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th style="width:180px;">Abreviatura</th>
+                                <th style="width:220px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var nombre in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@nombre.Nombre</td>
+                                <td>@nombre.Abreviatura</td>
+                                <td>
+                                    <div class="act-wrap">
+                                        <a class="btn btn-primary btn-pill btn-primary-pill btn-sm" asp-action="EditarNombre" asp-route-id="@nombre.InventarioNombreId">Editar</a>
+                                        <a class="btn btn-pill btn-danger-soft btn-sm" asp-action="BorrarNombreForm" asp-route-id="@nombre.InventarioNombreId">Borrar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

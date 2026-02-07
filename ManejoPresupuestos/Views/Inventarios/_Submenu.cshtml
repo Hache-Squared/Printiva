@@ -1,23 +1,55 @@
 ﻿@model SubMenuInventarios;
 
-<ul class="nav nav-pills nav-fill mb-3">
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuInventarios.Inventarios ? "active" : null) " asp-action="Index">Inventarios</a>
-    </li>
+<style>
+    :root{
+        --primary:#1D4ED8;
+        --text:#0F172A;
+        --muted:#64748B;
+        --border:rgba(15,23,42,.10);
+    }
 
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuInventarios.Marcas ? "active" : null) " asp-action="Marcas">Marcas</a>
-    </li>
+    .inv-tabs{
+        border-bottom:1px solid var(--border);
+        gap:1.25rem;
+        flex-wrap:wrap;
+    }
 
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuInventarios.Tipos ? "active" : null) " asp-action="Tipos">Tipos</a>
-    </li>
+    .inv-tab-link{
+        padding:.78rem .25rem;
+        border:0;
+        border-bottom:2px solid transparent;
+        border-radius:0;
+        background:transparent;
+        color:var(--muted);
+        font-weight:850;
+        font-size:.92rem;
+        white-space:nowrap;
+    }
 
-    <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuInventarios.Colores ? "active" : null) " asp-action="Colores">Colores</a>
-    </li>
+    .inv-tab-link:hover{
+        color:var(--text);
+    }
 
+    .inv-tab-link.active{
+        color:var(--primary);
+        border-bottom-color:var(--primary);
+    }
+</style>
+
+<ul class="nav inv-tabs mb-4">
     <li class="nav-item">
-        <a class="nav-link @(Model == SubMenuInventarios.Nombres ? "active" : null) " asp-action="Nombres">Nombres</a>
+        <a class="nav-link inv-tab-link @(Model == SubMenuInventarios.Inventarios ? "active" : null)" asp-action="Index">Inventarios</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link inv-tab-link @(Model == SubMenuInventarios.Marcas ? "active" : null)" asp-action="Marcas">Marcas</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link inv-tab-link @(Model == SubMenuInventarios.Tipos ? "active" : null)" asp-action="Tipos">Tipos</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link inv-tab-link @(Model == SubMenuInventarios.Colores ? "active" : null)" asp-action="Colores">Colores</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link inv-tab-link @(Model == SubMenuInventarios.Nombres ? "active" : null)" asp-action="Nombres">Nombres</a>
     </li>
 </ul>
