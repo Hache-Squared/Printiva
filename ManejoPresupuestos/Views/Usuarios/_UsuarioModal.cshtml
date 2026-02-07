@@ -1,6 +1,125 @@
 @model ManejoPresupuestos.Models.UsuarioFormVm
 
-<div class="modal fade" id="usuarioModal" tabindex="-1" aria-hidden="true">
+<style>
+  :root{
+    --pg-bg: #F6F7FB;
+    --card-bg: rgba(255,255,255,.96);
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: rgba(15,23,42,.08);
+    --border2: rgba(15,23,42,.06);
+    --primary: #1D4ED8;
+  }
+
+  .modal-modern .modal-content{
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(2,6,23,.16);
+  }
+
+  .modal-modern .modal-header{
+    padding: 1.05rem 1.15rem;
+    border-bottom: 1px solid var(--border2);
+  }
+  .modal-modern .modal-title{
+    color: var(--text);
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+  .modal-modern .modal-body{
+    padding: 1.15rem 1.15rem .95rem;
+  }
+  .modal-modern .modal-footer{
+    padding: .95rem 1.15rem 1.1rem;
+    border-top: 1px solid var(--border2);
+    gap: .5rem;
+  }
+
+  .modal-modern .form-label{
+    font-weight: 850;
+    color: var(--text);
+    margin-bottom: .35rem;
+  }
+
+  .control-soft{
+    border-radius: 12px;
+    border-color: rgba(15,23,42,.10);
+    background: rgba(15,23,42,.03);
+    padding-top: .70rem;
+    padding-bottom: .70rem;
+  }
+  .control-soft:focus{
+    border-color: rgba(29,78,216,.40);
+    box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
+    background: #fff;
+  }
+
+  .btn-pill{
+    border-radius: 999px;
+    padding: .56rem 1.02rem;
+    font-weight: 850;
+    font-size: .92rem;
+    white-space: nowrap;
+  }
+  .btn-primary-pill{
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 12px 24px rgba(29,78,216,.16);
+  }
+  .btn-soft{
+    border-color: rgba(100,116,139,.35);
+    color: #0F172A;
+    background: rgba(255,255,255,.75);
+  }
+  .btn-soft:hover{
+    background: rgba(255,255,255,.92);
+    border-color: rgba(100,116,139,.45);
+  }
+
+  .section-title{
+    color: var(--text);
+    font-weight: 900;
+    letter-spacing: -.01em;
+    margin: 0;
+    font-size: 1.02rem;
+  }
+  .section-sub{
+    color: var(--muted);
+    margin-top: .25rem;
+    font-size: .92rem;
+  }
+
+  .perm-grid{
+    border: 1px solid var(--border2);
+    background: rgba(255,255,255,.55);
+    border-radius: 16px;
+    padding: .9rem .9rem .2rem;
+  }
+
+  .form-check{
+    margin-bottom: .55rem;
+  }
+  .form-check-input{
+    border-color: rgba(15,23,42,.20);
+  }
+  .form-check-input:checked{
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+  .form-check-label{
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .divider{
+    height: 1px;
+    background: var(--border2);
+    margin: .95rem 0;
+  }
+</style>
+
+<div class="modal fade modal-modern" id="usuarioModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -14,52 +133,58 @@
 
           <input type="hidden" name="Id" value="@Model.Id" />
 
-          <div class="row">
-            <div class="col-md-6 mb-3">
+          <div class="row g-3">
+            <div class="col-md-6">
               <label class="form-label">Nombre</label>
-              <input class="form-control" name="Nombre" value="@Model.Nombre" />
+              <input class="form-control control-soft" name="Nombre" value="@Model.Nombre" placeholder="Ej. Angel" />
             </div>
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6">
               <label class="form-label">Email</label>
-              <input class="form-control" autocomplete="off" name="Email" value="@Model.Email" />
+              <input class="form-control control-soft" autocomplete="off" name="Email" value="@Model.Email" placeholder="Ej. usuario@correo.com" />
             </div>
           </div>
 
-          <div class="mb-3">
+          <div class="mt-3">
             <label class="form-label">
               Password @(Model.EsEdicion ? "(solo si quieres cambiarla)" : "")
             </label>
-            <input class="form-control" autocomplete="new-password" type="password" name="Password" />
+            <input class="form-control control-soft" autocomplete="new-password" type="password" name="Password" placeholder="••••••••" />
           </div>
 
-          <div class="form-check mb-3">
+          <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" name="EsAdmin" value="true" @(Model.EsAdmin ? "checked" : "") />
             <label class="form-check-label">Administrador (tiene acceso a todo)</label>
           </div>
 
-          <hr />
-          <h6>Permisos por módulo (Controller)</h6>
+          <div class="divider"></div>
 
-          <div class="row">
-            @foreach (var p in Model.PermisosDisponibles)
-            {
-              <div class="col-md-4">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         name="PermisosSeleccionados" value="@p.Key"
-                         @(p.Selected ? "checked" : "") />
-                  <label class="form-check-label">@p.Key</label>
+          <div class="mb-2">
+            <div class="section-title">Permisos por módulo (Controller)</div>
+            <div class="section-sub">Selecciona los módulos a los que este usuario tendrá acceso.</div>
+          </div>
+
+          <div class="perm-grid">
+            <div class="row">
+              @foreach (var p in Model.PermisosDisponibles)
+              {
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           name="PermisosSeleccionados" value="@p.Key"
+                           @(p.Selected ? "checked" : "") />
+                    <label class="form-check-label">@p.Key</label>
+                  </div>
                 </div>
-              </div>
-            }
+              }
+            </div>
           </div>
 
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-primary" type="submit">Guardar</button>
+          <button class="btn btn-pill btn-soft" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary btn-pill btn-primary-pill" type="submit">Guardar</button>
         </div>
       </form>
 
