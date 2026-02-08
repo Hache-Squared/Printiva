@@ -14,8 +14,6 @@ BEGIN TRY
     ------------------------------------------------------------------------------
     IF OBJECT_ID('dbo.TblComprasCategorias', 'U') IS NOT NULL
     BEGIN
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblComprasCategorias'), 'CompraCategoriaId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblComprasCategorias ON;
 
         MERGE dbo.TblComprasCategorias WITH (HOLDLOCK) AS tgt
         USING (VALUES
@@ -36,8 +34,6 @@ BEGIN TRY
             INSERT (CompraCategoriaId, Nombre, EstaActivo)
             VALUES (src.CompraCategoriaId, src.Nombre, src.EstaActivo);
 
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblComprasCategorias'), 'CompraCategoriaId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblComprasCategorias OFF;
     END;
 
     ------------------------------------------------------------------------------
@@ -46,8 +42,6 @@ BEGIN TRY
     ------------------------------------------------------------------------------
     IF OBJECT_ID('dbo.TblComprasTipos', 'U') IS NOT NULL
     BEGIN
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblComprasTipos'), 'CompraTipoId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblComprasTipos ON;
 
         MERGE dbo.TblComprasTipos WITH (HOLDLOCK) AS tgt
         USING (VALUES
@@ -74,8 +68,6 @@ BEGIN TRY
             INSERT (CompraTipoId, Nombre, EstaActivo, EsInventario, RequiereFilamentoTipo)
             VALUES (src.CompraTipoId, src.Nombre, src.EstaActivo, src.EsInventario, src.RequiereFilamentoTipo);
 
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblComprasTipos'), 'CompraTipoId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblComprasTipos OFF;
     END;
 
     ------------------------------------------------------------------------------
@@ -84,8 +76,6 @@ BEGIN TRY
     ------------------------------------------------------------------------------
     IF OBJECT_ID('dbo.TblCotizacionConceptoTipos', 'U') IS NOT NULL
     BEGIN
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblCotizacionConceptoTipos'), 'ConceptoTipoId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblCotizacionConceptoTipos ON;
 
         MERGE dbo.TblCotizacionConceptoTipos WITH (HOLDLOCK) AS tgt
         USING (VALUES
@@ -102,8 +92,6 @@ BEGIN TRY
             INSERT (ConceptoTipoId, Nombre)
             VALUES (src.ConceptoTipoId, src.Nombre);
 
-        IF COLUMNPROPERTY(OBJECT_ID('dbo.TblCotizacionConceptoTipos'), 'ConceptoTipoId', 'IsIdentity') = 1
-            SET IDENTITY_INSERT dbo.TblCotizacionConceptoTipos OFF;
     END;
 
 
@@ -113,8 +101,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblCotizacionesEstatus', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblCotizacionesEstatus'), 'CotizacionEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblCotizacionesEstatus ON;
 
 		MERGE dbo.TblCotizacionesEstatus WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -134,8 +120,6 @@ BEGIN TRY
 			INSERT (CotizacionEstatusId, Nombre)
 			VALUES (src.CotizacionEstatusId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblCotizacionesEstatus'), 'CotizacionEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblCotizacionesEstatus OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -144,8 +128,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblFilamentosTipos', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblFilamentosTipos'), 'FilamentoTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblFilamentosTipos ON;
 
 		MERGE dbo.TblFilamentosTipos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -163,8 +145,6 @@ BEGIN TRY
 			INSERT (FilamentoTipoId, Nombre)
 			VALUES (src.FilamentoTipoId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblFilamentosTipos'), 'FilamentoTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblFilamentosTipos OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -173,8 +153,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblInventariosMovimientoTipos', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosMovimientoTipos'), 'TipoMovimientoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosMovimientoTipos ON;
 
 		MERGE dbo.TblInventariosMovimientoTipos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -194,8 +172,6 @@ BEGIN TRY
 			INSERT (TipoMovimientoId, Nombre)
 			VALUES (src.TipoMovimientoId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosMovimientoTipos'), 'TipoMovimientoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosMovimientoTipos OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -204,8 +180,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblInventariosTipos', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosTipos'), 'InventarioTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosTipos ON;
 
 		MERGE dbo.TblInventariosTipos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -225,8 +199,6 @@ BEGIN TRY
 			INSERT (InventarioTipoId, Nombre, EstaActivo)
 			VALUES (src.InventarioTipoId, src.Nombre, src.EstaActivo);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosTipos'), 'InventarioTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosTipos OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -235,8 +207,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblInventariosUnidades', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosUnidades'), 'InventarioUnidadId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosUnidades ON;
 
 		MERGE dbo.TblInventariosUnidades WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -253,8 +223,6 @@ BEGIN TRY
 			INSERT (InventarioUnidadId, Nombre)
 			VALUES (src.InventarioUnidadId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblInventariosUnidades'), 'InventarioUnidadId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblInventariosUnidades OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -263,8 +231,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblPagoTipos', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPagoTipos'), 'PagoTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPagoTipos ON;
 
 		MERGE dbo.TblPagoTipos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -282,8 +248,6 @@ BEGIN TRY
 			INSERT (PagoTipoId, Nombre)
 			VALUES (src.PagoTipoId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPagoTipos'), 'PagoTipoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPagoTipos OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -292,8 +256,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblPedidoEstatus', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPedidoEstatus'), 'PedidoEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPedidoEstatus ON;
 
 		MERGE dbo.TblPedidoEstatus WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -315,8 +277,6 @@ BEGIN TRY
 			INSERT (PedidoEstatusId, Nombre)
 			VALUES (src.PedidoEstatusId, src.Nombre);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPedidoEstatus'), 'PedidoEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPedidoEstatus OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -325,8 +285,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblPedidosEstatusTransiciones', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPedidosEstatusTransiciones'), 'PedidoEstatusTransicionId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPedidosEstatusTransiciones ON;
 
 		MERGE dbo.TblPedidosEstatusTransiciones WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -363,8 +321,6 @@ BEGIN TRY
 			INSERT (PedidoEstatusTransicionId, DesdeEstatusId, HaciaEstatusId)
 			VALUES (src.PedidoEstatusTransicionId, src.DesdeEstatusId, src.HaciaEstatusId);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblPedidosEstatusTransiciones'), 'PedidoEstatusTransicionId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblPedidosEstatusTransiciones OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -373,8 +329,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblProduccionEstatus', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblProduccionEstatus'), 'ProduccionEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblProduccionEstatus ON;
 
 		MERGE dbo.TblProduccionEstatus WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -399,8 +353,6 @@ BEGIN TRY
 			INSERT (ProduccionEstatusId, Nombre, Orden, BadgeClass, EstaActivo)
 			VALUES (src.ProduccionEstatusId, src.Nombre, src.Orden, src.BadgeClass, src.EstaActivo);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblProduccionEstatus'), 'ProduccionEstatusId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblProduccionEstatus OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -428,8 +380,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TblTarifaConceptos', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblTarifaConceptos'), 'TarifaConceptoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblTarifaConceptos ON;
 
 		MERGE dbo.TblTarifaConceptos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -461,8 +411,6 @@ BEGIN TRY
 			INSERT (TarifaConceptoId, Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
 			VALUES (src.TarifaConceptoId, src.Codigo, src.Nombre, src.Unidad, src.Orden, src.EstaActivo,src.FechaCreacion);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblTarifaConceptos'), 'TarifaConceptoId', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TblTarifaConceptos OFF;
 	END;
 
 	------------------------------------------------------------------------------
@@ -471,8 +419,6 @@ BEGIN TRY
 	------------------------------------------------------------------------------
 	IF OBJECT_ID('dbo.TiposOperaciones', 'U') IS NOT NULL
 	BEGIN
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TiposOperaciones'), 'Id', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TiposOperaciones ON;
 
 		MERGE dbo.TiposOperaciones WITH (HOLDLOCK) AS tgt
 		USING (VALUES
@@ -487,8 +433,6 @@ BEGIN TRY
 			INSERT (Id, Descripcion)
 			VALUES (src.Id, src.Descripcion);
 
-		IF COLUMNPROPERTY(OBJECT_ID('dbo.TiposOperaciones'), 'Id', 'IsIdentity') = 1
-			SET IDENTITY_INSERT dbo.TiposOperaciones OFF;
 	END;
 
 
