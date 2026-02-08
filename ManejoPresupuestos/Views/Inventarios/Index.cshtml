@@ -125,6 +125,8 @@
                             <tr>
                                 <th style="width:140px;">Fecha</th>
                                 <th>Nombre</th>
+                                <th>Marca</th>
+                                <th>Tipo</th>
                                 <th style="width:170px;">Color</th>
                                 <th style="width:150px;">Cantidad</th>
                                 <th style="width:240px;">Acciones</th>
@@ -136,6 +138,8 @@
                             <tr>
                                 <td class="nowrap">@inventario.FechaCreacion.ToString("dd/MM/yyyy")</td>
                                 <td class="fw-semibold">@inventario.InventarioNombre</td>
+                                <td class="fw-semibold">@inventario.InventarioMarca</td>
+                                <td class="fw-semibold">@inventario.InventarioTipo</td>
                                 <td>@inventario.InventarioColor</td>
                                 <td class="nowrap">
                                     @inventario.Cantidad

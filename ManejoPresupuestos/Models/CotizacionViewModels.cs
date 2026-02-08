@@ -63,12 +63,14 @@ namespace ManejoPresupuestos.Models
         public int CotizacionId { get; set; }
 
         [Required]
+        [Display(Name = "Tipo de pago")]
         public int PagoTipoId { get; set; }
 
         [Range(0.01, 999999999)]
         public decimal Monto { get; set; }
 
         [Required]
+        [Display(Name = "Fecha de Pago")]
         public DateTime FechaPago { get; set; } = DateTime.Today;
 
         public string Metodo { get; set; }
