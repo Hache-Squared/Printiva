@@ -433,15 +433,15 @@ BEGIN TRY
 
 		MERGE dbo.TblTarifaConceptos WITH (HOLDLOCK) AS tgt
 		USING (VALUES
-			(1, N'PRINT_HOUR',                  N'Costo por hora de impresión',                 N'hora',        10, CAST(0 AS bit)),
-			(2, N'POST_HOUR',                   N'Costo por hora de post-proceso',              N'hora',        20, CAST(0 AS bit)),
-			(3, N'MATERIAL_GR',                 N'Costo de material por gramo',                 N'gr',          30, CAST(0 AS bit)),
-			(4, N'MARGIN_PCT',                  N'Margen (%)',                                  N'%',           40, CAST(0 AS bit)),
-			(5, N'MATERIAL_UNIT',               N'Costo de material por unidad de inventario',  N'unidad inv.', 31, CAST(1 AS bit)),
-			(6, N'MATERIAL_GENERAL',            N'Cargo fijo (por inventario/impresora)',       N'flat',        32, CAST(1 AS bit)),
-			(7, N'MATERIAL_GENERAL_INV_GLOBAL', N'Cargo fijo global (inventarios)',             N'flat',        33, CAST(1 AS bit)),
-			(8, N'MATERIAL_GENERAL_PRN_GLOBAL', N'Cargo fijo global (impresoras)',              N'flat',        34, CAST(1 AS bit))
-		) AS src (TarifaConceptoId, Codigo, Nombre, Unidad, Orden, EstaActivo)
+			(1, N'PRINT_HOUR',                  N'Costo por hora de impresión',                 N'hora',        10, CAST(0 AS bit),GETDATE()),
+			(2, N'POST_HOUR',                   N'Costo por hora de post-proceso',              N'hora',        20, CAST(0 AS bit),GETDATE()),
+			(3, N'MATERIAL_GR',                 N'Costo de material por gramo',                 N'gr',          30, CAST(0 AS bit),GETDATE()),
+			(4, N'MARGIN_PCT',                  N'Margen (%)',                                  N'%',           40, CAST(0 AS bit),GETDATE()),
+			(5, N'MATERIAL_UNIT',               N'Costo de material por unidad de inventario',  N'unidad inv.', 31, CAST(1 AS bit),GETDATE()),
+			(6, N'MATERIAL_GENERAL',            N'Cargo fijo (por inventario/impresora)',       N'flat',        32, CAST(1 AS bit),GETDATE()),
+			(7, N'MATERIAL_GENERAL_INV_GLOBAL', N'Cargo fijo global (inventarios)',             N'flat',        33, CAST(1 AS bit),GETDATE()),
+			(8, N'MATERIAL_GENERAL_PRN_GLOBAL', N'Cargo fijo global (impresoras)',              N'flat',        34, CAST(1 AS bit),GETDATE())
+		) AS src (TarifaConceptoId, Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
 		ON tgt.TarifaConceptoId = src.TarifaConceptoId
 		WHEN MATCHED AND (
 			ISNULL(tgt.Codigo, N'') <> ISNULL(src.Codigo, N'')
@@ -455,10 +455,11 @@ BEGIN TRY
 			Nombre = src.Nombre,
 			Unidad = src.Unidad,
 			Orden = src.Orden,
-			EstaActivo = src.EstaActivo
+			EstaActivo = src.EstaActivo,
+			FechaCreacion = src.FechaCreacion
 		WHEN NOT MATCHED THEN
-			INSERT (TarifaConceptoId, Codigo, Nombre, Unidad, Orden, EstaActivo)
-			VALUES (src.TarifaConceptoId, src.Codigo, src.Nombre, src.Unidad, src.Orden, src.EstaActivo);
+			INSERT (TarifaConceptoId, Codigo, Nombre, Unidad, Orden, EstaActivo, FechaCreacion)
+			VALUES (src.TarifaConceptoId, src.Codigo, src.Nombre, src.Unidad, src.Orden, src.EstaActivo,src.FechaCreacion);
 
 		IF COLUMNPROPERTY(OBJECT_ID('dbo.TblTarifaConceptos'), 'TarifaConceptoId', 'IsIdentity') = 1
 			SET IDENTITY_INSERT dbo.TblTarifaConceptos OFF;
