@@ -31,11 +31,14 @@ namespace ManejoPresupuestos.Models
         public int CotizacionId { get; set; }
 
         [Required]
+        [Display(Name = "Pedido")]
         public int PedidoId { get; set; }
 
         [Required]
+        [Display(Name = "Estatus Cotización")]
         public int CotizacionEstatusId { get; set; }
 
+        [Display(Name = "Fecha Vigencia")]
         public DateTime? FechaVigencia { get; set; }
 
         public string Notas { get; set; }
