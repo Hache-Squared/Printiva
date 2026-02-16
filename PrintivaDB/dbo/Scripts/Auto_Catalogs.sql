@@ -389,6 +389,43 @@ BEGIN TRY
         SET IDENTITY_INSERT dbo.TiposOperaciones OFF;
     END;
 
+	IF OBJECT_ID(N'dbo.Usuarios', N'U') IS NOT NULL
+    BEGIN
+        MERGE dbo.Usuarios AS tgt
+        USING (VALUES
+        (
+            N'admin@printed.com',
+            N'ADMIN@PRINTED.COM',
+            N'AQAAAAIAAYagAAAAEGSYitqliY6Tt6ftUtqpoaQkNUVDhgI96xrp5F3o+wiQu+fZGufcf5MD1EAzyJuEow==',
+            N'Admin',
+            CAST(1 AS bit),
+            CAST(1 AS bit)
+        )) AS src (Email, EmailNormalizado, PasswordHash, Nombre, EstaActivo, EsAdmin)
+        ON tgt.EmailNormalizado = src.EmailNormalizado
+
+        WHEN MATCHED AND (
+               ISNULL(tgt.Email, N'') <> ISNULL(src.Email, N'')
+            OR ISNULL(tgt.PasswordHash, N'') <> ISNULL(src.PasswordHash, N'')
+            OR ISNULL(tgt.Nombre, N'') <> ISNULL(src.Nombre, N'')
+            OR ISNULL(tgt.EstaActivo, 0) <> ISNULL(src.EstaActivo, 0)
+            OR ISNULL(tgt.EsAdmin, 0) <> ISNULL(src.EsAdmin, 0)
+        )
+        THEN UPDATE SET
+            Email              = src.Email,
+            EmailNormalizado   = src.EmailNormalizado,
+            PasswordHash       = src.PasswordHash,
+            Nombre             = src.Nombre,
+            EstaActivo         = src.EstaActivo,
+            EsAdmin            = src.EsAdmin,
+            FechaActualizacion = SYSDATETIME()
+
+        WHEN NOT MATCHED THEN
+            INSERT (Email, EmailNormalizado, PasswordHash, Nombre, EstaActivo, EsAdmin, FechaCreacion, FechaActualizacion)
+            VALUES (src.Email, src.EmailNormalizado, src.PasswordHash, src.Nombre, src.EstaActivo, src.EsAdmin, SYSDATETIME(), NULL);
+
+    END;
+
+
     COMMIT;
     
     PRINT 'Catalogos actualizados correctamente.';
