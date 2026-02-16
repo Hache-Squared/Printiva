@@ -13,7 +13,7 @@ CREATE TABLE [dbo].[Usuarios] (
 
 
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UX_Usuarios_EmailNormalizado]
-    ON [dbo].[Usuarios]([EmailNormalizado] ASC);
-GO
+--CREATE UNIQUE NONCLUSTERED INDEX [UX_Usuarios_EmailNormalizado]
+--    ON [dbo].[Usuarios]([EmailNormalizado] ASC);
+--GO
 

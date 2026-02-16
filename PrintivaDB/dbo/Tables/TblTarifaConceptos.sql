@@ -26,7 +26,7 @@ ALTER TABLE [dbo].[TblTarifaConceptos]
     ADD CONSTRAINT [DF_TblTarifaConceptos_FechaCreacion] DEFAULT (sysdatetime()) FOR [FechaCreacion];
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [UX_TblTarifaConceptos_Codigo]
-    ON [dbo].[TblTarifaConceptos]([Codigo] ASC);
-GO
+--CREATE UNIQUE NONCLUSTERED INDEX [UX_TblTarifaConceptos_Codigo]
+--    ON [dbo].[TblTarifaConceptos]([Codigo] ASC);
+--GO
 

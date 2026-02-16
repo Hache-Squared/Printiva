@@ -15,7 +15,7 @@ CREATE TABLE [dbo].[TblInventariosMovimientos] (
     CONSTRAINT [FK_TblInventariosMovimientos_Usuarios] FOREIGN KEY ([UsuarioId]) REFERENCES [dbo].[Usuarios] ([Id])
 );
 GO
-CREATE NONCLUSTERED INDEX [IX_TblInventariosMovimientos_Compra]
-    ON [dbo].[TblInventariosMovimientos]([UsuarioId] ASC, [CompraId] ASC, [InventarioId] ASC, [FechaCreacion] DESC);
-GO
+--CREATE NONCLUSTERED INDEX [IX_TblInventariosMovimientos_Compra]
+--    ON [dbo].[TblInventariosMovimientos]([UsuarioId] ASC, [CompraId] ASC, [InventarioId] ASC, [FechaCreacion] DESC);
+--GO
 

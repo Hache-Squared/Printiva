@@ -26,11 +26,3 @@ ALTER TABLE [dbo].[TblImpresoras]
     ADD CONSTRAINT [DF_TblImpresoras_FechaCreacion] DEFAULT (sysdatetime()) FOR [FechaCreacion];
 GO
 
-CREATE NONCLUSTERED INDEX [IX_TblImpresoras_Usuario_Activo]
-    ON [dbo].[TblImpresoras]([UsuarioId] ASC, [EstaActivo] ASC);
-GO
-
-CREATE UNIQUE NONCLUSTERED INDEX [UX_TblImpresoras_Usuario_Nombre_Activo]
-    ON [dbo].[TblImpresoras]([UsuarioId] ASC, [Nombre] ASC) WHERE ([EstaActivo]=(1));
-GO
-

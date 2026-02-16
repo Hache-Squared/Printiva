@@ -8,9 +8,9 @@ CREATE TABLE [dbo].[TblProduccionEstatus] (
 );
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [UX_TblProduccionEstatus_Nombre]
-    ON [dbo].[TblProduccionEstatus]([Nombre] ASC) WHERE ([EstaActivo]=(1));
-GO
+--CREATE UNIQUE NONCLUSTERED INDEX [UX_TblProduccionEstatus_Nombre]
+--    ON [dbo].[TblProduccionEstatus]([Nombre] ASC) WHERE ([EstaActivo]=(1));
+--GO
 
 ALTER TABLE [dbo].[TblProduccionEstatus]
     ADD CONSTRAINT [DF_TblProduccionEstatus_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];

@@ -22,7 +22,7 @@ CREATE TABLE [dbo].[TblProduccionInventarioConsumo] (
     PRIMARY KEY CLUSTERED ([ProduccionInventarioConsumoId] ASC)
 );
 GO
-
+/*
 CREATE UNIQUE NONCLUSTERED INDEX [UX_TblProduccionInventarioConsumo_ItemInv]
     ON [dbo].[TblProduccionInventarioConsumo]([ProduccionItemId] ASC, [InventarioId] ASC);
 GO
@@ -36,7 +36,7 @@ CREATE NONCLUSTERED INDEX [IX_TblProdInvConsumo_Pedido]
     ON [dbo].[TblProduccionInventarioConsumo]([PedidoId] ASC, [Fecha] ASC)
     INCLUDE([InventarioId], [Cantidad], [UsuarioId], [ProductoId], [RecetaId]);
 GO
-
+*/
 ALTER TABLE [dbo].[TblProduccionInventarioConsumo]
     ADD CONSTRAINT [DF_TblProduccionInventarioConsumo_Fecha] DEFAULT (sysdatetime()) FOR [Fecha];
 GO

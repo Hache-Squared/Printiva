@@ -23,11 +23,11 @@ CREATE TABLE [dbo].[TblTarifasLog] (
 );
 GO
 
-CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_Usuario_Fecha]
-    ON [dbo].[TblTarifasLog]([UsuarioId] ASC, [FechaAccion] DESC);
-GO
+--CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_Usuario_Fecha]
+--    ON [dbo].[TblTarifasLog]([UsuarioId] ASC, [FechaAccion] DESC);
+--GO
 
-CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_TarifaId_Fecha]
-    ON [dbo].[TblTarifasLog]([TarifaId] ASC, [FechaAccion] DESC);
-GO
+--CREATE NONCLUSTERED INDEX [IX_TblTarifasLog_TarifaId_Fecha]
+--    ON [dbo].[TblTarifasLog]([TarifaId] ASC, [FechaAccion] DESC);
+--GO
 

@@ -18,9 +18,9 @@ ALTER TABLE [dbo].[TblProduccionCosteos]
     ADD CONSTRAINT [DF_TblProduccionCosteos_EstaActivo] DEFAULT ((1)) FOR [EstaActivo];
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [UX_TblProduccionCosteos_Item_Tipo_Usuario]
-    ON [dbo].[TblProduccionCosteos]([ProduccionItemId] ASC, [UsuarioId] ASC, [TipoCodigo] ASC) WHERE ([EstaActivo]=(1));
-GO
+--CREATE UNIQUE NONCLUSTERED INDEX [UX_TblProduccionCosteos_Item_Tipo_Usuario]
+--    ON [dbo].[TblProduccionCosteos]([ProduccionItemId] ASC, [UsuarioId] ASC, [TipoCodigo] ASC) WHERE ([EstaActivo]=(1));
+--GO
 
 ALTER TABLE [dbo].[TblProduccionCosteos]
     ADD CONSTRAINT [PK_TblProduccionCosteos] PRIMARY KEY CLUSTERED ([ProduccionCosteoId] ASC);

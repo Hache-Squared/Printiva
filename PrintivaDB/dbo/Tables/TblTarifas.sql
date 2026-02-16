@@ -10,9 +10,9 @@ CREATE TABLE [dbo].[TblTarifas] (
     [EstaActivo]            BIT             CONSTRAINT [DF_TblTarifas_EstaActivo] DEFAULT ((1)) NOT NULL,
     [FechaCreacion]         DATETIME2 (0)   CONSTRAINT [DF_TblTarifas_FechaCreacion] DEFAULT (sysdatetime()) NOT NULL,
     [FechaActualizacion]    DATETIME2 (0)   NULL,
-    [ImpresoraIdKey]        AS              (isnull([ImpresoraId],(0))) PERSISTED NOT NULL,
-    [InventarioTipoIdKey]   AS              (isnull([InventarioTipoId],(0))) PERSISTED NOT NULL,
-    [InventarioNombreIdKey] AS              (isnull([InventarioNombreId],(0))) PERSISTED NOT NULL,
+    [ImpresoraIdKey]        AS (ISNULL([ImpresoraId],(0))),
+    [InventarioTipoIdKey]   AS (ISNULL([InventarioTipoId],(0))),
+    [InventarioNombreIdKey] AS (ISNULL([InventarioNombreId],(0))),
     [Nombre]                NVARCHAR (80)   CONSTRAINT [DF_TblTarifas_Nombre] DEFAULT (N'') NOT NULL,
     [Orden]                 INT             CONSTRAINT [DF_TblTarifas_Orden] DEFAULT ((100)) NOT NULL,
     [InventarioId]          INT             NULL,
@@ -21,13 +21,13 @@ CREATE TABLE [dbo].[TblTarifas] (
 );
 GO
 
-CREATE NONCLUSTERED INDEX [IX_TblTarifas_Usuario_Concepto]
-    ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC)
-    INCLUDE([Monto], [Moneda], [ImpresoraId], [InventarioTipoId], [InventarioNombreId], [FechaCreacion], [FechaActualizacion]);
-GO
+--CREATE NONCLUSTERED INDEX [IX_TblTarifas_Usuario_Concepto]
+--    ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC)
+--    INCLUDE([Monto], [Moneda], [ImpresoraId], [InventarioTipoId], [InventarioNombreId], [FechaCreacion], [FechaActualizacion]);
+--GO
 
-CREATE NONCLUSTERED INDEX [IX_TblTarifas_Lookup]
-    ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC, [ImpresoraId] ASC, [InventarioId] ASC)
-    INCLUDE([Monto], [Moneda], [Nombre], [Orden], [FechaCreacion], [FechaActualizacion]);
-GO
+--CREATE NONCLUSTERED INDEX [IX_TblTarifas_Lookup]
+--    ON [dbo].[TblTarifas]([UsuarioId] ASC, [TarifaConceptoId] ASC, [EstaActivo] ASC, [ImpresoraId] ASC, [InventarioId] ASC)
+--    INCLUDE([Monto], [Moneda], [Nombre], [Orden], [FechaCreacion], [FechaActualizacion]);
+--GO
 

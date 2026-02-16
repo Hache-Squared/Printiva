@@ -20,7 +20,7 @@ ALTER TABLE [dbo].[TblUsuariosPermisos]
     ADD CONSTRAINT [FK_TblUsuariosPermisos_Usuarios] FOREIGN KEY ([UsuarioId]) REFERENCES [dbo].[Usuarios] ([Id]);
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [UX_TblUsuariosPermisos_Usuario_Permiso]
-    ON [dbo].[TblUsuariosPermisos]([UsuarioId] ASC, [PermisoKey] ASC);
-GO
+--CREATE UNIQUE NONCLUSTERED INDEX [UX_TblUsuariosPermisos_Usuario_Permiso]
+--    ON [dbo].[TblUsuariosPermisos]([UsuarioId] ASC, [PermisoKey] ASC);
+--GO
 
