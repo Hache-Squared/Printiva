@@ -111,7 +111,7 @@ BEGIN
 				PedidoId, CotizacionEstatusId, FechaCreacion, FechaVigencia, Notas, EstaActivo
 			)
 			VALUES(
-				@PedidoId, @CotizacionEstatusId, GETDATE(), @FechaVigencia, @Notas, 1
+				@PedidoId, @CotizacionEstatusId, GETUTCDATE(), @FechaVigencia, @Notas, 1
 			);
 
 			SET @elementoId = SCOPE_IDENTITY();

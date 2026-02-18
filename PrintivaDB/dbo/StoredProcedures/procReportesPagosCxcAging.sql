@@ -95,8 +95,8 @@ BEGIN
       CAST(COALESCE(b.CotizacionTotal, b.TotalEstimado, 0) - COALESCE(b.TotalPagado, 0) AS DECIMAL(18,2)) AS Saldo,
 
       CASE
-        WHEN CAST(SYSDATETIME() AS DATE) > b.FechaBase
-          THEN DATEDIFF(DAY, b.FechaBase, CAST(SYSDATETIME() AS DATE))
+        WHEN CAST(GETUTCDATE() AS DATE) > b.FechaBase
+          THEN DATEDIFF(DAY, b.FechaBase, CAST(GETUTCDATE() AS DATE))
         ELSE 0
       END AS DiasVencidos
     FROM base b

@@ -46,7 +46,7 @@ BEGIN
             UPDATE dbo.TblProduccionCosteos
                SET Moneda=@Moneda,
                    Total=@Total,
-                   Fecha=SYSDATETIME()
+                   Fecha=GETUTCDATE()
             WHERE ProduccionCosteoId=@costeoId;
         END
 

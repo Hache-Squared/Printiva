@@ -16,7 +16,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.TblPedidos p (NOLOCK) WHERE p.PedidoId=@PedidoId AND ISNULL(p.EstaActivo,1)=1)
             THROW 50000, 'Pedido no encontrado.', 1;
 
-        DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+        DECLARE @Now DATETIME2(0) = CAST(GETUTCDATE() AS DATETIME2(0));
 
         DECLARE @EnProdId INT =
             (SELECT TOP 1 ProduccionEstatusId

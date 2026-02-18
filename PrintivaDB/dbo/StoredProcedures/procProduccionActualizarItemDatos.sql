@@ -39,7 +39,7 @@ BEGIN
                 RAISERROR('Impresora inválida o inactiva.', 16, 1);
         END
 
-        DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+        DECLARE @Now DATETIME2(0) = CAST(GETUTCDATE() AS DATETIME2(0));
 
         DECLARE @EnProdId INT =
         (
@@ -83,7 +83,7 @@ BEGIN
                             ELSE pi.FechaFin
                          END,
 
-               FechaActualizacion = SYSDATETIME()
+               FechaActualizacion = GETUTCDATE()
         FROM dbo.TblProduccionItems pi
         WHERE pi.ProduccionItemId = @ProduccionItemId
           AND pi.EstaActivo = 1;

@@ -36,7 +36,7 @@ BEGIN
     END
 
     IF (@FechaCreacion IS NULL)
-        SET @FechaCreacion = CAST(GETDATE() AS DATE);
+        SET @FechaCreacion = CAST(GETUTCDATE() AS DATE);
 
     DECLARE @op VARCHAR(20) =
         CASE

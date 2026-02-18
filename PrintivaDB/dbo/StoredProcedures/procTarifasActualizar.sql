@@ -43,7 +43,7 @@ BEGIN
             Moneda = @Moneda,
             Nombre = COALESCE(@Nombre, t.Nombre),
             Orden  = COALESCE(@Orden, t.Orden),
-            FechaActualizacion = SYSDATETIME()
+            FechaActualizacion = GETUTCDATE()
         OUTPUT
             inserted.TarifaId,
             inserted.UsuarioId,

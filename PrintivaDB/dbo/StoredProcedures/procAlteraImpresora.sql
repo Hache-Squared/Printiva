@@ -29,7 +29,7 @@ BEGIN
 
             UPDATE dbo.TblImpresoras
             SET EstaActivo = 0,
-                FechaActualizacion = SYSDATETIME()
+                FechaActualizacion = GETUTCDATE()
             WHERE ImpresoraId = @ElementoAlterarId;
 
             SET @message = 'Impresora desactivada.';
@@ -53,7 +53,7 @@ BEGIN
             SET Nombre = @Nombre,
                 Modelo = NULLIF(@Modelo,''),
                 Notas = NULLIF(@Notas,''),
-                FechaActualizacion = SYSDATETIME(),
+                FechaActualizacion = GETUTCDATE(),
                 EstaActivo = 1
             WHERE ImpresoraId = @ElementoAlterarId;
 

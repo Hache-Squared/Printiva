@@ -57,7 +57,7 @@ BEGIN
             THROW 50000, @MensajeError, 1;
         END
 
-        DECLARE @Now DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+        DECLARE @Now DATETIME2(0) = CAST(GETUTCDATE() AS DATETIME2(0));
 
         -- IDs por proceso (tu tabla real)
         DECLARE @EnProdId INT =
@@ -221,7 +221,7 @@ BEGIN
                 d.Cantidad,
                 d.InventarioUnidadId,
                 @loginId,
-                SYSDATETIME(),
+                GETUTCDATE(),
                 @PedidoId,
                 @PedidoItemId,
                 @ProductoId,
@@ -238,7 +238,7 @@ BEGIN
 
             UPDATE dbo.TblProduccionItems
                SET InventarioAplicado = 1,
-                   FechaActualizacion = SYSDATETIME()
+                   FechaActualizacion = GETUTCDATE()
             WHERE ProduccionItemId=@ProduccionItemId;
 
             SET @InventarioAplicadoAhora = 1;
@@ -247,7 +247,7 @@ BEGIN
         UPDATE dbo.TblProduccionItems
            SET ProduccionEstatusId = @HaciaEstatusId,
                Notas = NULLIF(@Notas,''),
-               FechaActualizacion = SYSDATETIME(),
+               FechaActualizacion = GETUTCDATE(),
 
                -- si entra a En producción y no hay inicio → arranca
                FechaInicio = CASE

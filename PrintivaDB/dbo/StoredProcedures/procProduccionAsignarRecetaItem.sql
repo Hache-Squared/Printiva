@@ -38,7 +38,7 @@ BEGIN
 
         UPDATE dbo.TblProduccionItems
            SET RecetaId = @RecetaId,
-               FechaActualizacion = SYSDATETIME()
+               FechaActualizacion = GETUTCDATE()
         WHERE ProduccionItemId=@ProduccionItemId;
 
         SELECT @result [result], @message [message], @elementoId [elementoId];

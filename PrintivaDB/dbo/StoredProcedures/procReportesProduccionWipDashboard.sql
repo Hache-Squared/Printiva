@@ -86,11 +86,11 @@ BEGIN
     CASE
       WHEN DATEDIFF(DAY,
         CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE),
-        CAST(GETDATE() AS DATE)
+        CAST(GETUTCDATE() AS DATE)
       ) < 0 THEN 0
       ELSE DATEDIFF(DAY,
         CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE),
-        CAST(GETDATE() AS DATE)
+        CAST(GETUTCDATE() AS DATE)
       )
     END AS DiasEnEstatus,
 
@@ -98,24 +98,24 @@ BEGIN
 
     CASE
       WHEN p.FechaEntregaEstimada IS NOT NULL
-       AND CAST(GETDATE() AS DATE) > CAST(p.FechaEntregaEstimada AS DATE)
+       AND CAST(GETUTCDATE() AS DATE) > CAST(p.FechaEntregaEstimada AS DATE)
        AND pes.Orden < @FinalOrden
       THEN CAST(1 AS bit)
       ELSE CAST(0 AS bit)
     END AS Atrasado,
 
     CASE
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) <= 1 THEN 0
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 2 AND 3 THEN 1
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 4 AND 7 THEN 2
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 8 AND 14 THEN 3
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) <= 1 THEN 0
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 2 AND 3 THEN 1
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 4 AND 7 THEN 2
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 8 AND 14 THEN 3
       ELSE 4
     END AS ColaBucketId,
     CASE
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) <= 1 THEN '0-1'
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 2 AND 3 THEN '2-3'
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 4 AND 7 THEN '4-7'
-      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETDATE() AS DATE)) BETWEEN 8 AND 14 THEN '8-14'
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) <= 1 THEN '0-1'
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 2 AND 3 THEN '2-3'
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 4 AND 7 THEN '4-7'
+      WHEN DATEDIFF(DAY, CAST(COALESCE(lastMv.UltimoMovimientoFecha, pi.FechaActualizacion, pi.FechaCreacion) AS DATE), CAST(GETUTCDATE() AS DATE)) BETWEEN 8 AND 14 THEN '8-14'
       ELSE '15+'
     END AS ColaBucketNombre
 

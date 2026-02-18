@@ -10,7 +10,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF @FechaHasta IS NULL SET @FechaHasta = CONVERT(date, GETDATE());
+    IF @FechaHasta IS NULL SET @FechaHasta = CONVERT(date, GETUTCDATE());
     IF @FechaDesde IS NULL SET @FechaDesde = DATEADD(day, -7, @FechaHasta);
 
     DECLARE @DesdeDT DATETIME2 = CAST(@FechaDesde AS DATETIME2);

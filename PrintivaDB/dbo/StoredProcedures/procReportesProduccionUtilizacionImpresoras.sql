@@ -108,8 +108,8 @@ BEGIN
 
     CASE
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NULL AND @incluirEnCurso = 1
-        THEN CASE WHEN DATEDIFF(MINUTE, r.FechaInicio, CAST(GETDATE() AS datetime2(0))) < 0 THEN 0
-                  ELSE DATEDIFF(MINUTE, r.FechaInicio, CAST(GETDATE() AS datetime2(0))) END
+        THEN CASE WHEN DATEDIFF(MINUTE, r.FechaInicio, CAST(GETUTCDATE() AS datetime2(0))) < 0 THEN 0
+                  ELSE DATEDIFF(MINUTE, r.FechaInicio, CAST(GETUTCDATE() AS datetime2(0))) END
       ELSE NULL
     END AS DuracionMinEnCurso,
 
@@ -117,8 +117,8 @@ BEGIN
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NOT NULL AND r.FechaFin >= r.FechaInicio
         THEN DATEDIFF(MINUTE, r.FechaInicio, r.FechaFin)
       WHEN r.FechaInicio IS NOT NULL AND r.FechaFin IS NULL AND @incluirEnCurso = 1
-        THEN CASE WHEN DATEDIFF(MINUTE, r.FechaInicio, CAST(GETDATE() AS datetime2(0))) < 0 THEN 0
-                  ELSE DATEDIFF(MINUTE, r.FechaInicio, CAST(GETDATE() AS datetime2(0))) END
+        THEN CASE WHEN DATEDIFF(MINUTE, r.FechaInicio, CAST(GETUTCDATE() AS datetime2(0))) < 0 THEN 0
+                  ELSE DATEDIFF(MINUTE, r.FechaInicio, CAST(GETUTCDATE() AS datetime2(0))) END
       ELSE NULL
     END AS DuracionMinTotal,
 

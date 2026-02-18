@@ -10,7 +10,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT TOP(200)
+    SELECT
         l.TarifaLogId,
         l.Accion,
 
