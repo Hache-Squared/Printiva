@@ -283,7 +283,7 @@
                         <div class="row g-2">
                             <div class="col-md-3">
                                 <div class="text-muted small">Creación</div>
-                                <div class="fw-semibold">@header.FechaCreacion.ToString("yyyy-MM-dd HH:mm")</div>
+                                <div class="fw-semibold">@header.FechaCreacion.MxFmt("yyyy-MM-dd HH:mm")</div>
                             </div>
                             <div class="col-md-3">
                                 <div class="text-muted small">Entrega estimada</div>
@@ -523,8 +523,8 @@
                                 <td>@(pr.RecetaNombre ?? "-")</td>
                                 <td class="text-end">@((pr.PesoEstimadoGr ?? 0m).ToString("N2"))</td>
                                 <td class="text-end">@((pr.PesoRealGr ?? 0m).ToString("N2"))</td>
-                                <td>@(pr.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
-                                <td>@(pr.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                <td>@(pr.FechaInicio?.MxFmt("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                <td>@(pr.FechaFin?.MxFmt("yyyy-MM-dd HH:mm") ?? "-")</td>
                                 <td>@(pr.InventarioAplicado ? "Sí" : "No")</td>
                             </tr>
                         }
@@ -561,7 +561,7 @@
                         @foreach (var c in Model.Consumo.OrderByDescending(x => x.Fecha))
                         {
                             <tr>
-                                <td>@c.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@c.Fecha.MxFmt("yyyy-MM-dd HH:mm")</td>
                                 <td>@c.ProduccionItemId</td>
                                 <td>@(c.PedidoItemId?.ToString() ?? "-")</td>
                                 <td>@(c.RecetaNombre ?? c.RecetaId?.ToString() ?? "-")</td>
@@ -603,7 +603,7 @@
                         @foreach (var h in Model.Historia)
                         {
                             <tr>
-                                <td>@h.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@h.Fecha.MxFmt("yyyy-MM-dd HH:mm")</td>
                                 <td>@h.Tipo</td>
                                 <td>@(h.PedidoItemId?.ToString() ?? "-")</td>
                                 <td>@(h.ProduccionItemId?.ToString() ?? "-")</td>

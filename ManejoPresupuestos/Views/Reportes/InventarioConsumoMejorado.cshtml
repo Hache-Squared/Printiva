@@ -364,7 +364,7 @@
                             Model.TarifasPorKey.TryGetValue(keyGlobal, out var tarifasGlobal);
 
                             <tr>
-                                <td>@x.FechaConsumo.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@x.FechaConsumo.MxFmt("yyyy-MM-dd HH:mm")</td>
                                 <td><a href="/Reportes/Pedido360?pedidoId=@x.PedidoId">#@x.PedidoId</a></td>
                                 <td>@x.ClienteNombre</td>
                                 <td>@x.ProductoNombre</td>

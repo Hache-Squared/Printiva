@@ -106,7 +106,7 @@
                 @foreach(var r in Model.Rows)
                 {
                     <tr>
-                        <td>@r.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@r.Fecha.MxFmt("yyyy-MM-dd HH:mm")</td>
                         <td>@(r.PedidoId?.ToString() ?? "-")</td>
                         <td>@(r.ProduccionItemId?.ToString() ?? "-")</td>
                         <td>@(r.RecetaNombre ?? r.RecetaId?.ToString() ?? "-")</td>

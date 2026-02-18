@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using ManejoPresupuestos.Helpers;
 using ManejoPresupuestos.Models;
 using ManejoPresupuestos.Servicios;
 using Microsoft.AspNetCore.Mvc;
@@ -358,7 +359,7 @@ namespace ManejoPresupuestos.Servicios
             int r2 = r - 6;
             EscribirKVInline(ws, r2 + 0, 9, "PedidoId", h.PedidoId.ToString(), 3, 3, cSoftGray);
             EscribirKVInline(ws, r2 + 1, 9, "Estatus", h.PedidoEstatusNombre ?? "-", 3, 3, cSoftGray);
-            EscribirKVInline(ws, r2 + 2, 9, "Creación", h.FechaCreacion.ToString("yyyy-MM-dd HH:mm"), 3, 3, cSoftGray);
+            EscribirKVInline(ws, r2 + 2, 9, "Creación", h.FechaCreacion.MxFmt("yyyy-MM-dd HH:mm"), 3, 3, cSoftGray);
             EscribirKVInline(ws, r2 + 3, 9, "Entrega estimada", h.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-", 3, 3, cSoftGray);
             EscribirKVInline(ws, r2 + 4, 9, "CotizaciónId", h.CotizacionIdVinculada?.ToString() ?? "-", 3, 3, cSoftGray);
 
@@ -580,8 +581,8 @@ namespace ManejoPresupuestos.Servicios
                     pr.RecetaNombre ?? "-",
                     pr.PesoEstimadoGr ?? 0m,
                     pr.PesoRealGr ?? 0m,
-                    pr.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-",
-                    pr.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    pr.FechaInicio?.MxFmt("yyyy-MM-dd HH:mm") ?? "-",
+                    pr.FechaFin?.MxFmt("yyyy-MM-dd HH:mm") ?? "-",
                     pr.InventarioAplicado ? "Sí" : "No"
                 );
             }
@@ -617,7 +618,7 @@ namespace ManejoPresupuestos.Servicios
             foreach (var c in vm.Consumo.OrderByDescending(x => x.Fecha))
             {
                 dtCons.Rows.Add(
-                    c.Fecha.ToString("yyyy-MM-dd HH:mm"),
+                    c.Fecha.MxFmt("yyyy-MM-dd HH:mm"),
                     c.ProduccionItemId,
                     c.PedidoItemId?.ToString() ?? "-",
                     c.RecetaNombre ?? c.RecetaId?.ToString() ?? "-",
@@ -660,7 +661,7 @@ namespace ManejoPresupuestos.Servicios
             foreach (var hi in vm.Historia.OrderByDescending(x => x.Fecha))
             {
                 dtHist.Rows.Add(
-                    hi.Fecha.ToString("yyyy-MM-dd HH:mm"),
+                    hi.Fecha.MxFmt("yyyy-MM-dd HH:mm"),
                     hi.Tipo,
                     hi.PedidoItemId?.ToString() ?? "-",
                     hi.ProduccionItemId?.ToString() ?? "-",
@@ -1863,8 +1864,8 @@ namespace ManejoPresupuestos.Servicios
                     x.ClienteNombre ?? "-",
                     x.ProductoNombre ?? "-",
                     x.ImpresoraNombre ?? "(Sin impresora)",
-                    x.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-",
-                    x.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    x.FechaInicio?.MxFmt("yyyy-MM-dd HH:mm") ?? "-",
+                    x.FechaFin?.MxFmt("yyyy-MM-dd HH:mm") ?? "-",
                     x.DuracionMin,
                     x.ProduccionEstatusNombre ?? "-",
                     x.MarcadaFalla ? "Sí" : "No",
