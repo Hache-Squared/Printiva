@@ -390,7 +390,7 @@ namespace ManejoPresupuestos.Controllers
             string Label(dynamic i)
             {
                 var unidad = (string)i.InventarioUnidad;
-                var suf = unidad == "Unidad" ? "unid" : "g";
+                var suf = unidad == "Unidad" ? "unidad" : "g";
                 return $"{i.InventarioNombre} ({i.InventarioColor}) - {suf}";
             }
 

@@ -251,7 +251,7 @@
 
                             <div class="kv">
                                 <div class="kv-label">Total estimado</div>
-                                <div class="kv-value money">@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                                <div class="kv-value money">$@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
                             </div>
 
                             <div class="kv">
@@ -299,8 +299,8 @@
                                                 }
                                             </td>
                                             <td>@i.Cantidad</td>
-                                            <td class="text-end money">@pu.ToString("0.00")</td>
-                                            <td class="text-end money">@sub.ToString("0.00")</td>
+                                            <td class="text-end money">$@pu.ToString("0.00")</td>
+                                            <td class="text-end money">$@sub.ToString("0.00")</td>
                                         </tr>
                                     }
                                     @if (!Model.Items.Any())
@@ -316,7 +316,7 @@
                         <div class="d-flex justify-content-end mt-3">
                             <div class="text-end total-box">
                                 <div class="kv-label mb-1">Total estimado</div>
-                                <div class="money" style="font-size: 1.65rem;">@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                                <div class="money" style="font-size: 1.65rem;">$@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
                             </div>
                         </div>
                     </div>

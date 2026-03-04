@@ -166,6 +166,12 @@
     }
 
     .money{ white-space: nowrap; }
+    .money::before{
+        content: "$";
+        margin-right: .15rem;
+        color: var(--muted);
+        font-weight: 850;
+    }
 
     .danger-soft{
         border: 1px solid rgba(239,68,68,.20) !important;
@@ -286,7 +292,7 @@
                                         <td><span class="st-pill @TipoPillClass(i.ConceptoTipo)">@i.ConceptoTipo</span></td>
                                         <td class="fw-semibold">@(string.IsNullOrWhiteSpace(i.ProductoNombre) ? "-" : i.ProductoNombre)</td>
                                         <td class="fw-semibold">@i.Concepto</td>
-                                        <td class="text-end money">@i.Cantidad.ToString("0.00")</td>
+                                        <td class="text-end">@i.Cantidad.ToString("0.00")</td>
                                         <td class="text-end money">@i.PrecioUnitario.ToString("0.00")</td>
                                         <td class="text-end fw-semibold money">@((i.Cantidad * i.PrecioUnitario).ToString("0.00"))</td>
                                         <td>@(string.IsNullOrWhiteSpace(i.Notas) ? "-" : i.Notas)</td>

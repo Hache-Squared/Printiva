@@ -213,7 +213,10 @@
 
                             <div class="mb-3">
                                 <label asp-for="TotalEstimado" class="form-label"></label>
-                                <input asp-for="TotalEstimado" class="form-control ctrl" />
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <div>$</div>
+                                    <input asp-for="TotalEstimado" class="form-control ctrl" />
+                                </div>   
                                 <span asp-validation-for="TotalEstimado" class="text-danger"></span>
                             </div>
 
@@ -268,7 +271,10 @@
                                                     <span asp-validation-for="Items[@i].Cantidad" class="text-danger"></span>
                                                 </td>
                                                 <td>
-                                                    <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control ctrl" />
+                                                    <div class="d-flex gap-2">
+                                                        <div class="d-flex align-items-center justify-content-center gap-2">$</div>
+                                                        <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control ctrl" />
+                                                    </div>
                                                     <span asp-validation-for="Items[@i].PrecioUnitarioEstimado" class="text-danger"></span>
                                                 </td>
                                                 <td>
@@ -358,7 +364,7 @@
                     tr.innerHTML = `
                         <td class="fw-semibold">${escapeHtml(p.nombre)}</td>
                         <td>${escapeHtml(p.categoria || '')}</td>
-                        <td class="text-end">${Number(p.precioSugerido || 0).toFixed(2)}</td>
+                        <td class="text-end">$${Number(p.precioSugerido || 0).toFixed(2)}</td>
                         <td class="text-end">
                             <button type="button" class="btn btn-success btn-mini btnSelectProduct"
                                 data-id="${p.productoId}"
@@ -478,7 +484,10 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].Cantidad" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <input class="form-control ctrl" name="Items[${idx}].PrecioUnitarioEstimado" />
+                        <div class="d-flex gap-2">
+                            <div class="d-flex align-items-center justify-content-center gap-2">$</div>
+                            <input class="form-control ctrl" name="Items[${idx}].PrecioUnitarioEstimado" />
+                        </div>    
                         <span class="text-danger field-validation-valid" data-valmsg-for="Items[${idx}].PrecioUnitarioEstimado" data-valmsg-replace="true"></span>
                     </td>
                     <td>

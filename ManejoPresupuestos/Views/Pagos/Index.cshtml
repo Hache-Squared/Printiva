@@ -116,7 +116,7 @@
             <div>
                 <h1 class="pg-title">Pagos</h1>
                 <div class="pg-subtitle">
-                    Cotización #@cot.CotizacionId · Total @cot.TotalCotizado.ToString("0.00") · Saldo @cot.Saldo.ToString("0.00")
+                    Cotización #@cot.CotizacionId · Total $@cot.TotalCotizado.ToString("0.00") · Saldo $@cot.Saldo.ToString("0.00")
                 </div>
             </div>
             <div class="d-flex gap-2 flex-wrap">
@@ -147,7 +147,7 @@
                                 <td><span class="badge badge-soft">@p.PagoTipo</span></td>
                                 <td>@(string.IsNullOrWhiteSpace(p.Metodo) ? "-" : p.Metodo)</td>
                                 <td>@(string.IsNullOrWhiteSpace(p.Referencia) ? "-" : p.Referencia)</td>
-                                <td class="text-end money">@p.Monto.ToString("0.00")</td>
+                                <td class="text-end money">$@p.Monto.ToString("0.00")</td>
                                 <td style="white-space:nowrap;">
                                     <div class="d-flex gap-2 flex-wrap">
                                         <a class="btn btn-pill btn-soft btn-sm"

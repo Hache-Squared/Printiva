@@ -17,7 +17,10 @@
 
     body{ background: var(--pg-bg); }
 
-    .pg-wrap{ max-width: 1280px; }
+    .pg-wrap{
+       width: 100%;
+       max-width: 1600px;  
+    }
 
     .pg-title{
         color: var(--text);
@@ -238,6 +241,32 @@
         box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
         background: #fff;
     }
+
+    /* ===== Money visual ===== */
+    .money { white-space: nowrap; }
+    .money::before{
+        content: "$";
+        margin-right: .15rem;
+        color: var(--muted);
+        font-weight: 850;
+    }
+
+    /* Prefijo $ para inputs numéricos sin cambiar valor */
+    .money-input .input-group-text{
+        border-radius: 12px 0 0 12px;
+        border-color: rgba(15,23,42,.10);
+        background: rgba(15,23,42,.03);
+        color: var(--muted);
+        font-weight: 850;
+    }
+    .money-input .form-control{
+        border-radius: 0 12px 12px 0;
+    }
+    .money-input .form-control:focus{
+        border-color: rgba(29,78,216,.40);
+        box-shadow: 0 0 0 .25rem rgba(29,78,216,.10);
+        background: #fff;
+    }
 </style>
 
 <div class="container-xxl py-4">
@@ -284,15 +313,15 @@
                             <div class="totals-box">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="lbl">Total modelado</div>
-                                    <div class="val" id="lblTotalModelado">0.00</div>
+                                    <div class="val money" id="lblTotalModelado">0.00</div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-1">
                                     <div class="lbl">Total producción</div>
-                                    <div class="val" id="lblTotalProduccion">0.00</div>
+                                    <div class="val money" id="lblTotalProduccion">0.00</div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-end mt-2 pt-2" style="border-top:1px solid var(--border2);">
                                     <div class="val">Total</div>
-                                    <div class="val grand" id="lblTotalCotizado">0.00</div>
+                                    <div class="val grand money" id="lblTotalCotizado">0.00</div>
                                 </div>
                             </div>
 
@@ -318,7 +347,7 @@
                                             <th style="width:260px;">Producto</th>
                                             <th>Concepto</th>
                                             <th style="width:120px;">Cantidad</th>
-                                            <th style="width:140px;">Precio</th>
+                                            <th style="width:180px;">Precio</th>
                                             <th style="width:140px;" class="text-end">Subtotal</th>
                                             <th style="width:200px;">Notas</th>
                                             <th style="width:90px;"></th>
@@ -365,7 +394,7 @@
 
                                     <div class="border-top pt-2 mt-2 d-flex justify-content-between">
                                         <div class="fw-semibold">Total costos extra</div>
-                                        <div class="fw-bold" id="lblTotalTarifas">0.00</div>
+                                        <div class="fw-bold money" id="lblTotalTarifas">0.00</div>
                                     </div>
 
                                     <div class="text-muted small mt-1">
@@ -502,9 +531,9 @@
                         <div class="text-muted small">${x.conceptoCodigo || ''}</div>
                     </td>
                     <td>${(x.tarifaNombre || '')}${badge}</td>
-                    <td class="text-end">${money(x.monto || 0)}</td>
+                    <td class="text-end"><span class="money">${money(x.monto || 0)}</span></td>
                     <td class="text-end">${money(x.cantidad || 0)}</td>
-                    <td class="text-end fw-semibold">${money(x.subtotal || 0)}</td>
+                    <td class="text-end fw-semibold"><span class="money">${money(x.subtotal || 0)}</span></td>
                     <td>${x.aplicaA || ''}</td>
                 </tr>
             `;
@@ -627,7 +656,7 @@
                 <td>
                     <input type="number" step="0.01" class="form-control form-control-sm control-soft-sm js-precio" data-name="Items[__i__].PrecioUnitario" value="${item?.precioUnitario || ''}" />
                 </td>
-                <td class="text-end js-subtotal">0.00</td>
+                <td class="text-end js-subtotal money">0.00</td>
                 <td>
                     <input class="form-control form-control-sm control-soft-sm" data-name="Items[__i__].Notas" value="${item?.notas || ''}" />
                 </td>
@@ -689,7 +718,9 @@
                     tr.innerHTML = `
                         <td class="fw-semibold">${p.nombre || ''}</td>
                         <td>${p.productoCategoria || ''}</td>
-                        <td class="text-end">${precio === '' ? '' : money(precio)}</td>
+                        <td class="text-end">
+                            ${precio === '' ? '' : `<span class="money">${money(precio)}</span>`}
+                        </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-primary btn-pill btn-primary-pill p-0 px-3 py-1">Seleccionar</button>
                         </td>

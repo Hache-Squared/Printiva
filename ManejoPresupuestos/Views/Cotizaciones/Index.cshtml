@@ -223,11 +223,11 @@
 
                                 <td style="white-space:nowrap;">@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
 
-                                <td class="text-end money">@c.TotalModelado.ToString("0.00")</td>
-                                <td class="text-end money">@c.TotalProduccion.ToString("0.00")</td>
-                                <td class="text-end fw-semibold money">@c.TotalCotizado.ToString("0.00")</td>
-                                <td class="text-end money">@c.TotalPagado.ToString("0.00")</td>
-                                <td class="text-end fw-semibold money @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</td>
+                                <td class="text-end money">$@c.TotalModelado.ToString("0.00")</td>
+                                <td class="text-end money">$@c.TotalProduccion.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money">$@c.TotalCotizado.ToString("0.00")</td>
+                                <td class="text-end money">$@c.TotalPagado.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money @(c.Saldo > 0 ? "text-danger" : "text-success")">$@c.Saldo.ToString("0.00")</td>
                                 <td style="white-space:nowrap;">
                                     <div class="act-wrap">
                                         <a class="btn act-btn act-view" asp-action="Detalles" asp-route-id="@c.CotizacionId">Ver</a>
