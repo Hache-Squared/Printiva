@@ -209,8 +209,24 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="avatar">@ini</div>
                                         <div>
-                                            <div class="fw-semibold">@c.Nombre</div>
-                                            <div class="cell-muted small">ID: @c.ClienteId</div>
+                                            @{
+                                                var fullName = string.Join(" ",
+                                                    new[] { c.Nombre, c.ApellidoPaterno, c.ApellidoMaterno }
+                                                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                                                );
+                                            }
+                                            <div class="fw-semibold">@fullName</div>
+                                            <div class="cell-muted small">ID: @c.ClienteId
+                                                @if (c.EsEmpresa)
+                                                {
+                                                    <span class="ms-2 chip" style="border-color: rgba(245,158,11,.22); background: rgba(245,158,11,.10); color:#92400E;">Empresa</span>
+                                                }
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(c.RFC))
+                                            {
+                                                <div class="cell-muted small">RFC: <span class="fw-semibold">@c.RFC</span></div>
+                                            }
                                         </div>
                                     </div>
                                 </td>

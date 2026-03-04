@@ -7,9 +7,15 @@ namespace ManejoPresupuestos.Models
         public int ClienteId { get; set; }
         public int UsuarioId { get; set; }
 
-        [Required(ErrorMessage = "El campo {0} es obligatorio")]
+        [Required]
         [StringLength(150)]
         public string Nombre { get; set; } = string.Empty;
+
+        [StringLength(80)]
+        public string? ApellidoPaterno { get; set; }
+
+        [StringLength(80)]
+        public string? ApellidoMaterno { get; set; }
 
         [StringLength(30)]
         public string? Telefono { get; set; }
@@ -21,17 +27,19 @@ namespace ManejoPresupuestos.Models
         public string? WhatsApp { get; set; }
 
         [StringLength(120)]
-        [EmailAddress(ErrorMessage = "Email inválido")]
+        [EmailAddress]
         public string? Email { get; set; }
 
         [StringLength(250)]
         public string? Direccion { get; set; }
 
+        public bool EsEmpresa { get; set; }
+
+        [StringLength(13)]
+        public string? RFC { get; set; }
+
         public DateTime FechaCreacion { get; set; }
-
-        // NUEVO: borrado lógico
         public bool EstaActivo { get; set; } = true;
-
         public DateTime? FechaActualizacion { get; set; }
     }
 }

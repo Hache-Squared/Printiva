@@ -61,6 +61,10 @@ namespace ManejoPresupuestos.Controllers
                 Direccion = cliente.Direccion,
                 Instagram = cliente.Instagram,
                 WhatsApp = cliente.WhatsApp,
+                EsEmpresa = cliente.EsEmpresa,
+                RFC = cliente.RFC,
+                ApellidoPaterno = cliente.ApellidoPaterno,
+                ApellidoMaterno = cliente.ApellidoMaterno,
                 EstaActivo = cliente.EstaActivo
             };
 
