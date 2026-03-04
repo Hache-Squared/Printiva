@@ -173,7 +173,7 @@ namespace ManejoPresupuestos.Servicios
             // -------------------------
             // Sheet: Antiguedad (cola)
             // -------------------------
-            var wsCola = wb.AddWorksheet("Antigüedad (cola)");
+            var wsCola = wb.AddWorksheet("Antigüedad (en fila)");
             var dataCola = vm.PorAntiguedad
                 .OrderBy(x => x.ColaBucketId)
                 .Select(x => new

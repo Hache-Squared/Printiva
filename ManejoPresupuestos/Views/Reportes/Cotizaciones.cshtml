@@ -214,7 +214,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label">Min monto</label>
+                    <label class="form-label">Min monto($)</label>
                     <input class="form-control" name="minMonto" value="@(Model.MinMonto?.ToString() ?? "")" />
                 </div>
 
@@ -264,7 +264,7 @@
             <div class="col-md-3">
                 <div class="card card-body">
                     <div class="text-muted small">Monto total</div>
-                    <div class="fs-4 fw-semibold">@((Model.Totales.MontoTotal ?? 0).ToString("N2"))</div>
+                    <div class="fs-4 fw-semibold">$@((Model.Totales.MontoTotal ?? 0).ToString("N2"))</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -315,7 +315,7 @@
                         <tr>
                             <td>@r.CotizacionEstatusNombre</td>
                             <td class="text-end">@r.Cotizaciones</td>
-                            <td class="text-end">@((r.Monto ?? 0).ToString("N2"))</td>
+                            <td class="text-end">$@((r.Monto ?? 0).ToString("N2"))</td>
                             <td class="text-end">@r.Convertidas</td>
                             <td class="text-end">@((r.ConversionPct ?? 0).ToString("N2"))%</td>
                         </tr>
@@ -364,9 +364,9 @@
                             <td>@r.CotizacionEstatusNombre</td>
                             <td>@r.Categoria</td>
                             <td>@r.CotizacionFechaCreacion.ToString("yyyy-MM-dd")</td>
-                            <td class="text-end">@r.MontoCotizacion.ToString("N2")</td>
-                            <td class="text-end">@r.TotalPagado.ToString("N2")</td>
-                            <td class="text-end">@r.Saldo.ToString("N2")</td>
+                            <td class="text-end">$@r.MontoCotizacion.ToString("N2")</td>
+                            <td class="text-end">$@r.TotalPagado.ToString("N2")</td>
+                            <td class="text-end">$@r.Saldo.ToString("N2")</td>
                             <td>
                                 @(r.UltimoPagoFecha?.ToString("yyyy-MM-dd") ?? "-")
                                 <div class="small text-muted">

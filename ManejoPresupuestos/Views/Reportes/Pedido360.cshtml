@@ -302,17 +302,17 @@
                         <div class="col-12">
                             <div class="card kpi-card">
                                 <div class="text-muted small">Total estimado</div>
-                                <div class="fs-4 kpi-val">@((header.TotalEstimado ?? 0m).ToString("N2"))</div>
+                                <div class="fs-4 kpi-val">$@((header.TotalEstimado ?? 0m).ToString("N2"))</div>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="card kpi-card">
                                 <div class="text-muted small">Total cotización</div>
-                                <div class="fs-4 kpi-val">@totalCot.ToString("N2")</div>
+                                <div class="fs-4 kpi-val">$@totalCot.ToString("N2")</div>
                                 <div class="text-muted small mt-2">Pagado</div>
-                                <div class="fw-semibold">@totalPagado.ToString("N2")</div>
+                                <div class="fw-semibold">$@totalPagado.ToString("N2")</div>
                                 <div class="text-muted small">Pendiente</div>
-                                <div class="fw-semibold">@pendiente.ToString("N2")</div>
+                                <div class="fw-semibold">$@pendiente.ToString("N2")</div>
                             </div>
                         </div>
                     </div>
@@ -347,7 +347,7 @@
                                 <td>@(i.ProductoNombre ?? i.ProductoId.ToString())</td>
                                 <td>@(i.ProductoCategoriaNombre ?? "-")</td>
                                 <td class="text-end">@i.Cantidad</td>
-                                <td class="text-end">@((i.PrecioUnitarioEstimado ?? 0m).ToString("N2"))</td>
+                                <td class="text-end">$@((i.PrecioUnitarioEstimado ?? 0m).ToString("N2"))</td>
                                 <td class="text-end">@i.ProduccionItems</td>
                                 <td class="text-end">@i.CantidadEnProduccion</td>
                                 <td class="text-end">@i.PesoEstimadoGrTotal.ToString("N2")</td>
@@ -426,8 +426,8 @@
                                         <td>@(ci.Concepto ?? "-")</td>
                                         <td>@(ci.ProductoNombre ?? "-")</td>
                                         <td class="text-end">@((ci.Cantidad ?? 0m).ToString("N2"))</td>
-                                        <td class="text-end">@((ci.PrecioUnitario ?? 0m).ToString("N2"))</td>
-                                        <td class="text-end">@((ci.Subtotal ?? 0m).ToString("N2"))</td>
+                                        <td class="text-end">$@((ci.PrecioUnitario ?? 0m).ToString("N2"))</td>
+                                        <td class="text-end">$@((ci.Subtotal ?? 0m).ToString("N2"))</td>
                                         <td>@(ci.ItemNotas ?? "-")</td>
                                     </tr>
                                 }
@@ -439,7 +439,7 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="6" class="text-end fw-semibold">Total</td>
-                                        <td class="text-end fw-semibold">@totalCot.ToString("N2")</td>
+                                        <td class="text-end fw-semibold">$@totalCot.ToString("N2")</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -476,7 +476,7 @@
                                 <td>@(p.Metodo ?? "-")</td>
                                 <td>@(p.Referencia ?? "-")</td>
                                 <td>@(p.Notas ?? "-")</td>
-                                <td class="text-end">@p.Monto.ToString("N2")</td>
+                                <td class="text-end">$@p.Monto.ToString("N2")</td>
                                 <td>@(p.EstaActivo ? "Sí" : "No")</td>
                             </tr>
                         }

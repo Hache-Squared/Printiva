@@ -294,7 +294,7 @@
             <div class="col-md-3">
                 <div class="card card-body">
                     <div class="text-muted small">Saldo total</div>
-                    <div class="fs-4 fw-semibold">@Model.TotalSaldo.ToString("N2")</div>
+                    <div class="fs-4 fw-semibold">$@Model.TotalSaldo.ToString("N2")</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -331,9 +331,9 @@
                             <td class="fw-semibold">@r.Prioridad</td>
                             <td>@r.PedidoId</td>
                             <td>@r.ClienteNombre</td>
-                            <td class="text-end">@r.Total.ToString("N2")</td>
+                            <td class="text-end">$@r.Total.ToString("N2")</td>
                             <td class="text-end">@r.PagadoPorcentaje.ToString("N2")%</td>
-                            <td class="text-end">@r.Saldo.ToString("N2")</td>
+                            <td class="text-end">$@r.Saldo.ToString("N2")</td>
                             <td>@r.PedidoEstatusNombre</td>
                             <td>@(r.ProduccionEstatusNombre ?? "Sin producción")</td>
                             <td>@(r.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-")</td>
