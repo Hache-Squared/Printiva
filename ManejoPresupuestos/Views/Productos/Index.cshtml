@@ -151,7 +151,7 @@
                                 <tr>
                                     <td class="fw-semibold">@producto.Nombre</td>
                                     <td class="text-muted">@producto.ProductoCategoria</td>
-                                    <td class="text-end money">@((producto.PrecioSugerido ?? 0).ToString("0.00"))</td>
+                                    <td class="text-end money">$@((producto.PrecioSugerido ?? 0).ToString("0.00"))</td>
                                     <td class="text-end">
                                         <div class="act-wrap">
                                             <a class="btn act-btn act-edit" asp-action="Editar" asp-route-id="@producto.ProductoId">Editar</a>

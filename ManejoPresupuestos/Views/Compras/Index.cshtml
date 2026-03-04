@@ -199,7 +199,7 @@
                                 </td>
                                 <td class="text-end">@(c.Cantidad > 0 ? c.Cantidad.ToString("0.##") : "")</td>
                                 <td class="text-end">@(c.CostoUnitario > 0 ? c.CostoUnitario.ToString("0.00") : "")</td>
-                                <td class="text-end fw-semibold">@c.CostoTotal.ToString("0.00")</td>
+                                <td class="text-end fw-semibold">$@c.CostoTotal.ToString("0.00")</td>
                                 <td class="text-center">
                                     <span class="@(c.EstaActivo ? "text-yes" : "text-no")">@(c.EstaActivo ? "Sí" : "No")</span>
                                 </td>

@@ -154,13 +154,19 @@
 
                         <div class="col-md-4">
                             <label asp-for="CostoUnitario" class="form-label fw-semibold"></label>
-                            <input asp-for="CostoUnitario" class="form-control control-soft" />
+                            <div class="d-flex gap-2">
+                                <div class="d-flex align-items-center justify-content-center gap-2">$</div>
+                                <input asp-for="CostoUnitario" class="form-control control-soft" />
+                            </div>
                             <span asp-validation-for="CostoUnitario" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4">
                             <label asp-for="CostoTotal" class="form-label fw-semibold"></label>
-                            <input asp-for="CostoTotal" class="form-control control-soft" />
+                            <div class="d-flex gap-2">
+                                <div class="d-flex align-items-center justify-content-center gap-2">$</div>
+                                <input asp-for="CostoTotal" class="form-control control-soft" />
+                            </div>
                             <span asp-validation-for="CostoTotal" class="text-danger"></span>
                         </div>
                     </div>
