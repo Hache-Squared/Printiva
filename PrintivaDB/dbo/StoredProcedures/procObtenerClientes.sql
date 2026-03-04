@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.procObtenerClientes
+CREATE PROCEDURE dbo.procObtenerClientes
   @loginId INT,
   @elementoObtenerId INT = NULL,
   @SoloActivos BIT = 1
@@ -10,11 +10,15 @@ BEGIN
     ClienteId,
     UsuarioId,
     Nombre,
+    ApellidoPaterno,
+    ApellidoMaterno,
     Telefono,
     Instagram,
     WhatsApp,
     Email,
     Direccion,
+    EsEmpresa,
+    RFC,
     FechaCreacion,
     EstaActivo,
     FechaActualizacion

@@ -13,15 +13,21 @@ Version Author Date Description Ticket
 1.0 AGHH 17/11/2025 First Version N/A
 */
 
-CREATE   PROCEDURE dbo.procAlteraClientes
+CREATE PROCEDURE dbo.procAlteraClientes
     @ElementoAlterarId INT = 0,
 
     @Nombre NVARCHAR(150) = NULL,
+    @ApellidoPaterno NVARCHAR(80) = NULL,
+    @ApellidoMaterno NVARCHAR(80) = NULL,
+
     @Telefono NVARCHAR(30) = NULL,
     @Instagram NVARCHAR(80) = NULL,
     @WhatsApp NVARCHAR(30) = NULL,
     @Email NVARCHAR(120) = NULL,
     @Direccion NVARCHAR(250) = NULL,
+
+    @EsEmpresa BIT = 0,
+    @RFC NVARCHAR(13) = NULL,
 
     @loginId INT = 0,
     @Actualizar BIT = 0,
@@ -42,16 +48,15 @@ BEGIN
             RAISERROR(@message, 16, 1);
         END
 
-        /* -----------------------------
-           BORRAR LOGICO
-           ----------------------------- */
+        /* Limpiezas */
+        SET @RFC = NULLIF(UPPER(LTRIM(RTRIM(ISNULL(@RFC, N'')))), N'');
+        SET @ApellidoPaterno = NULLIF(LTRIM(RTRIM(ISNULL(@ApellidoPaterno, N''))), N'');
+        SET @ApellidoMaterno = NULLIF(LTRIM(RTRIM(ISNULL(@ApellidoMaterno, N''))), N'');
+
+        /* BORRAR */
         IF (ISNULL(@Borrar,0) = 1)
         BEGIN
-            IF NOT EXISTS (
-                SELECT 1
-                FROM dbo.TblClientes c (NOLOCK)
-                WHERE c.ClienteId = @ElementoAlterarId
-            )
+            IF NOT EXISTS (SELECT 1 FROM dbo.TblClientes c (NOLOCK) WHERE c.ClienteId = @ElementoAlterarId)
             BEGIN
                 SET @message = N'Registro no encontrado para borrar.';
                 RAISERROR(@message, 16, 1);
@@ -68,16 +73,10 @@ BEGIN
             RETURN;
         END
 
-        /* -----------------------------
-           REACTIVAR
-           ----------------------------- */
+        /* REACTIVAR */
         IF (ISNULL(@Reactivar,0) = 1)
         BEGIN
-            IF NOT EXISTS (
-                SELECT 1
-                FROM dbo.TblClientes c (NOLOCK)
-                WHERE c.ClienteId = @ElementoAlterarId
-            )
+            IF NOT EXISTS (SELECT 1 FROM dbo.TblClientes c (NOLOCK) WHERE c.ClienteId = @ElementoAlterarId)
             BEGIN
                 SET @message = N'Registro no encontrado para reactivar.';
                 RAISERROR(@message, 16, 1);
@@ -94,25 +93,48 @@ BEGIN
             RETURN;
         END
 
-        /* -----------------------------
-           VALIDACIONES BASE (create/update)
-           ----------------------------- */
+        /* VALIDACIONES BASE */
         IF (ISNULL(@Nombre, N'') = N'')
         BEGIN
             SET @message = N'Nombre no puede ser vacío.';
             RAISERROR(@message, 16, 1);
         END
 
-        /* -----------------------------
-           UPDATE
-           ----------------------------- */
+        /* RFC requerido si es empresa */
+        IF (ISNULL(@EsEmpresa,0) = 1 AND @RFC IS NULL)
+        BEGIN
+            SET @message = N'RFC es obligatorio cuando el cliente es empresa.';
+            RAISERROR(@message, 16, 1);
+        END
+
+        /* RFC si viene: validar 12/13 */
+        IF (@RFC IS NOT NULL)
+        BEGIN
+            IF LEN(@RFC) NOT IN (12,13)
+            BEGIN
+                SET @message = N'RFC inválido: longitud debe ser 12 o 13.';
+                RAISERROR(@message, 16, 1);
+            END
+
+            IF (LEN(@RFC) = 12 AND @RFC NOT LIKE
+                '[A-ZÑ&][A-ZÑ&][A-ZÑ&][0-9][0-9][0-9][0-9][0-9][0-9][A-Z0-9][A-Z0-9][A-Z0-9]')
+            BEGIN
+                SET @message = N'RFC inválido (formato empresa).';
+                RAISERROR(@message, 16, 1);
+            END
+
+            IF (LEN(@RFC) = 13 AND @RFC NOT LIKE
+                '[A-ZÑ&][A-ZÑ&][A-ZÑ&][A-ZÑ&][0-9][0-9][0-9][0-9][0-9][0-9][A-Z0-9][A-Z0-9][A-Z0-9]')
+            BEGIN
+                SET @message = N'RFC inválido (formato persona).';
+                RAISERROR(@message, 16, 1);
+            END
+        END
+
+        /* UPDATE */
         IF (ISNULL(@Actualizar,0) = 1)
         BEGIN
-            IF NOT EXISTS (
-                SELECT 1
-                FROM dbo.TblClientes c (NOLOCK)
-                WHERE c.ClienteId = @ElementoAlterarId
-            )
+            IF NOT EXISTS (SELECT 1 FROM dbo.TblClientes c (NOLOCK) WHERE c.ClienteId = @ElementoAlterarId)
             BEGIN
                 SET @message = N'Registro no encontrado para actualizar.';
                 RAISERROR(@message, 16, 1);
@@ -120,11 +142,15 @@ BEGIN
 
             UPDATE dbo.TblClientes
             SET Nombre = @Nombre,
+                ApellidoPaterno = @ApellidoPaterno,
+                ApellidoMaterno = @ApellidoMaterno,
                 Telefono = @Telefono,
                 Instagram = @Instagram,
                 WhatsApp = @WhatsApp,
                 Email = @Email,
                 Direccion = @Direccion,
+                EsEmpresa = ISNULL(@EsEmpresa,0),
+                RFC = @RFC,
                 FechaActualizacion = SYSUTCDATETIME()
             WHERE ClienteId = @ElementoAlterarId;
 
@@ -134,17 +160,19 @@ BEGIN
             RETURN;
         END
 
-        /* -----------------------------
-           CREATE
-           ----------------------------- */
+        /* CREATE */
         INSERT INTO dbo.TblClientes
         (
-            UsuarioId, Nombre, Telefono, Instagram, WhatsApp, Email, Direccion,
+            UsuarioId, Nombre, ApellidoPaterno, ApellidoMaterno,
+            Telefono, Instagram, WhatsApp, Email, Direccion,
+            EsEmpresa, RFC,
             FechaCreacion, EstaActivo, FechaActualizacion
         )
         VALUES
         (
-            @loginId, @Nombre, @Telefono, @Instagram, @WhatsApp, @Email, @Direccion,
+            @loginId, @Nombre, @ApellidoPaterno, @ApellidoMaterno,
+            @Telefono, @Instagram, @WhatsApp, @Email, @Direccion,
+            ISNULL(@EsEmpresa,0), @RFC,
             SYSUTCDATETIME(), 1, NULL
         );
 

@@ -10,6 +10,15 @@ CREATE TABLE [dbo].[TblClientes] (
     [FechaCreacion]      DATETIME2 (7)  DEFAULT (sysdatetime()) NOT NULL,
     [EstaActivo]         BIT            CONSTRAINT [DF_TblClientes_EstaActivo] DEFAULT ((1)) NOT NULL,
     [FechaActualizacion] DATETIME2 (7)  NULL,
+    [EsEmpresa]          BIT            CONSTRAINT [DF_TblClientes_EsEmpresa] DEFAULT ((0)) NOT NULL,
+    [RFC]                NVARCHAR (13)  NULL,
+    [ApellidoPaterno]    NVARCHAR (80)  NULL,
+    [ApellidoMaterno]    NVARCHAR (80)  NULL,
     PRIMARY KEY CLUSTERED ([ClienteId] ASC)
 );
 GO
+
+ALTER TABLE [dbo].[TblClientes]
+    ADD CONSTRAINT [DF_TblClientes_EsEmpresa] DEFAULT ((0)) FOR [EsEmpresa];
+GO
+
