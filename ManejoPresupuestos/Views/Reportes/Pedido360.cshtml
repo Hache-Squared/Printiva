@@ -283,11 +283,11 @@
                         <div class="row g-2">
                             <div class="col-md-3">
                                 <div class="text-muted small">Creación</div>
-                                <div class="fw-semibold">@header.FechaCreacion.ToString("yyyy-MM-dd HH:mm")</div>
+                                <div class="fw-semibold">@header.FechaCreacion.ToString("dd-MM-yyyy HH:mm")</div>
                             </div>
                             <div class="col-md-3">
                                 <div class="text-muted small">Entrega estimada</div>
-                                <div class="fw-semibold">@(header.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                <div class="fw-semibold">@(header.FechaEntregaEstimada?.ToString("dd-MM-yyyy") ?? "-")</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="text-muted small">Notas</div>
@@ -389,11 +389,11 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="text-muted small">Creación</div>
-                                    <div class="fw-semibold">@cotHeader.FechaCreacion.ToString("yyyy-MM-dd")</div>
+                                    <div class="fw-semibold">@cotHeader.FechaCreacion.ToString("dd-MM-yyyy")</div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="text-muted small">Vigencia</div>
-                                    <div class="fw-semibold">@(cotHeader.FechaVigencia?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                    <div class="fw-semibold">@(cotHeader.FechaVigencia?.ToString("dd-MM-yyyy") ?? "-")</div>
                                 </div>
                                 <div class="col-12 mt-2">
                                     <div class="text-muted small">Notas</div>
@@ -472,7 +472,7 @@
                             <tr>
                                 <td>@p.PagoId</td>
                                 <td>@(p.PagoTipoNombre ?? p.PagoTipoId.ToString())</td>
-                                <td>@p.FechaPago.ToString("yyyy-MM-dd")</td>
+                                <td>@p.FechaPago.ToString("dd-MM-yyyy")</td>
                                 <td>@(p.Metodo ?? "-")</td>
                                 <td>@(p.Referencia ?? "-")</td>
                                 <td>@(p.Notas ?? "-")</td>
@@ -523,8 +523,8 @@
                                 <td>@(pr.RecetaNombre ?? "-")</td>
                                 <td class="text-end">@((pr.PesoEstimadoGr ?? 0m).ToString("N2"))</td>
                                 <td class="text-end">@((pr.PesoRealGr ?? 0m).ToString("N2"))</td>
-                                <td>@(pr.FechaInicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
-                                <td>@(pr.FechaFin?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                <td>@(pr.FechaInicio?.ToString("dd-MM-yyyy HH:mm") ?? "-")</td>
+                                <td>@(pr.FechaFin?.ToString("dd-MM-yyyy HH:mm") ?? "-")</td>
                                 <td>@(pr.InventarioAplicado ? "Sí" : "No")</td>
                             </tr>
                         }
@@ -561,7 +561,7 @@
                         @foreach (var c in Model.Consumo.OrderByDescending(x => x.Fecha))
                         {
                             <tr>
-                                <td>@c.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@c.Fecha.ToString("dd-MM-yyyy HH:mm")</td>
                                 <td>@c.ProduccionItemId</td>
                                 <td>@(c.PedidoItemId?.ToString() ?? "-")</td>
                                 <td>@(c.RecetaNombre ?? c.RecetaId?.ToString() ?? "-")</td>
@@ -603,7 +603,7 @@
                         @foreach (var h in Model.Historia)
                         {
                             <tr>
-                                <td>@h.Fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@h.Fecha.ToString("dd-MM-yyyy HH:mm")</td>
                                 <td>@h.Tipo</td>
                                 <td>@(h.PedidoItemId?.ToString() ?? "-")</td>
                                 <td>@(h.ProduccionItemId?.ToString() ?? "-")</td>

@@ -538,8 +538,8 @@
                                     }
                                 </td>
                                 <td class="text-end">@x.DiasEnEstatus</td>
-                                <td>@x.FechaEnEstatus.ToString("yyyy-MM-dd")</td>
-                                <td>@(x.FechaEntregaEstimada.HasValue ? x.FechaEntregaEstimada.Value.ToString("yyyy-MM-dd") : "-")</td>
+                                <td>@x.FechaEnEstatus.ToString("dd-MM-yyyy")</td>
+                                <td>@(x.FechaEntregaEstimada.HasValue ? x.FechaEntregaEstimada.Value.ToString("dd-MM-yyyy") : "-")</td>
                                 <td>@(x.Atrasado ? "Sí" : "No")</td>
                             </tr>
                         }

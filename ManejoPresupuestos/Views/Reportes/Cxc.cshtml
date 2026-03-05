@@ -357,14 +357,14 @@
                             </td>
                             <td>@r.ClienteNombre</td>
                             <td>@r.PedidoEstatusNombre</td>
-                            <td>@r.FechaBase.ToString("yyyy-MM-dd")</td>
+                            <td>@r.FechaBase.ToString("dd-MM-yyyy")</td>
                             <td class="text-end">@r.DiasVencidos</td>
                             <td>@r.BucketNombre</td>
                             <td class="text-end">$@r.TotalCobro.ToString("N2")</td>
                             <td class="text-end">$@r.TotalPagado.ToString("N2")</td>
                             <td class="text-end fw-semibold">$@r.Saldo.ToString("N2")</td>
                             <td class="text-end">@r.PagadoPct.ToString("N2")%</td>
-                            <td>@(r.UltimoPagoFecha?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>@(r.UltimoPagoFecha?.ToString("dd-MM-yyyy") ?? "-")</td>
                             <td>@(r.UltimoPagoMetodo ?? r.UltimoPagoTipoNombre ?? "-")</td>
                         </tr>
                     }

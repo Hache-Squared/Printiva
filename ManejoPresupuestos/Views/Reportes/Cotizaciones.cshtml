@@ -363,12 +363,12 @@
                             <td>@r.ClienteNombre</td>
                             <td>@r.CotizacionEstatusNombre</td>
                             <td>@r.Categoria</td>
-                            <td>@r.CotizacionFechaCreacion.ToString("yyyy-MM-dd")</td>
+                            <td>@r.CotizacionFechaCreacion.ToString("dd-MM-yyyy")</td>
                             <td class="text-end">$@r.MontoCotizacion.ToString("N2")</td>
                             <td class="text-end">$@r.TotalPagado.ToString("N2")</td>
                             <td class="text-end">$@r.Saldo.ToString("N2")</td>
                             <td>
-                                @(r.UltimoPagoFecha?.ToString("yyyy-MM-dd") ?? "-")
+                                @(r.UltimoPagoFecha?.ToString("dd-MM-yyyy") ?? "-")
                                 <div class="small text-muted">
                                     @(r.UltimoPagoTipoNombre ?? r.UltimoPagoMetodo ?? "-")
                                 </div>

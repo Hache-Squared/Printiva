@@ -353,8 +353,8 @@
                                 <td>@x.ClienteNombre</td>
                                 <td>@x.ProductoNombre</td>
                                 <td>@(x.ImpresoraNombre ?? "(Sin impresora)")</td>
-                                <td>@(x.FechaInicio.HasValue ? x.FechaInicio.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
-                                <td>@(x.FechaFin.HasValue ? x.FechaFin.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                                <td>@(x.FechaInicio.HasValue ? x.FechaInicio.Value.ToString("dd-MM-yyyy HH:mm") : "-")</td>
+                                <td>@(x.FechaFin.HasValue ? x.FechaFin.Value.ToString("dd-MM-yyyy HH:mm") : "-")</td>
                                 <td class="text-end">@x.DuracionMin.ToString("0")</td>
                                 <td>
                                     <span class="badge @(string.IsNullOrWhiteSpace(x.BadgeClass) ? "bg-secondary" : x.BadgeClass)">

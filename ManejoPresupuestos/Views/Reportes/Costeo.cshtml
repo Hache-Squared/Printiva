@@ -57,7 +57,7 @@
                         <td class="text-end">@((p.TotalEstimado ?? 0).ToString("N2"))</td>
                         <td class="text-end">@((p.CostoReal ?? 0).ToString("N2"))</td>
                         <td class="text-end">@((p.Diferencia ?? 0).ToString("N2"))</td>
-                        <td>@(p.PrimerConsumo?.ToString("yyyy-MM-dd") ?? "-") → @(p.UltimoConsumo?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>@(p.PrimerConsumo?.ToString("dd-MM-yyyy") ?? "-") → @(p.UltimoConsumo?.ToString("dd-MM-yyyy") ?? "-")</td>
                     </tr>
                 }
                 @if(!Model.Pedidos.Any())
