@@ -6,6 +6,11 @@ namespace ManejoPresupuestos.Models
         public int UsuarioId { get; set; }
         public int ClienteId { get; set; }
         public string ClienteNombre { get; set; }
+        public string ClienteCorreo { get; set; } = "";
+        public string ClienteTelefono { get; set; } = "";
+        public string ClienteWhatsapp { get; set; } = "";
+        public string ClienteRFC { get; set; } = "";
+        public bool ClienteEsEmpresa { get; set; }
         public int PedidoEstatusId { get; set; }
         public string EstatusNombre { get; set; }
         public DateTime FechaCreacion { get; set; }

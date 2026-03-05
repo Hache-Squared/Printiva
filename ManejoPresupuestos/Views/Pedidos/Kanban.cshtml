@@ -384,7 +384,7 @@
                         <div class="d-flex align-items-start justify-content-between gap-2">
                             <div>
                                 <div class="fw-semibold">Pedido #${c.pedidoId}</div>
-                                <div class="text-muted small">${escapeHtml(c.clienteNombre || '')}</div>
+                                <div class="text-muted small fw-bold">${escapeHtml(c.clienteNombre || '')}</div>
                             </div>
 
                             <div class="d-flex gap-2">
@@ -496,7 +496,13 @@
             <div class="row g-2">
                 <div class="col-md-6">
                     <div class="small text-muted">Cliente</div>
-                    <div class="fw-semibold">${escapeHtml(c.clienteNombre || '')}</div>
+                    <div class="fw-bold">${escapeHtml(c.clienteNombre || '')}</div>
+                    <div class="text-muted small">Correo: <span class="fw-bold">${escapeHtml(c.clienteCorreo || '')}</span></div>
+                    <div class="text-muted small">Tel: <span class="fw-bold">${escapeHtml(c.clienteTelefono || '')}</span></div>
+                    <div class="text-muted small">Whatsapp: <span class="fw-bold">${escapeHtml(c.clienteWhatsapp || '')}</span></div>
+                    <div class="text-muted small">Es Empresa: <span class="fw-bold">${c.clienteEsEmpresa ? "Si" : "No"}</span></div>
+                    <div class="text-muted small">RFC: <span class="fw-bold">${escapeHtml(c.clienteRFC || '')}</span></div>
+                    
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Entrega</div>

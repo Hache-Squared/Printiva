@@ -232,7 +232,7 @@ namespace ManejoPresupuestos.Controllers
         private async Task<IEnumerable<SelectListItem>> ObtenerClientes(int usuarioId)
         {
             var clientes = await repositorioClientes.ObtenerTodos(usuarioId);
-            return clientes.Select(x => new SelectListItem(x.Nombre, x.ClienteId.ToString()));
+            return clientes.Select(x => new SelectListItem(x.Nombre + " " + x?.ApellidoPaterno + " " + x?.ApellidoMaterno, x.ClienteId.ToString()));
         }
 
         private async Task<IEnumerable<SelectListItem>> ObtenerEstatus()

@@ -54,6 +54,7 @@ BEGIN
       cl.Email,
       cl.Direccion,
       cl.EstaActivo          AS ClienteEstaActivo,
+      cl.EsEmpresa          AS ClienteEsEmpresa,
 
       p.PedidoEstatusId,
       pe.Nombre              AS PedidoEstatusNombre,

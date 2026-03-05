@@ -13,6 +13,7 @@ namespace ManejoPresupuestos.Models
         public string? Email { get; set; }
         public string? Direccion { get; set; }
         public bool ClienteEstaActivo { get; set; }
+        public bool ClienteEsEmpresa { get; set; }
 
         public int PedidoEstatusId { get; set; }
         public string? PedidoEstatusNombre { get; set; }

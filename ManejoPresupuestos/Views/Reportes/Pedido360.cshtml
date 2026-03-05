@@ -263,12 +263,14 @@
                             <div>
                                 <div class="text-muted small">Cliente</div>
                                 <div class="fs-5 fw-semibold">@header.ClienteNombre</div>
-                                <div class="small text-muted">
-                                    @(header.Telefono ?? "-") · @(header.WhatsApp ?? "-") · @(header.Instagram ?? "-")
-                                </div>
-                                <div class="small text-muted">
-                                    @(header.Email ?? "-") · @(header.Direccion ?? "-")
-                                </div>
+                                <div class="text-muted small">Correo: <span class="fw-bold">@(header.Email ?? "-")</span></div>
+                                <div class="text-muted small">Teléfono: <span class="fw-bold">@(header.Telefono ?? "-")</span></div>
+                                <div class="text-muted small">WhatsApp: <span class="fw-bold">@(header.WhatsApp ?? "-")</span></div>
+                                <div class="text-muted small">Instagram: <span class="fw-bold">@(header.Instagram ?? "-")</span></div>
+                                <div class="text-muted small">Dirección: <span class="fw-bold">@(header.Direccion ?? "-")</span></div>
+                                <div class="text-muted small">Es Empresa: <span class="fw-bold">@(header.ClienteEsEmpresa ? "Si" : "No")</span></div>
+
+                                
                             </div>
                             <div class="text-end">
                                 <div class="text-muted small">Estatus pedido</div>

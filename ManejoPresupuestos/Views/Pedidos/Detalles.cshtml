@@ -228,6 +228,16 @@
                 <div class="card card-soft">
                     <div class="card-body p-4">
                         <div class="d-grid gap-3">
+
+                            <div class="kv">
+                                <div class="fw-bold">@Model.Pedido?.ClienteNombre</div>
+                                <div class="text-muted small">Correo: <span class="fw-bold">@Model.Pedido?.ClienteCorreo</span></div>
+                                <div class="text-muted small">Tel: <span class="fw-bold">@Model.Pedido?.ClienteTelefono</span></div>
+                                <div class="text-muted small">Whatsapp: <span class="fw-bold">@Model.Pedido?.ClienteWhatsapp</span></div>
+                                <div class="text-muted small">Es Empresa: <span class="fw-bold">@(Model.Pedido.ClienteEsEmpresa ? "Si" : "No")</span></div>
+                                <div class="text-muted small">RFC: <span class="fw-bold">@Model.Pedido?.ClienteRFC</span></div>
+                            </div>
+                            
                             <div class="kv">
                                 <div class="kv-label">Estatus</div>
                                 <div class="kv-value">
@@ -374,6 +384,10 @@
 
             function clearList() {
                 listEl.innerHTML = '';
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
             }
 
             async function loadAcciones(pedidoId) {
