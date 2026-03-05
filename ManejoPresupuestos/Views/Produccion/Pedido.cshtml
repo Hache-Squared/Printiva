@@ -163,6 +163,11 @@
                     <div class="col-md-6">
                         <div class="kpi-label">Cliente</div>
                         <div class="kpi-value">@Model.Pedido.ClienteNombre</div>
+                        <div class="small">Correo: <span class="kpi-value">@Model.Pedido.ClienteCorreo</span></div>
+                        <div class="small">Teléfono: <span class="kpi-value">@Model.Pedido.ClienteTelefono</span></div>
+                        <div class="small">Whatsapp: <span class="kpi-value">@Model.Pedido.ClienteWhatsapp</span></div>
+                        <div class="small">RFC: <span class="kpi-value">@Model.Pedido.ClienteRFC</span></div>
+                        <div class="small">Es Empresa: <span class="kpi-value">@(Model.Pedido.ClienteEsEmpresa ? "Si" : "No")</span></div>
                     </div>
                     <div class="col-md-3">
                         <div class="kpi-label">Entrega</div>
@@ -170,7 +175,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="kpi-label">Total estimado</div>
-                        <div class="kpi-value">@((Model.Pedido.TotalEstimado ?? 0).ToString("N2"))</div>
+                        <div class="kpi-value">$@((Model.Pedido.TotalEstimado ?? 0).ToString("N2"))</div>
                     </div>
                 </div>
             </div>
@@ -230,12 +235,17 @@
                                     </td>
 
                                     <td>
-                                        <input type="number"
-                                               step="0.01"
-                                               class="form-control form-control-sm control-soft control-sm kbPesoReal"
-                                               data-id="@it.ProduccionItemId"
-                                               value="@(it.PesoRealGr?.ToString() ?? "")"
-                                               placeholder="0.00" />
+                                        <div class="d-flex gap-2">
+                                            <input type="number"
+                                                step="0.01"
+                                                class="form-control form-control-sm control-soft control-sm kbPesoReal"
+                                                data-id="@it.ProduccionItemId"
+                                                value="@(it.PesoRealGr?.ToString() ?? "")"
+                                                placeholder="0.00" />
+                                            <div class="d-flex align-items-center justify-content-center gap-2 fw-bold"> (g) </div>
+                                            
+                                        </div>
+
                                     </td>
 
                                     <td>
