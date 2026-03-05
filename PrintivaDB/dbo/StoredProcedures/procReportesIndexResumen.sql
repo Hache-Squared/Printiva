@@ -134,7 +134,7 @@ BEGIN
 
     SELECT TOP (@topN)
         pa.PedidoId,
-        c.Nombre  AS ClienteNombre,
+        CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS ClienteNombre,
         pe.Nombre AS EstatusNombre,
         pa.FechaEntregaEstimada,
         pa.TotalEstimado,
@@ -211,7 +211,7 @@ BEGIN
     SELECT TOP (@topN)
         pp.ProduccionItemId,
         pp.PedidoId,
-        cli.Nombre AS ClienteNombre,
+        CONCAT( ISNULL(cli.Nombre, ''), ' ', ISNULL(cli.ApellidoPaterno, ''), ' ', ISNULL(cli.ApellidoMaterno, '')) AS ClienteNombre,
         pr.Nombre  AS ProductoNombre,
         pp.Cantidad,
         pes.Nombre AS ProduccionEstatus,

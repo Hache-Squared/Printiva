@@ -48,7 +48,7 @@ BEGIN
         p.PedidoId,
         p.UsuarioId,
         p.ClienteId,
-        c.Nombre AS ClienteNombre,
+        CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS ClienteNombre,
         p.PedidoEstatusId,
         e.Nombre AS EstatusNombre,
         p.FechaCreacion,

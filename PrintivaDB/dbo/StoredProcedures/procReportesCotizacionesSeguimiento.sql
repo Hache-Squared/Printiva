@@ -52,7 +52,7 @@ BEGIN
       c.CotizacionId,
       c.PedidoId,
       p.ClienteId,
-      cl.Nombre AS ClienteNombre,
+      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
       c.CotizacionEstatusId,
       ce.Nombre AS CotizacionEstatusNombre,
@@ -271,9 +271,9 @@ BEGIN
   -- Resultset 4: Clientes (dropdown)
   -----------------------------------------------------------------------
   SELECT
-    ClienteId AS Id,
-    Nombre
-  FROM dbo.TblClientes
+    c.ClienteId AS Id,
+    CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+  FROM dbo.TblClientes c
   WHERE EstaActivo = 1
   ORDER BY Nombre;
 

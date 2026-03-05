@@ -20,7 +20,7 @@ BEGIN
       p.PedidoId,
       p.UsuarioId,
       p.ClienteId,
-      cl.Nombre AS ClienteNombre,
+      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
       p.PedidoEstatusId,
       pe.Nombre AS PedidoEstatusNombre,

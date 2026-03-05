@@ -18,7 +18,3 @@ CREATE TABLE [dbo].[TblClientes] (
 );
 GO
 
-ALTER TABLE [dbo].[TblClientes]
-    ADD CONSTRAINT [DF_TblClientes_EsEmpresa] DEFAULT ((0)) FOR [EsEmpresa];
-GO
-

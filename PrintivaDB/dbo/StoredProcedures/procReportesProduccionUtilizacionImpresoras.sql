@@ -24,7 +24,7 @@ BEGIN
       pr.Nombre AS ProductoNombre,
 
       p.ClienteId,
-      cl.Nombre AS ClienteNombre,
+      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
       pi.Cantidad,
       pi.ProduccionEstatusId,

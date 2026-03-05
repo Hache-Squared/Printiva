@@ -378,8 +378,8 @@ namespace ManejoPresupuestos.Servicios
 
             // Lookup clientes (para dropdown)
             var clientes = await connection.QueryAsync<LookupItem>(
-                @"SELECT ClienteId AS Id, Nombre
-                FROM dbo.TblClientes
+                @"SELECT c.ClienteId AS Id, CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+                FROM dbo.TblClientes c
                 WHERE EstaActivo = 1
                 ORDER BY Nombre;",
                 new { usuarioId }

@@ -15,7 +15,7 @@ BEGIN
 
     SELECT
         p.PedidoId,
-        cli.Nombre ClienteNombre,
+        CONCAT( ISNULL(cli.Nombre, ''), ' ', ISNULL(cli.ApellidoPaterno, ''), ' ', ISNULL(cli.ApellidoMaterno, '')) AS ClienteNombre,
         p.TotalEstimado,
 
         SUM(c.Cantidad * ISNULL(inv.CostoUnitario,0)) AS CostoReal,
@@ -34,7 +34,7 @@ BEGIN
         ON cli.ClienteId = p.ClienteId
     WHERE ISNULL(p.EstaActivo,1)=1
       AND (@PedidoId IS NULL OR p.PedidoId=@PedidoId)
-    GROUP BY p.PedidoId, cli.Nombre, p.TotalEstimado
+    GROUP BY p.PedidoId, cli.Nombre, cli.ApellidoPaterno, cli.ApellidoMaterno, p.TotalEstimado
     ORDER BY p.PedidoId DESC;
 END
 GO

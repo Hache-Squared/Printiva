@@ -18,7 +18,7 @@ BEGIN
       p.PedidoId,
       p.UsuarioId,
       p.ClienteId,
-      cl.Nombre AS ClienteNombre,
+      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
       p.PedidoEstatusId,
       pe.Nombre AS PedidoEstatusNombre,
       p.FechaCreacion,
@@ -179,8 +179,10 @@ BEGIN
   WHERE EstaActivo = 1
   ORDER BY Orden, Nombre;
 
-  SELECT ClienteId AS Id, Nombre
-  FROM dbo.TblClientes
+  SELECT 
+    c.ClienteId AS Id, 
+    CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+  FROM dbo.TblClientes c
   WHERE EstaActivo = 1
   ORDER BY Nombre;
 

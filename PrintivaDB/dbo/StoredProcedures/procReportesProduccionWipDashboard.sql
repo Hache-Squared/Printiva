@@ -51,7 +51,7 @@ BEGIN
     pr.Nombre AS ProductoNombre,
 
     p.ClienteId,
-    cl.Nombre AS ClienteNombre,
+    CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
     pi.Cantidad,
     pi.ProduccionEstatusId,
@@ -311,9 +311,9 @@ BEGIN
   -- Resultset 8: Dropdown clientes (global)
   -----------------------------------------------------------------------
   SELECT
-    ClienteId AS Id,
-    Nombre
-  FROM dbo.TblClientes
+    c.ClienteId AS Id,
+    CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+  FROM dbo.TblClientes c
   WHERE EstaActivo = 1
   ORDER BY Nombre;
 

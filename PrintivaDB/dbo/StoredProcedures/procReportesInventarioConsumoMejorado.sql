@@ -47,7 +47,7 @@ BEGIN
             pr.Nombre AS ProductoNombre,
 
             p.ClienteId,
-            cl.Nombre AS ClienteNombre,
+            CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
             CAST(p.FechaCreacion AS datetime2(0)) AS PedidoFechaCreacion,
             CAST(ISNULL(p.TotalEstimado,0) AS decimal(18,2)) AS PedidoTotalEstimado,
 
