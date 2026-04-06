@@ -2,6 +2,10 @@
 @{
     ViewData["Title"] = "Detalles de pedido";
 
+    var totalGeneral = Model.Pedido.TotalEstimado ?? 0m;
+    var subtotal = Math.Round(totalGeneral / 1.16m, 2, MidpointRounding.AwayFromZero);
+    var iva = Math.Round(totalGeneral - subtotal, 2, MidpointRounding.AwayFromZero);
+
     string StatusClass(string? s)
     {
         var v = (s ?? "").Trim().ToLowerInvariant();
@@ -151,7 +155,32 @@
         border-radius: 16px;
         padding: .9rem 1rem;
         background: rgba(15,23,42,.02);
-        min-width: 220px;
+        min-width: 280px;
+    }
+
+    .total-line{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .total-line + .total-line{
+        margin-top: .5rem;
+    }
+
+    .total-line.total-final{
+        margin-top: .85rem;
+        padding-top: .85rem;
+        border-top: 1px solid rgba(15,23,42,.08);
+    }
+
+    .total-label{
+        color: var(--muted);
+        font-weight: 800;
+        font-size: .78rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
     }
 
     .modal-content{
@@ -260,8 +289,8 @@
                             </div>
 
                             <div class="kv">
-                                <div class="kv-label">Total estimado</div>
-                                <div class="kv-value money">$@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                                <div class="kv-label">Total general</div>
+                                <div class="kv-value money">$@totalGeneral.ToString("0.00")</div>
                             </div>
 
                             <div class="kv">
@@ -325,8 +354,18 @@
 
                         <div class="d-flex justify-content-end mt-3">
                             <div class="text-end total-box">
-                                <div class="kv-label mb-1">Total estimado</div>
-                                <div class="money" style="font-size: 1.65rem;">$@((Model.Pedido.TotalEstimado ?? 0).ToString("0.00"))</div>
+                                <div class="total-line">
+                                    <div class="total-label">Subtotal</div>
+                                    <div class="money">$@subtotal.ToString("0.00")</div>
+                                </div>
+                                <div class="total-line">
+                                    <div class="total-label">IVA 16%</div>
+                                    <div class="money">$@iva.ToString("0.00")</div>
+                                </div>
+                                <div class="total-line total-final">
+                                    <div class="total-label">Total general</div>
+                                    <div class="money" style="font-size: 1.65rem;">$@totalGeneral.ToString("0.00")</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -384,10 +423,6 @@
 
             function clearList() {
                 listEl.innerHTML = '';
-            }
-
-            function escapeHtml(s) {
-                return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
             }
 
             async function loadAcciones(pedidoId) {

@@ -108,6 +108,24 @@
         font-weight: 650;
     }
 
+    .calc-box{
+        margin-top: .9rem;
+        padding: .9rem;
+        border: 1px solid rgba(15,23,42,.08);
+        border-radius: 16px;
+        background: rgba(15,23,42,.02);
+    }
+
+    .calc-row + .calc-row{
+        margin-top: .75rem;
+    }
+
+    .calc-help{
+        color: var(--muted);
+        font-size: .82rem;
+        margin-top: .6rem;
+    }
+
     .table-clean thead th{
         color: var(--muted);
         font-weight: 800;
@@ -223,12 +241,34 @@
                             </div>
 
                             <div class="mb-3">
-                                <label asp-for="TotalEstimado" class="form-label"></label>
+                                <label asp-for="TotalEstimado" class="form-label">Total general</label>
                                 <div class="d-flex align-items-center justify-content-center gap-2">
                                     <div>$</div>
-                                    <input asp-for="TotalEstimado" class="form-control ctrl" />
+                                    <input asp-for="TotalEstimado" class="form-control ctrl" readonly />
                                 </div>
                                 <span asp-validation-for="TotalEstimado" class="text-danger"></span>
+
+                                <div class="calc-box">
+                                    <div class="calc-row">
+                                        <label class="form-label">Subtotal</label>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div>$</div>
+                                            <input type="text" id="SubtotalPreview" class="form-control ctrl" readonly />
+                                        </div>
+                                    </div>
+
+                                    <div class="calc-row">
+                                        <label class="form-label">IVA 16%</label>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div>$</div>
+                                            <input type="text" id="IvaPreview" class="form-control ctrl" readonly />
+                                        </div>
+                                    </div>
+
+                                    <div class="calc-help">
+                                        El total general se calcula automáticamente con los items. Subtotal e IVA se muestran como desglose visual.
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -278,13 +318,13 @@
                                                     <input asp-for="Items[@i].ProductoNombre" class="form-control ctrl" readonly />
                                                 </td>
                                                 <td>
-                                                    <input asp-for="Items[@i].Cantidad" class="form-control ctrl" />
+                                                    <input asp-for="Items[@i].Cantidad" class="form-control ctrl js-calc-qty" />
                                                     <span asp-validation-for="Items[@i].Cantidad" class="text-danger"></span>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex gap-2">
                                                         <div class="d-flex align-items-center justify-content-center gap-2">$</div>
-                                                        <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control ctrl" />
+                                                        <input asp-for="Items[@i].PrecioUnitarioEstimado" class="form-control ctrl js-calc-price" />
                                                     </div>
                                                     <span asp-validation-for="Items[@i].PrecioUnitarioEstimado" class="text-danger"></span>
                                                 </td>
@@ -353,6 +393,71 @@
                 modal = bootstrap.Modal.getOrCreateInstance(el);
             }
 
+            function round2(value) {
+                return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+            }
+
+            function parseDecimal(value) {
+                if (value === null || value === undefined) return 0;
+                const clean = String(value).replace(/,/g, '').trim();
+                const n = Number(clean);
+                return isNaN(n) ? 0 : n;
+            }
+
+            function recalcFiscalBreakdown() {
+                const totalInput = document.getElementById('TotalEstimado');
+                const subtotalInput = document.getElementById('SubtotalPreview');
+                const ivaInput = document.getElementById('IvaPreview');
+
+                if (!totalInput || !subtotalInput || !ivaInput) return;
+
+                const totalGeneral = round2(parseDecimal(totalInput.value));
+                const subtotal = round2(totalGeneral / 1.16);
+                const iva = round2(totalGeneral - subtotal);
+
+                subtotalInput.value = subtotal.toFixed(2);
+                ivaInput.value = iva.toFixed(2);
+            }
+
+            function recalcOrderTotalFromItems() {
+                const totalInput = document.getElementById('TotalEstimado');
+                const subtotalInput = document.getElementById('SubtotalPreview');
+                const ivaInput = document.getElementById('IvaPreview');
+
+                if (!totalInput || !subtotalInput || !ivaInput) return;
+
+                let subtotal = 0;
+
+                document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+                    const qtyInput = row.querySelector('input[name$=".Cantidad"], input[name*="].Cantidad"]');
+                    const priceInput = row.querySelector('input[name$=".PrecioUnitarioEstimado"], input[name*="].PrecioUnitarioEstimado"]');
+
+                    const qty = parseDecimal(qtyInput?.value);
+                    const price = parseDecimal(priceInput?.value);
+
+                    subtotal += (qty * price);
+                });
+
+                subtotal = round2(subtotal);
+                const iva = round2(subtotal * 0.16);
+                const totalGeneral = round2(subtotal + iva);
+
+                subtotalInput.value = subtotal.toFixed(2);
+                ivaInput.value = iva.toFixed(2);
+                totalInput.value = totalGeneral.toFixed(2);
+            }
+
+            function bindRowCalcEvents(row) {
+                const qtyInput = row.querySelector('input[name$=".Cantidad"], input[name*="].Cantidad"]');
+                const priceInput = row.querySelector('input[name$=".PrecioUnitarioEstimado"], input[name*="].PrecioUnitarioEstimado"]');
+
+                [qtyInput, priceInput].forEach(input => {
+                    if (!input) return;
+                    input.addEventListener('input', recalcOrderTotalFromItems);
+                    input.addEventListener('change', recalcOrderTotalFromItems);
+                });
+            }
+
             async function cargarProductos() {
                 if (productosCache.length > 0) return;
                 const res = await fetch('@Url.Action("ProductosActivos", "Pedidos")');
@@ -407,6 +512,8 @@
                 if (precioInput && currentPrecio === '') {
                     precioInput.value = Number(precioSugerido || 0).toFixed(2);
                 }
+
+                recalcOrderTotalFromItems();
             }
 
             function escapeHtml(s) {
@@ -509,6 +616,8 @@
                     </td>
                 `;
                 tableBody.appendChild(tr);
+                bindRowCalcEvents(tr);
+                recalcOrderTotalFromItems();
             }
 
             addBtn?.addEventListener('click', addRow);
@@ -520,7 +629,11 @@
                 row.remove();
                 if (tableBody.querySelectorAll('tr').length === 0) addRow();
                 reindexRows();
+                recalcOrderTotalFromItems();
             });
+
+            tableBody?.querySelectorAll('tr').forEach(bindRowCalcEvents);
+            recalcOrderTotalFromItems();
         })();
     </script>
 }

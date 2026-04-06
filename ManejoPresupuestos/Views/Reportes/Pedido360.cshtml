@@ -11,6 +11,14 @@
     var totalCot = cotItems.Sum(x => x.Subtotal ?? 0m);
     var totalPagado = Model.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto);
     var pendiente = totalCot - totalPagado;
+
+    var totalPedidoGeneral = header?.TotalEstimado ?? 0m;
+    var subtotalPedido = Math.Round(totalPedidoGeneral / 1.16m, 2, MidpointRounding.AwayFromZero);
+    var ivaPedido = Math.Round(totalPedidoGeneral - subtotalPedido, 2, MidpointRounding.AwayFromZero);
+
+    var subtotalItemsPedido = Model.Items.Sum(x => (x.PrecioUnitarioEstimado ?? 0m) * x.Cantidad);
+    var ivaItemsPedido = Math.Round(subtotalItemsPedido * 0.16m, 2, MidpointRounding.AwayFromZero);
+    var totalItemsPedido = Math.Round(subtotalItemsPedido + ivaItemsPedido, 2, MidpointRounding.AwayFromZero);
 }
 
 <style>
@@ -49,7 +57,6 @@
         max-width: 92ch;
     }
 
-    /* Cards */
     .card{
         border-color: var(--border);
         border-radius: var(--radius);
@@ -65,7 +72,6 @@
     }
     .card-body{ padding: 1.1rem; }
 
-    /* Form */
     .form-label{
         font-weight: 900;
         color: var(--text);
@@ -83,7 +89,6 @@
         background: #fff;
     }
 
-    /* Buttons */
     .btn{
         border-radius: 999px;
         font-weight: 850;
@@ -117,7 +122,6 @@
         box-shadow: 0 0 0 .25rem rgba(29,78,216,.12);
     }
 
-    /* Alerts */
     .alert{
         border-radius: 16px;
         border-color: rgba(245,158,11,.22);
@@ -126,7 +130,6 @@
         box-shadow: var(--shadow);
     }
 
-    /* Tables: compact + clean */
     .table thead th{
         color: var(--muted);
         font-weight: 850;
@@ -147,7 +150,15 @@
         color: var(--text);
     }
 
-    /* Badges: softer */
+    .table tfoot td{
+        border-top: 1px solid var(--border);
+        padding-top: .7rem !important;
+        padding-bottom: .7rem !important;
+        font-size: .94rem;
+        color: var(--text);
+        background: rgba(15,23,42,.02);
+    }
+
     .badge{
         border-radius: 999px;
         font-weight: 900;
@@ -184,14 +195,12 @@
         color: var(--text) !important;
     }
 
-    /* Highlight rows */
     .table-warning{
         --bs-table-bg: rgba(245,158,11,.10);
         --bs-table-striped-bg: rgba(245,158,11,.08);
         --bs-table-hover-bg: rgba(245,158,11,.12);
     }
 
-    /* Links */
     a{
         color: color-mix(in srgb, var(--primary) 88%, #000);
         font-weight: 900;
@@ -199,7 +208,6 @@
     }
     a:hover{ text-decoration: underline; }
 
-    /* Mini KPI cards in header area */
     .kpi-card{
         padding: 1.05rem 1.1rem;
     }
@@ -207,6 +215,26 @@
         font-weight: 950;
         letter-spacing: -.02em;
         color: var(--text);
+    }
+
+    .kpi-line{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .kpi-line + .kpi-line{
+        margin-top: .45rem;
+    }
+    .kpi-line.total{
+        margin-top: .75rem;
+        padding-top: .75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .money{
+        white-space: nowrap;
+        font-weight: 900;
     }
 </style>
 
@@ -255,7 +283,6 @@
 
         @if (header is not null)
         {
-            <!-- HEADER -->
             <div class="row g-2 mb-3">
                 <div class="col-md-8">
                     <div class="card card-body">
@@ -269,8 +296,6 @@
                                 <div class="text-muted small">Instagram: <span class="fw-bold">@(header.Instagram ?? "-")</span></div>
                                 <div class="text-muted small">Dirección: <span class="fw-bold">@(header.Direccion ?? "-")</span></div>
                                 <div class="text-muted small">Es Empresa: <span class="fw-bold">@(header.ClienteEsEmpresa ? "Si" : "No")</span></div>
-
-                                
                             </div>
                             <div class="text-end">
                                 <div class="text-muted small">Estatus pedido</div>
@@ -303,10 +328,25 @@
                     <div class="row g-2">
                         <div class="col-12">
                             <div class="card kpi-card">
-                                <div class="text-muted small">Total estimado</div>
-                                <div class="fs-4 kpi-val">$@((header.TotalEstimado ?? 0m).ToString("N2"))</div>
+                                <div class="text-muted small mb-2">Resumen del pedido</div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">Subtotal</div>
+                                    <div class="fw-semibold money">$@subtotalPedido.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">IVA 16%</div>
+                                    <div class="fw-semibold money">$@ivaPedido.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line total">
+                                    <div class="text-muted small">Total general</div>
+                                    <div class="fs-4 kpi-val money">$@totalPedidoGeneral.ToString("N2")</div>
+                                </div>
                             </div>
                         </div>
+
                         <div class="col-12">
                             <div class="card kpi-card">
                                 <div class="text-muted small">Total cotización</div>
@@ -321,7 +361,6 @@
                 </div>
             </div>
 
-            <!-- 2) ITEMS DEL PEDIDO -->
             <div class="card mb-3">
                 <div class="card-header fw-semibold">Items del pedido</div>
                 <div class="table-responsive">
@@ -333,6 +372,7 @@
                                 <th>Categoría</th>
                                 <th class="text-end">Cantidad</th>
                                 <th class="text-end">Precio Est.</th>
+                                <th class="text-end">Subtotal</th>
                                 <th class="text-end">ProdItems</th>
                                 <th class="text-end">Cant. Prod</th>
                                 <th class="text-end">Peso Est.</th>
@@ -344,12 +384,14 @@
                         <tbody>
                         @foreach (var i in Model.Items.OrderBy(x => x.PedidoItemId))
                         {
+                            var subtotalItem = (i.PrecioUnitarioEstimado ?? 0m) * i.Cantidad;
                             <tr>
                                 <td>@i.PedidoItemId</td>
                                 <td>@(i.ProductoNombre ?? i.ProductoId.ToString())</td>
                                 <td>@(i.ProductoCategoriaNombre ?? "-")</td>
                                 <td class="text-end">@i.Cantidad</td>
                                 <td class="text-end">$@((i.PrecioUnitarioEstimado ?? 0m).ToString("N2"))</td>
+                                <td class="text-end">$@subtotalItem.ToString("N2")</td>
                                 <td class="text-end">@i.ProduccionItems</td>
                                 <td class="text-end">@i.CantidadEnProduccion</td>
                                 <td class="text-end">@i.PesoEstimadoGrTotal.ToString("N2")</td>
@@ -360,14 +402,33 @@
                         }
                         @if (!Model.Items.Any())
                         {
-                            <tr><td colspan="11" class="text-muted text-center py-3">Sin items</td></tr>
+                            <tr><td colspan="12" class="text-muted text-center py-3">Sin items</td></tr>
                         }
                         </tbody>
+                        @if (Model.Items.Any())
+                        {
+                            <tfoot>
+                                <tr>
+                                    <td colspan="5" class="text-end fw-semibold">Subtotal</td>
+                                    <td class="text-end fw-semibold">$@subtotalItemsPedido.ToString("N2")</td>
+                                    <td colspan="6"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end fw-semibold">IVA 16%</td>
+                                    <td class="text-end fw-semibold">$@ivaItemsPedido.ToString("N2")</td>
+                                    <td colspan="6"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end fw-bold">Total general</td>
+                                    <td class="text-end fw-bold">$@totalItemsPedido.ToString("N2")</td>
+                                    <td colspan="6"></td>
+                                </tr>
+                            </tfoot>
+                        }
                     </table>
                 </div>
             </div>
 
-            <!-- 3) COTIZACIÓN (HEADER + ITEMS) -->
             <div class="card mb-3">
                 <div class="card-header fw-semibold">Cotización vinculada</div>
 
@@ -451,7 +512,6 @@
                 }
             </div>
 
-            <!-- 4) PAGOS -->
             <div class="card mb-3">
                 <div class="card-header fw-semibold">Pagos</div>
                 <div class="table-responsive">
@@ -491,7 +551,6 @@
                 </div>
             </div>
 
-            <!-- 5) PRODUCCIÓN -->
             <div class="card mb-3">
                 <div class="card-header fw-semibold">Producción</div>
                 <div class="table-responsive">
@@ -539,7 +598,6 @@
                 </div>
             </div>
 
-            <!-- 6) CONSUMO -->
             <div class="card mb-3">
                 <div class="card-header fw-semibold">Consumo de inventario (por receta/insumo)</div>
                 <div class="table-responsive">
@@ -585,7 +643,6 @@
                 </div>
             </div>
 
-            <!-- 7) TIMELINE -->
             <div class="card">
                 <div class="card-header fw-semibold">Timeline</div>
                 <div class="table-responsive">

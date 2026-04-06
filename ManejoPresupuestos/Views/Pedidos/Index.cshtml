@@ -27,7 +27,7 @@
 
     body{ background: var(--pg-bg); }
 
-    .pg-wrap{ max-width: 1200px; }
+    .pg-wrap{ max-width: 1380px; }
 
     .pg-title{
         color: var(--text);
@@ -175,13 +175,19 @@
                                 <th>ESTATUS</th>
                                 <th>CREACION</th>
                                 <th>ENTREGA ESTIMADA</th>
-                                <th class="text-end">TOTAL ESTIMADO</th>
+                                <th class="text-end">SUBTOTAL</th>
+                                <th class="text-end">IVA 16%</th>
+                                <th class="text-end">TOTAL GENERAL</th>
                                 <th class="text-end">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var p in Model)
                             {
+                                var totalGeneral = p.TotalEstimado ?? 0m;
+                                var subtotal = Math.Round(totalGeneral / 1.16m, 2, MidpointRounding.AwayFromZero);
+                                var iva = Math.Round(totalGeneral - subtotal, 2, MidpointRounding.AwayFromZero);
+
                                 <tr>
                                     <td style="min-width: 240px;">
                                         <div class="cell-title">@p.ClienteNombre</div>
@@ -198,7 +204,9 @@
                                         @(p.FechaEntregaEstimada.HasValue ? p.FechaEntregaEstimada.Value.ToString("dd/MM/yyyy") : "-")
                                     </td>
 
-                                    <td class="text-end money">@Money(p.TotalEstimado)</td>
+                                    <td class="text-end money">@Money(subtotal)</td>
+                                    <td class="text-end money">@Money(iva)</td>
+                                    <td class="text-end money">@Money(totalGeneral)</td>
 
                                     <td class="text-end" style="min-width: 220px;">
                                         <div class="act-wrap">
@@ -213,7 +221,7 @@
                             @if (!Model.Any())
                             {
                                 <tr>
-                                    <td colspan="6" class="text-center py-4" style="color: var(--muted);">
+                                    <td colspan="8" class="text-center py-4" style="color: var(--muted);">
                                         No hay pedidos registrados.
                                     </td>
                                 </tr>
