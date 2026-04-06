@@ -19,7 +19,7 @@
 
     .pg-wrap{
        width: 100%;
-       max-width: 1600px;  
+       max-width: 1600px;
     }
 
     .pg-title{
@@ -236,30 +236,12 @@
         background: #fff;
     }
 
-    /* ===== Money visual ===== */
     .money { white-space: nowrap; }
     .money::before{
         content: "$";
         margin-right: .15rem;
         color: var(--muted);
         font-weight: 850;
-    }
-
-    /* Prefijo $ para inputs numéricos sin cambiar valor */
-    .money-input .input-group-text{
-        border-radius: 12px 0 0 12px;
-        border-color: rgba(15,23,42,.10);
-        background: rgba(15,23,42,.03);
-        color: var(--muted);
-        font-weight: 850;
-    }
-    .money-input .form-control{
-        border-radius: 0 12px 12px 0;
-    }
-    .money-input .form-control:focus{
-        border-color: rgba(29,78,216,.40);
-        box-shadow: 0 0 0 .25rem rgba(29,78,216,.10);
-        background: #fff;
     }
 </style>
 
@@ -307,15 +289,23 @@
 
                             <div class="totals-box">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div class="lbl">Total modelado</div>
+                                    <div class="lbl">Subtotal modelado</div>
                                     <div class="val money" id="lblTotalModelado">0.00</div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <div class="lbl">Total producción</div>
+                                    <div class="lbl">Subtotal producción</div>
                                     <div class="val money" id="lblTotalProduccion">0.00</div>
                                 </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid var(--border2);">
+                                    <div class="lbl">Subtotal</div>
+                                    <div class="val money" id="lblSubtotalCotizado">0.00</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <div class="lbl">IVA 16%</div>
+                                    <div class="val money" id="lblIvaCotizado">0.00</div>
+                                </div>
                                 <div class="d-flex justify-content-between align-items-end mt-2 pt-2" style="border-top:1px solid var(--border2);">
-                                    <div class="val">Total</div>
+                                    <div class="val">Total general</div>
                                     <div class="val grand money" id="lblTotalCotizado">0.00</div>
                                 </div>
                             </div>
@@ -360,7 +350,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                         <h6 class="mb-0" style="font-weight:800;color:var(--text);">
-                                            Estimación basada en recetas y tarifas configuradas; 
+                                            Estimación basada en recetas y tarifas configuradas;
                                             úsalo como referencia para tu cotización.
                                         </h6>
                                         <small class="text-muted" id="tarifasStatus">—</small>
@@ -448,6 +438,10 @@
         function getAntiForgeryToken() {
             const el = document.querySelector('input[name="__RequestVerificationToken"]');
             return el ? el.value : '';
+        }
+
+        function round2(n) {
+            return Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
         }
 
         function money(n) {
@@ -601,7 +595,7 @@
                 const tipo = Number(tr.querySelector('.js-tipo').value || 0);
                 const qty = Number(tr.querySelector('.js-cantidad').value || 0);
                 const price = Number(tr.querySelector('.js-precio').value || 0);
-                const sub = qty * price;
+                const sub = round2(qty * price);
 
                 tr.querySelector('.js-subtotal').textContent = money(sub);
 
@@ -609,9 +603,18 @@
                 if (tipo === 2) totalProduccion += sub;
             });
 
+            totalModelado = round2(totalModelado);
+            totalProduccion = round2(totalProduccion);
+
+            const subtotal = round2(totalModelado + totalProduccion);
+            const iva = round2(subtotal * 0.16);
+            const totalGeneral = round2(subtotal + iva);
+
             document.getElementById('lblTotalModelado').textContent = money(totalModelado);
             document.getElementById('lblTotalProduccion').textContent = money(totalProduccion);
-            document.getElementById('lblTotalCotizado').textContent = money(totalModelado + totalProduccion);
+            document.getElementById('lblSubtotalCotizado').textContent = money(subtotal);
+            document.getElementById('lblIvaCotizado').textContent = money(iva);
+            document.getElementById('lblTotalCotizado').textContent = money(totalGeneral);
         }
 
         function reindexRows() {

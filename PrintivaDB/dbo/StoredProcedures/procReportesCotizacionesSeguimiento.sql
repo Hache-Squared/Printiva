@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.procReportesCotizacionesSeguimiento
+CREATE OR ALTER PROCEDURE dbo.procReportesCotizacionesSeguimiento
   @loginId             INT,
   @desde               DATE          = NULL,
   @hasta               DATE          = NULL,
@@ -14,9 +14,6 @@ BEGIN
 
   SET @q = NULLIF(LTRIM(RTRIM(@q)), '');
 
-  -----------------------------------------------------------------------
-  -- Resolver IDs por NOMBRE (sin hardcode)
-  -----------------------------------------------------------------------
   DECLARE
     @EstatusBorradorId   INT = NULL,
     @EstatusEnviadaId    INT = NULL,
@@ -52,7 +49,7 @@ BEGIN
       c.CotizacionId,
       c.PedidoId,
       p.ClienteId,
-      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
+      CONCAT(ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
       c.CotizacionEstatusId,
       ce.Nombre AS CotizacionEstatusNombre,
@@ -96,38 +93,29 @@ BEGIN
     prod.ProduccionItems,
     prod.PrimerProduccionFecha,
 
-    -------------------------------------------------------------------
-    -- CATEGORIA por IDs resueltos por nombre
-    -------------------------------------------------------------------
     CASE
       WHEN @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId
         THEN 'Aceptada'
-      WHEN ( @EstatusRechazadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusRechazadaId )
-        OR ( @EstatusCanceladaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusCanceladaId )
+      WHEN (@EstatusRechazadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusRechazadaId)
+        OR (@EstatusCanceladaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusCanceladaId)
         THEN 'Rechazada'
       ELSE 'Pendiente'
     END AS Categoria,
 
-    -------------------------------------------------------------------
-    -- Convertida: aceptada O ya hubo dinero O ya hubo producción
-    -------------------------------------------------------------------
     CASE
-      WHEN ( @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId )
+      WHEN (@EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId)
         OR COALESCE(note.TotalPagado, 0) > 0
         OR COALESCE(prod.ProduccionItems, 0) > 0
       THEN CAST(1 AS bit)
       ELSE CAST(0 AS bit)
     END AS Convertida,
 
-    -------------------------------------------------------------------
-    -- FechaConversion (proxy):
-    -------------------------------------------------------------------
     CAST(
       COALESCE(
         note.PrimerPagoFecha,
         prod.PrimerProduccionFecha,
         CASE
-          WHEN ( @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId )
+          WHEN (@EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId)
           THEN b.CotizacionFechaCreacion
         END
       ) AS datetime2(0)
@@ -138,7 +126,7 @@ BEGIN
             note.PrimerPagoFecha,
             prod.PrimerProduccionFecha,
             CASE
-              WHEN ( @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId )
+              WHEN (@EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId)
               THEN b.CotizacionFechaCreacion
             END
           ) IS NOT NULL
@@ -149,7 +137,7 @@ BEGIN
               note.PrimerPagoFecha,
               prod.PrimerProduccionFecha,
               CASE
-                WHEN ( @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId )
+                WHEN (@EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId)
                 THEN b.CotizacionFechaCreacion
               END
             ) AS DATE)
@@ -160,7 +148,11 @@ BEGIN
   INTO #filtered
   FROM base b
   OUTER APPLY (
-    SELECT COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0) AS MontoCotizacion
+    SELECT
+      CAST(
+        COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0)
+        + ROUND(COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0) * 0.16, 2)
+      AS DECIMAL(18,2)) AS MontoCotizacion
     FROM dbo.TblCotizacionItems ci
     WHERE ci.CotizacionId = b.CotizacionId
       AND ci.EstaActivo = 1
@@ -177,9 +169,9 @@ BEGIN
   OUTER APPLY (
     SELECT TOP (1)
       pa.FechaPago AS UltimoPagoFecha,
-      pa.Metodo    AS UltimoPagoMetodo,
+      pa.Metodo AS UltimoPagoMetodo,
       pa.Referencia AS UltimoPagoReferencia,
-      pt.Nombre    AS UltimoPagoTipoNombre
+      pt.Nombre AS UltimoPagoTipoNombre
     FROM dbo.TblPagos pa
     INNER JOIN dbo.TblPagoTipos pt ON pt.PagoTipoId = pa.PagoTipoId
     WHERE pa.CotizacionId = b.CotizacionId
@@ -200,7 +192,7 @@ BEGIN
     AND (
       @soloConvertidas = 0 OR
       (
-        ( @EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId )
+        (@EstatusAceptadaId IS NOT NULL AND b.CotizacionEstatusId = @EstatusAceptadaId)
         OR COALESCE(note.TotalPagado, 0) > 0
         OR COALESCE(prod.ProduccionItems, 0) > 0
       )
@@ -213,9 +205,6 @@ BEGIN
       OR CAST(b.CotizacionId AS nvarchar(30)) LIKE '%' + @q + '%'
     );
 
-  -----------------------------------------------------------------------
-  -- Resultset 1: Totales / KPIs
-  -----------------------------------------------------------------------
   SELECT
     COUNT(1) AS Cotizaciones,
     SUM(MontoCotizacion) AS MontoTotal,
@@ -227,9 +216,6 @@ BEGIN
     AVG(CASE WHEN Convertida = 1 AND DiasAConversion IS NOT NULL THEN CAST(DiasAConversion AS DECIMAL(18,2)) ELSE NULL END) AS AvgDiasAConversion
   FROM #filtered;
 
-  -----------------------------------------------------------------------
-  -- Resultset 2: Resumen por estatus (real)
-  -----------------------------------------------------------------------
   SELECT
     CotizacionEstatusId,
     CotizacionEstatusNombre,
@@ -241,9 +227,6 @@ BEGIN
   GROUP BY CotizacionEstatusId, CotizacionEstatusNombre
   ORDER BY CotizacionEstatusNombre;
 
-  -----------------------------------------------------------------------
-  -- Resultset 3: Detalle
-  -----------------------------------------------------------------------
   SELECT
     CotizacionId,
     PedidoId,
@@ -267,19 +250,13 @@ BEGIN
   FROM #filtered
   ORDER BY CotizacionFechaCreacion DESC, CotizacionId DESC;
 
-  -----------------------------------------------------------------------
-  -- Resultset 4: Clientes (dropdown)
-  -----------------------------------------------------------------------
   SELECT
     c.ClienteId AS Id,
-    CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+    CONCAT(ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
   FROM dbo.TblClientes c
   WHERE EstaActivo = 1
   ORDER BY Nombre;
 
-  -----------------------------------------------------------------------
-  -- Resultset 5: Estatus cotización (dropdown)
-  -----------------------------------------------------------------------
   SELECT
     CotizacionEstatusId AS Id,
     Nombre
@@ -287,4 +264,3 @@ BEGIN
   ORDER BY Nombre;
 END
 GO
-

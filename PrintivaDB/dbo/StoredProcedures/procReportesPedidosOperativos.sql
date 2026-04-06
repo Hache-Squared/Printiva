@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.procReportesPedidosOperativos
+CREATE OR ALTER PROCEDURE dbo.procReportesPedidosOperativos
   @loginId            INT,
   @desde              DATE        = NULL,
   @hasta              DATE        = NULL,
@@ -18,7 +18,7 @@ BEGIN
       p.PedidoId,
       p.UsuarioId,
       p.ClienteId,
-      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
+      CONCAT(ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
       p.PedidoEstatusId,
       pe.Nombre AS PedidoEstatusNombre,
       p.FechaCreacion,
@@ -38,7 +38,8 @@ BEGIN
 
       CASE
         WHEN (CASE WHEN cq.CotizacionId IS NOT NULL THEN COALESCE(cq.CotizacionTotal, 0) ELSE COALESCE(p.TotalEstimado, 0) END) > 0
-          THEN CAST( (COALESCE(cq.TotalPagado, 0) * 100.0) /
+          THEN CAST(
+               (COALESCE(cq.TotalPagado, 0) * 100.0) /
                (CASE WHEN cq.CotizacionId IS NOT NULL THEN COALESCE(cq.CotizacionTotal, 0) ELSE COALESCE(p.TotalEstimado, 0) END)
                AS DECIMAL(10,2))
         ELSE CAST(0 AS DECIMAL(10,2))
@@ -73,12 +74,20 @@ BEGIN
     OUTER APPLY (
       SELECT TOP (1)
         c.CotizacionId,
-        CAST(COALESCE((
-          SELECT SUM(ci.Cantidad * ci.PrecioUnitario)
-          FROM dbo.TblCotizacionItems ci
-          WHERE ci.CotizacionId = c.CotizacionId
-            AND ci.EstaActivo = 1
-        ), 0) AS DECIMAL(18,2)) AS CotizacionTotal,
+        CAST(
+          COALESCE((
+            SELECT SUM(ci.Cantidad * ci.PrecioUnitario)
+            FROM dbo.TblCotizacionItems ci
+            WHERE ci.CotizacionId = c.CotizacionId
+              AND ci.EstaActivo = 1
+          ), 0)
+          + ROUND(COALESCE((
+            SELECT SUM(ci.Cantidad * ci.PrecioUnitario)
+            FROM dbo.TblCotizacionItems ci
+            WHERE ci.CotizacionId = c.CotizacionId
+              AND ci.EstaActivo = 1
+          ), 0) * 0.16, 2)
+        AS DECIMAL(18,2)) AS CotizacionTotal,
         CAST(COALESCE((
           SELECT SUM(pa.Monto)
           FROM dbo.TblPagos pa
@@ -102,7 +111,7 @@ BEGIN
         SELECT TOP (1)
           pes.ProduccionEstatusId,
           pes.Nombre AS ProduccionEstatusNombre,
-          pes.Orden  AS ProduccionEstatusOrden
+          pes.Orden AS ProduccionEstatusOrden
         FROM dbo.TblProduccionItems pi2
         INNER JOIN dbo.TblProduccionEstatus pes ON pes.ProduccionEstatusId = pi2.ProduccionEstatusId
         WHERE pi2.PedidoId = p.PedidoId
@@ -167,9 +176,6 @@ BEGIN
     ISNULL(FechaEntregaEstimada, CAST(FechaCreacion AS DATE)) ASC,
     PedidoId DESC;
 
-  -----------------------------------------------------------------------
-  -- Lookups (para filtros dropdown)
-  -----------------------------------------------------------------------
   SELECT PedidoEstatusId AS Id, Nombre
   FROM dbo.TblPedidoEstatus
   ORDER BY Nombre;
@@ -179,13 +185,11 @@ BEGIN
   WHERE EstaActivo = 1
   ORDER BY Orden, Nombre;
 
-  SELECT 
-    c.ClienteId AS Id, 
-    CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
+  SELECT
+    c.ClienteId AS Id,
+    CONCAT(ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS Nombre
   FROM dbo.TblClientes c
   WHERE EstaActivo = 1
   ORDER BY Nombre;
-
 END
 GO
-

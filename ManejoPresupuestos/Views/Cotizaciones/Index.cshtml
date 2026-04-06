@@ -25,8 +25,7 @@
 
     body{ background: var(--pg-bg); }
 
-    /* MÁS ANCHO */
-    .pg-wrap{ max-width: 1240px; }
+    .pg-wrap{ max-width: 1480px; }
 
     .pg-title{
         color: var(--text);
@@ -90,7 +89,7 @@
 
     .table-clean{
         margin: 0;
-        min-width: 1060px; /* si la pantalla es chica, fuerza scroll horizontal */
+        min-width: 1320px;
     }
 
     .table-clean thead th{
@@ -204,7 +203,9 @@
                                 <th>Creación</th>
                                 <th class="text-end">Modelado</th>
                                 <th class="text-end">Producción</th>
-                                <th class="text-end">Total</th>
+                                <th class="text-end">Subtotal</th>
+                                <th class="text-end">IVA 16%</th>
+                                <th class="text-end">Total general</th>
                                 <th class="text-end">Pagado</th>
                                 <th class="text-end">Saldo</th>
                                 <th style="width: 230px;">Acciones</th>
@@ -213,6 +214,9 @@
                         <tbody>
                         @foreach (var c in Model)
                         {
+                            var subtotal = c.TotalModelado + c.TotalProduccion;
+                            var iva = Math.Round(c.TotalCotizado - subtotal, 2, MidpointRounding.AwayFromZero);
+
                             <tr>
                                 <td class="fw-semibold">#@c.CotizacionId</td>
                                 <td class="fw-semibold">#@c.PedidoId</td>
@@ -223,11 +227,13 @@
 
                                 <td style="white-space:nowrap;">@c.FechaCreacion.ToString("dd/MM/yyyy")</td>
 
-                                <td class="text-end money">$@c.TotalModelado.ToString("0.00")</td>
-                                <td class="text-end money">$@c.TotalProduccion.ToString("0.00")</td>
-                                <td class="text-end fw-semibold money">$@c.TotalCotizado.ToString("0.00")</td>
-                                <td class="text-end money">$@c.TotalPagado.ToString("0.00")</td>
-                                <td class="text-end fw-semibold money @(c.Saldo > 0 ? "text-danger" : "text-success")">$@c.Saldo.ToString("0.00")</td>
+                                <td class="text-end money">@c.TotalModelado.ToString("0.00")</td>
+                                <td class="text-end money">@c.TotalProduccion.ToString("0.00")</td>
+                                <td class="text-end money">@subtotal.ToString("0.00")</td>
+                                <td class="text-end money">@iva.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money">@c.TotalCotizado.ToString("0.00")</td>
+                                <td class="text-end money">@c.TotalPagado.ToString("0.00")</td>
+                                <td class="text-end fw-semibold money @(c.Saldo > 0 ? "text-danger" : "text-success")">@c.Saldo.ToString("0.00")</td>
                                 <td style="white-space:nowrap;">
                                     <div class="act-wrap">
                                         <a class="btn act-btn act-view" asp-action="Detalles" asp-route-id="@c.CotizacionId">Ver</a>

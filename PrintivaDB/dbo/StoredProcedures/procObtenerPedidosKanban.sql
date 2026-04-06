@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.procObtenerPedidosKanban
+CREATE OR ALTER PROCEDURE dbo.procObtenerPedidosKanban
     @loginId INT,
     @ClienteId INT = 0,
     @q VARCHAR(200) = '',
@@ -31,7 +31,10 @@ BEGIN
     TotCot AS (
         SELECT
             ci.CotizacionId,
-            SUM(ISNULL(ci.Cantidad,0) * ISNULL(ci.PrecioUnitario,0)) AS TotalCotizado
+            CAST(
+                ISNULL(SUM(ISNULL(ci.Cantidad,0) * ISNULL(ci.PrecioUnitario,0)), 0)
+                + ROUND(ISNULL(SUM(ISNULL(ci.Cantidad,0) * ISNULL(ci.PrecioUnitario,0)), 0) * 0.16, 2)
+            AS DECIMAL(18,2)) AS TotalCotizado
         FROM dbo.TblCotizacionItems ci WITH (NOLOCK)
         WHERE ISNULL(ci.EstaActivo, 1) = 1
         GROUP BY ci.CotizacionId
@@ -48,12 +51,12 @@ BEGIN
         p.PedidoId,
         p.UsuarioId,
         p.ClienteId,
-        CONCAT( ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS ClienteNombre,
-        ISNULL(c.Email, '') ClienteCorreo,
-        ISNULL(c.Telefono, '') ClienteTelefono,
-        ISNULL(c.WhatsApp, '') ClienteWhatsapp,
-        ISNULL(c.RFC, '') ClienteRFC,
-        ISNULL(c.EsEmpresa, 0) ClienteEsEmpresa,
+        CONCAT(ISNULL(c.Nombre, ''), ' ', ISNULL(c.ApellidoPaterno, ''), ' ', ISNULL(c.ApellidoMaterno, '')) AS ClienteNombre,
+        ISNULL(c.Email, '') AS ClienteCorreo,
+        ISNULL(c.Telefono, '') AS ClienteTelefono,
+        ISNULL(c.WhatsApp, '') AS ClienteWhatsapp,
+        ISNULL(c.RFC, '') AS ClienteRFC,
+        ISNULL(c.EsEmpresa, 0) AS ClienteEsEmpresa,
         p.PedidoEstatusId,
         e.Nombre AS EstatusNombre,
         p.FechaCreacion,
@@ -68,7 +71,7 @@ BEGIN
 
         ISNULL(tc.TotalCotizado, 0) AS TotalCotizado,
         ISNULL(tp.TotalPagado, 0) AS TotalPagado,
-        ISNULL(tc.TotalCotizado, 0) - ISNULL(tp.TotalPagado, 0) AS Saldo
+        CAST(ISNULL(tc.TotalCotizado, 0) - ISNULL(tp.TotalPagado, 0) AS DECIMAL(18,2)) AS Saldo
     FROM dbo.TblPedidos p WITH (NOLOCK)
     INNER JOIN dbo.TblClientes c WITH (NOLOCK) ON c.ClienteId = p.ClienteId
     INNER JOIN dbo.TblPedidoEstatus e WITH (NOLOCK) ON e.PedidoEstatusId = p.PedidoEstatusId
@@ -91,4 +94,3 @@ BEGIN
     ORDER BY p.FechaCreacion DESC, p.PedidoId DESC;
 END
 GO
-

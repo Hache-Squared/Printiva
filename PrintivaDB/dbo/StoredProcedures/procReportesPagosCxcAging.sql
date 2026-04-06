@@ -1,12 +1,12 @@
-CREATE   PROCEDURE dbo.procReportesPagosCxcAging
+CREATE OR ALTER PROCEDURE dbo.procReportesPagosCxcAging
   @loginId      INT,
   @desde        DATE        = NULL,
   @hasta        DATE        = NULL,
   @clienteId    INT         = NULL,
   @pedidoId     INT         = NULL,
   @soloVencidos BIT         = 0,
-  @bucketId     INT         = NULL,   -- 0=no vencido, 1=1-7, 2=8-14, 3=15-30, 4=31-60, 5=61+
-  @metodo       NVARCHAR(100) = NULL, -- busca en Metodo/Referencia/PagoTipo del ÚLTIMO pago
+  @bucketId     INT         = NULL,
+  @metodo       NVARCHAR(100) = NULL,
   @minSaldo     DECIMAL(18,2) = NULL
 AS
 BEGIN
@@ -20,17 +20,17 @@ BEGIN
       p.PedidoId,
       p.UsuarioId,
       p.ClienteId,
-      CONCAT( ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
+      CONCAT(ISNULL(cl.Nombre, ''), ' ', ISNULL(cl.ApellidoPaterno, ''), ' ', ISNULL(cl.ApellidoMaterno, '')) AS ClienteNombre,
 
       p.PedidoEstatusId,
       pe.Nombre AS PedidoEstatusNombre,
 
-      p.FechaCreacion      AS PedidoFechaCreacion,
+      p.FechaCreacion AS PedidoFechaCreacion,
       p.FechaEntregaEstimada,
       p.TotalEstimado,
 
       c.CotizacionId,
-      c.FechaCreacion      AS CotizacionFechaCreacion,
+      c.FechaCreacion AS CotizacionFechaCreacion,
       c.FechaVigencia,
 
       qt.CotizacionTotal,
@@ -55,7 +55,10 @@ BEGIN
     ) c
 
     OUTER APPLY (
-      SELECT COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0) AS CotizacionTotal
+      SELECT CAST(
+          COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0)
+          + ROUND(COALESCE(SUM(ci.Cantidad * ci.PrecioUnitario), 0) * 0.16, 2)
+      AS DECIMAL(18,2)) AS CotizacionTotal
       FROM dbo.TblCotizacionItems ci
       WHERE ci.CotizacionId = c.CotizacionId
         AND ci.EstaActivo = 1
@@ -70,10 +73,10 @@ BEGIN
 
     OUTER APPLY (
       SELECT TOP (1)
-        pa.FechaPago   AS UltimoPagoFecha,
-        pa.Metodo      AS UltimoPagoMetodo,
-        pa.Referencia  AS UltimoPagoReferencia,
-        pt.Nombre      AS UltimoPagoTipoNombre
+        pa.FechaPago AS UltimoPagoFecha,
+        pa.Metodo AS UltimoPagoMetodo,
+        pa.Referencia AS UltimoPagoReferencia,
+        pt.Nombre AS UltimoPagoTipoNombre
       FROM dbo.TblPagos pa
       INNER JOIN dbo.TblPagoTipos pt ON pt.PagoTipoId = pa.PagoTipoId
       WHERE pa.CotizacionId = c.CotizacionId
@@ -83,7 +86,7 @@ BEGIN
 
     WHERE p.EstaActivo = 1
       AND (@clienteId IS NULL OR p.ClienteId = @clienteId)
-      AND (@pedidoId  IS NULL OR p.PedidoId  = @pedidoId)
+      AND (@pedidoId IS NULL OR p.PedidoId = @pedidoId)
   ),
   calc AS
   (
@@ -176,9 +179,6 @@ BEGIN
       OR COALESCE(a.UltimoPagoTipoNombre, N'') LIKE N'%' + @metodo + N'%'
     );
 
-  -----------------------------------------------------------------------
-  -- Resultset 1: Totales
-  -----------------------------------------------------------------------
   SELECT
     COUNT(1) AS PedidosConSaldo,
     SUM(f.Saldo) AS SaldoTotal,
@@ -188,9 +188,6 @@ BEGIN
     SUM(CASE WHEN f.DiasVencidos > 0 THEN f.Saldo ELSE 0 END) AS SaldoVencido
   FROM #filtered f;
 
-  -----------------------------------------------------------------------
-  -- Resultset 2: Buckets
-  -----------------------------------------------------------------------
   SELECT
     f.BucketId,
     f.BucketNombre,
@@ -200,9 +197,6 @@ BEGIN
   GROUP BY f.BucketId, f.BucketNombre
   ORDER BY f.BucketId;
 
-  -----------------------------------------------------------------------
-  -- Resultset 3: Detalle
-  -----------------------------------------------------------------------
   SELECT
     f.PedidoId,
     f.ClienteId,
@@ -242,4 +236,3 @@ BEGIN
   DROP TABLE #filtered;
 END
 GO
-

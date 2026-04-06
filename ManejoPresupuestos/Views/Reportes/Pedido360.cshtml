@@ -8,7 +8,9 @@
     var cotHeader = Model.Cotizacion.FirstOrDefault(x => x.RowType == "HEADER");
     var cotItems = Model.Cotizacion.Where(x => x.RowType == "ITEM").ToList();
 
-    var totalCot = cotItems.Sum(x => x.Subtotal ?? 0m);
+    var subtotalCot = cotItems.Sum(x => x.Subtotal ?? 0m);
+    var totalCot = cotHeader?.CotizacionTotal ?? Math.Round(subtotalCot + (subtotalCot * 0.16m), 2, MidpointRounding.AwayFromZero);
+    var ivaCot = Math.Round(totalCot - subtotalCot, 2, MidpointRounding.AwayFromZero);
     var totalPagado = Model.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto);
     var pendiente = totalCot - totalPagado;
 
@@ -349,12 +351,32 @@
 
                         <div class="col-12">
                             <div class="card kpi-card">
-                                <div class="text-muted small">Total cotización</div>
-                                <div class="fs-4 kpi-val">$@totalCot.ToString("N2")</div>
-                                <div class="text-muted small mt-2">Pagado</div>
-                                <div class="fw-semibold">$@totalPagado.ToString("N2")</div>
-                                <div class="text-muted small">Pendiente</div>
-                                <div class="fw-semibold">$@pendiente.ToString("N2")</div>
+                                <div class="text-muted small mb-2">Resumen de cotización</div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">Subtotal</div>
+                                    <div class="fw-semibold money">$@subtotalCot.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">IVA 16%</div>
+                                    <div class="fw-semibold money">$@ivaCot.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">Total general</div>
+                                    <div class="fw-semibold">$@totalCot.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line">
+                                    <div class="text-muted small">Pagado</div>
+                                    <div class="fw-semibold">$@totalPagado.ToString("N2")</div>
+                                </div>
+
+                                <div class="kpi-line total">
+                                    <div class="text-muted small">Pendiente</div>
+                                    <div class="fs-5 fw-bold">$@pendiente.ToString("N2")</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -501,8 +523,18 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="6" class="text-end fw-semibold">Total</td>
-                                        <td class="text-end fw-semibold">$@totalCot.ToString("N2")</td>
+                                        <td colspan="6" class="text-end fw-semibold">Subtotal</td>
+                                        <td class="text-end fw-semibold">$@subtotalCot.ToString("N2")</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" class="text-end fw-semibold">IVA 16%</td>
+                                        <td class="text-end fw-semibold">$@ivaCot.ToString("N2")</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" class="text-end fw-bold">Total general</td>
+                                        <td class="text-end fw-bold">$@totalCot.ToString("N2")</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
