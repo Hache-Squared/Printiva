@@ -270,6 +270,7 @@ namespace ManejoPresupuestos.Servicios
             return table;
         }
 
+
         public byte[] GenerarExcelPedido360(ReportePedido360ViewModel vm)
         {
             using var wb = new XLWorkbook();
@@ -281,16 +282,18 @@ namespace ManejoPresupuestos.Servicios
             const int MAX_COL = 18; // A..R
             int r = 1;
 
-            // Paleta (uniforme, no chillona)
-            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
-            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
-            var cPurple   = XLColor.FromHtml("#5B21B6"); // violet-800
-            var cOrange   = XLColor.FromHtml("#9A3412"); // orange-800
-            var cGreen    = XLColor.FromHtml("#166534"); // green-800
-            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
-            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
-            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
-            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            // Paleta
+            var cTitle    = XLColor.FromHtml("#0F172A");
+            var cTeal     = XLColor.FromHtml("#0F766E");
+            var cPurple   = XLColor.FromHtml("#5B21B6");
+            var cOrange   = XLColor.FromHtml("#9A3412");
+            var cGreen    = XLColor.FromHtml("#166534");
+            var cBlueGray = XLColor.FromHtml("#1E293B");
+            var cSlate    = XLColor.FromHtml("#334155");
+            var cSoftGray = XLColor.FromHtml("#F1F5F9");
+            var cZebra    = XLColor.FromHtml("#F8FAFC");
+            var cRedText  = XLColor.FromHtml("#B91C1C");
+            var cGreenText = XLColor.FromHtml("#166534");
 
             // --- Título ---
             var title = ws.Range(r, 1, r, MAX_COL);
@@ -313,7 +316,6 @@ namespace ManejoPresupuestos.Servicios
             gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             r += 2;
 
-            // Si no hay header (no encontrado)
             if (vm.Header is null)
             {
                 var msg = ws.Range(r, 1, r, MAX_COL);
@@ -330,6 +332,7 @@ namespace ManejoPresupuestos.Servicios
                 ws.Row(r).Height = 22;
 
                 ws.Columns(1, MAX_COL).AdjustToContents(1, 80);
+
                 using var ms0 = new MemoryStream();
                 wb.SaveAs(ms0);
                 return ms0.ToArray();
@@ -337,16 +340,29 @@ namespace ManejoPresupuestos.Servicios
 
             var h = vm.Header;
 
-            // Totales (igual que tu vista)
+            // ==========================
+            // TOTALES LOCALES CORRECTOS
+            // ==========================
             var cotItems = vm.Cotizacion.Where(x => x.RowType == "ITEM").ToList();
-            var totalCot = cotItems.Sum(x => x.Subtotal ?? 0m);
-            var totalPagado = vm.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto);
-            var pendiente = totalCot - totalPagado;
 
-            // --- Seccion: Cliente y pedido ---
+            var subtotalCot = Redondear2(cotItems.Sum(x => x.Subtotal ?? 0m));
+            var ivaCot = CalcularIva16(subtotalCot);
+            var totalCot = CalcularTotalConIva16(subtotalCot);
+
+            var totalPagado = Redondear2(vm.Pagos.Where(p => p.EstaActivo).Sum(p => p.Monto));
+            var pendiente = Redondear2(totalCot - totalPagado);
+
+            var totalPedido = Redondear2(h.TotalEstimado ?? 0m);
+            var subtotalPedido = totalPedido > 0 ? Redondear2(totalPedido / 1.16m) : 0m;
+            var ivaPedido = Redondear2(totalPedido - subtotalPedido);
+
+            var subtotalItemsPedido = Redondear2(vm.Items.Sum(x => (x.PrecioUnitarioEstimado ?? 0m) * x.Cantidad));
+            var ivaItemsPedido = CalcularIva16(subtotalItemsPedido);
+            var totalItemsPedido = CalcularTotalConIva16(subtotalItemsPedido);
+
+            // --- Cliente y pedido ---
             r = EscribirTituloSeccion(ws, r, "Cliente y pedido", cTeal, MAX_COL);
 
-            // Bloque izquierda (cliente)
             r = EscribirKV(ws, r, 1, "Cliente", h.ClienteNombre ?? "-", 3, cSoftGray);
             r = EscribirKV(ws, r, 1, "Teléfono", h.Telefono ?? "-", 3, cSoftGray);
             r = EscribirKV(ws, r, 1, "WhatsApp", h.WhatsApp ?? "-", 3, cSoftGray);
@@ -354,7 +370,6 @@ namespace ManejoPresupuestos.Servicios
             r = EscribirKV(ws, r, 1, "Email", h.Email ?? "-", 3, cSoftGray);
             r = EscribirKV(ws, r, 1, "Dirección", h.Direccion ?? "-", 3, cSoftGray);
 
-            // Bloque derecha (pedido) -> empieza en 9 para NO pisarse con el bloque cliente
             int r2 = r - 6;
             EscribirKVInline(ws, r2 + 0, 9, "PedidoId", h.PedidoId.ToString(), 3, 3, cSoftGray);
             EscribirKVInline(ws, r2 + 1, 9, "Estatus", h.PedidoEstatusNombre ?? "-", 3, 3, cSoftGray);
@@ -362,7 +377,6 @@ namespace ManejoPresupuestos.Servicios
             EscribirKVInline(ws, r2 + 3, 9, "Entrega estimada", h.FechaEntregaEstimada?.ToString("yyyy-MM-dd") ?? "-", 3, 3, cSoftGray);
             EscribirKVInline(ws, r2 + 4, 9, "CotizaciónId", h.CotizacionIdVinculada?.ToString() ?? "-", 3, 3, cSoftGray);
 
-            // Notas (merge ancho)
             ws.Cell(r, 1).Value = "Notas";
             ws.Cell(r, 1).Style.Font.Bold = true;
             var notasRange = ws.Range(r, 2, r, MAX_COL);
@@ -374,16 +388,39 @@ namespace ManejoPresupuestos.Servicios
             ws.Row(r).Height = 28;
             r += 2;
 
-            // --- Seccion: Totales ---
+            // --- Totales ---
             r = EscribirTituloSeccion(ws, r, "Totales", cGreen, MAX_COL);
 
-            EscribirMoney(ws, r, 1, "Total estimado", h.TotalEstimado ?? 0m, 3); r++;
+            ws.Cell(r, 1).Value = "Pedido";
+            ws.Cell(r, 1).Style.Font.Bold = true;
+            r++;
+
+            EscribirMoney(ws, r, 1, "Subtotal pedido", subtotalPedido, 3); r++;
+            EscribirMoney(ws, r, 1, "IVA 16% pedido", ivaPedido, 3); r++;
+            EscribirMoney(ws, r, 1, "Total estimado pedido", totalPedido, 3); r++;
+            ws.Cell(r - 1, 4).Style.Font.FontColor = cGreenText;
+
+            r++;
+
+            ws.Cell(r, 1).Value = "Cotización";
+            ws.Cell(r, 1).Style.Font.Bold = true;
+            r++;
+
+            EscribirMoney(ws, r, 1, "Subtotal cotización", subtotalCot, 3); r++;
+            EscribirMoney(ws, r, 1, "IVA 16% cotización", ivaCot, 3); r++;
             EscribirMoney(ws, r, 1, "Total cotización", totalCot, 3); r++;
             EscribirMoney(ws, r, 1, "Pagado", totalPagado, 3); r++;
-            EscribirMoney(ws, r, 1, "Pendiente", pendiente, 3); r += 2;
+            EscribirMoney(ws, r, 1, "Pendiente", pendiente, 3);
+
+            if (pendiente < 0)
+                ws.Cell(r, 4).Style.Font.FontColor = cRedText;
+            else if (pendiente == 0)
+                ws.Cell(r, 4).Style.Font.FontColor = cGreenText;
+
+            r += 2;
 
             // ==========================
-            // TABLA: Items del pedido
+            // Items del pedido
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Items del pedido", cBlueGray, MAX_COL);
 
@@ -393,8 +430,9 @@ namespace ManejoPresupuestos.Servicios
                 new DataColumn("PedidoItemId"),
                 new DataColumn("Producto"),
                 new DataColumn("Categoría"),
-                new DataColumn("Cantidad", typeof(int)),
+                new DataColumn("Cantidad", typeof(decimal)),
                 new DataColumn("Precio Est.", typeof(decimal)),
+                new DataColumn("Subtotal", typeof(decimal)),
                 new DataColumn("ProdItems", typeof(int)),
                 new DataColumn("Cant. Prod", typeof(int)),
                 new DataColumn("Peso Est. (gr)", typeof(decimal)),
@@ -405,12 +443,15 @@ namespace ManejoPresupuestos.Servicios
 
             foreach (var i in vm.Items.OrderBy(x => x.PedidoItemId))
             {
+                var subtotalItem = Redondear2((i.PrecioUnitarioEstimado ?? 0m) * i.Cantidad);
+
                 dtItems.Rows.Add(
                     i.PedidoItemId,
                     i.ProductoNombre ?? i.ProductoId.ToString(),
                     i.ProductoCategoriaNombre ?? "-",
                     i.Cantidad,
                     i.PrecioUnitarioEstimado ?? 0m,
+                    subtotalItem,
                     i.ProduccionItems,
                     i.CantidadEnProduccion,
                     i.PesoEstimadoGrTotal,
@@ -420,21 +461,35 @@ namespace ManejoPresupuestos.Servicios
                 );
             }
 
-            r = InsertarTablaAt(ws, r, 1, dtItems, "tblPedidoItems", cBlueGray, MAX_COL, cZebra, out var tblItems) + 2;
+            r = InsertarTablaAt(ws, r, 1, dtItems, "tblPedidoItems", cBlueGray, MAX_COL, cZebra, out var tblItems) + 1;
+
             AplicarFormatosTabla(tblItems, new()
             {
+                ["Cantidad"] = "#,##0.00",
                 ["Precio Est."] = "#,##0.00",
+                ["Subtotal"] = "#,##0.00",
                 ["Peso Est. (gr)"] = "#,##0.00",
                 ["Peso Real (gr)"] = "#,##0.00",
             });
+
             PintarInactivos(tblItems, "Activo", "No", XLColor.FromHtml("#E5E7EB"));
 
+            if (vm.Items.Any())
+            {
+                EscribirMoney(ws, r, 1, "Subtotal items pedido", subtotalItemsPedido, 4); r++;
+                EscribirMoney(ws, r, 1, "IVA 16% items pedido", ivaItemsPedido, 4); r++;
+                EscribirMoney(ws, r, 1, "Total items pedido", totalItemsPedido, 4); r++;
+            }
+
+            r += 1;
+
             // ==========================
-            // COTIZACION: Header + Items
+            // Cotización vinculada
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Cotización vinculada", cPurple, MAX_COL);
 
             var cotHeader = vm.Cotizacion.FirstOrDefault(x => x.RowType == "HEADER");
+
             if (cotHeader is null && !cotItems.Any())
             {
                 r = EscribirSinDatos(ws, r, "Sin cotización vinculada.", MAX_COL) + 2;
@@ -443,11 +498,10 @@ namespace ManejoPresupuestos.Servicios
             {
                 if (cotHeader is not null)
                 {
-                    // 4 bloques perfectos en 18 columnas -> NO se pisan
                     EscribirKVInline(ws, r, 1,  "CotizaciónId", cotHeader.CotizacionId.ToString(), 2, 2, cSoftGray);
-                    EscribirKVInline(ws, r, 5,  "Estatus",      cotHeader.CotizacionEstatusNombre ?? "-", 2, 2, cSoftGray);
-                    EscribirKVInline(ws, r, 9,  "Creación",     cotHeader.FechaCreacion.ToString("yyyy-MM-dd"), 2, 2, cSoftGray);
-                    EscribirKVInline(ws, r, 13, "Vigencia",     cotHeader.FechaVigencia?.ToString("yyyy-MM-dd") ?? "-", 2, 2, cSoftGray);
+                    EscribirKVInline(ws, r, 5,  "Estatus", cotHeader.CotizacionEstatusNombre ?? "-", 2, 2, cSoftGray);
+                    EscribirKVInline(ws, r, 9,  "Creación", cotHeader.FechaCreacion.ToString("yyyy-MM-dd"), 2, 2, cSoftGray);
+                    EscribirKVInline(ws, r, 13, "Vigencia", cotHeader.FechaVigencia?.ToString("yyyy-MM-dd") ?? "-", 2, 2, cSoftGray);
                     r++;
 
                     ws.Cell(r, 1).Value = "Notas cotización";
@@ -490,6 +544,7 @@ namespace ManejoPresupuestos.Servicios
                 }
 
                 r = InsertarTablaAt(ws, r, 1, dtCot, "tblCotItems", cPurple, MAX_COL, cZebra, out var tblCot) + 1;
+
                 AplicarFormatosTabla(tblCot, new()
                 {
                     ["Cantidad"] = "#,##0.00",
@@ -497,17 +552,22 @@ namespace ManejoPresupuestos.Servicios
                     ["Subtotal"] = "#,##0.00",
                 });
 
-                // Total debajo
-                ws.Cell(r, 1).Value = "Total cotización";
-                ws.Range(r, 1, r, 6).Merge().Style.Font.Bold = true;
-                ws.Cell(r, 7).Value = totalCot;
-                ws.Cell(r, 7).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(r, 7).Style.Font.Bold = true;
+                EscribirMoney(ws, r, 1, "Subtotal cotización", subtotalCot, 4); r++;
+                EscribirMoney(ws, r, 1, "IVA 16% cotización", ivaCot, 4); r++;
+                EscribirMoney(ws, r, 1, "Total cotización", totalCot, 4); r++;
+                EscribirMoney(ws, r, 1, "Pagado", totalPagado, 4); r++;
+                EscribirMoney(ws, r, 1, "Pendiente", pendiente, 4);
+
+                if (pendiente < 0)
+                    ws.Cell(r, 5).Style.Font.FontColor = cRedText;
+                else if (pendiente == 0)
+                    ws.Cell(r, 5).Style.Font.FontColor = cGreenText;
+
                 r += 2;
             }
 
             // ==========================
-            // PAGOS
+            // Pagos
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Pagos", cOrange, MAX_COL);
 
@@ -539,15 +599,17 @@ namespace ManejoPresupuestos.Servicios
             }
 
             r = InsertarTablaAt(ws, r, 1, dtPagos, "tblPagos", cOrange, MAX_COL, cZebra, out var tblPagos) + 2;
+
             AplicarFormatosTabla(tblPagos, new()
             {
                 ["Fecha"] = "yyyy-mm-dd",
                 ["Monto"] = "#,##0.00",
             });
+
             PintarInactivos(tblPagos, "Activo", "No", XLColor.FromHtml("#E5E7EB"));
 
             // ==========================
-            // PRODUCCION
+            // Producción
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Producción", cTeal, MAX_COL);
 
@@ -587,6 +649,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             r = InsertarTablaAt(ws, r, 1, dtProd, "tblProduccion360", cTeal, MAX_COL, cZebra, out var tblProd) + 2;
+
             AplicarFormatosTabla(tblProd, new()
             {
                 ["Peso Est. (gr)"] = "#,##0.00",
@@ -594,7 +657,7 @@ namespace ManejoPresupuestos.Servicios
             });
 
             // ==========================
-            // CONSUMO
+            // Consumo
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Consumo de inventario (por receta/insumo)", cGreen, MAX_COL);
 
@@ -632,6 +695,7 @@ namespace ManejoPresupuestos.Servicios
             }
 
             r = InsertarTablaAt(ws, r, 1, dtCons, "tblConsumo360", cGreen, MAX_COL, cZebra, out var tblCons) + 2;
+
             AplicarFormatosTabla(tblCons, new()
             {
                 ["Planeado"] = "#,##0.00",
@@ -641,7 +705,7 @@ namespace ManejoPresupuestos.Servicios
             });
 
             // ==========================
-            // TIMELINE
+            // Timeline
             // ==========================
             r = EscribirTituloSeccion(ws, r, "Timeline", cSlate, MAX_COL);
 
@@ -672,18 +736,15 @@ namespace ManejoPresupuestos.Servicios
 
             _ = InsertarTablaAt(ws, r, 1, dtHist, "tblTimeline360", cSlate, MAX_COL, cZebra, out var tblHist);
 
-            // wrap para notas en timeline
             if (tblHist != null && TieneCampo(tblHist, "Notas"))
                 tblHist.Field("Notas").Column.Style.Alignment.WrapText = true;
 
-            // Ajustes finales
             ws.SheetView.FreezeRows(3);
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
             ws.PageSetup.FitToPages(1, 0);
             ws.PageSetup.CenterHorizontally = true;
 
             ws.Columns(1, MAX_COL).AdjustToContents(1, 80);
-            // notas suelen ocupar mucho
             ws.Column(10).Width = Math.Max(ws.Column(10).Width, 28);
             ws.Column(11).Width = Math.Max(ws.Column(11).Width, 28);
 
@@ -691,7 +752,6 @@ namespace ManejoPresupuestos.Servicios
             wb.SaveAs(ms);
             return ms.ToArray();
         }
-
         // ===================== Helpers (solo para Pedido360) =====================
 
         private static int EscribirTituloSeccion(IXLWorksheet ws, int row, string titulo, XLColor color, int maxCol)
@@ -1388,6 +1448,7 @@ namespace ManejoPresupuestos.Servicios
             wb.SaveAs(ms);
             return ms.ToArray();
         }
+
         public byte[] GenerarExcelCotizacionesSeguimiento(ReporteCotizacionesSeguimientoViewModel vm)
         {
             using var wb = new XLWorkbook();
@@ -1396,23 +1457,21 @@ namespace ManejoPresupuestos.Servicios
             ws.Style.Font.FontName = "Calibri";
             ws.Style.Font.FontSize = 11;
 
-            const int MAX_COL = 18; // A..R
+            const int MAX_COL = 20;
             int r = 1;
 
-            // Paleta sobria (igual familia que los demás)
-            var cTitle    = XLColor.FromHtml("#0F172A"); // slate-900
-            var cTeal     = XLColor.FromHtml("#0F766E"); // teal-700
-            var cPurple   = XLColor.FromHtml("#5B21B6"); // violet-800
-            var cBlueGray = XLColor.FromHtml("#1E293B"); // slate-800
-            var cSlate    = XLColor.FromHtml("#334155"); // slate-700
-            var cSoftGray = XLColor.FromHtml("#F1F5F9"); // slate-100
-            var cZebra    = XLColor.FromHtml("#F8FAFC"); // zebra
+            var cTitle    = XLColor.FromHtml("#0F172A");
+            var cTeal     = XLColor.FromHtml("#0F766E");
+            var cPurple   = XLColor.FromHtml("#5B21B6");
+            var cBlueGray = XLColor.FromHtml("#1E293B");
+            var cSlate    = XLColor.FromHtml("#334155");
+            var cSoftGray = XLColor.FromHtml("#F1F5F9");
+            var cZebra    = XLColor.FromHtml("#F8FAFC");
 
-            // resaltados suaves por categoría
-            var cOkRow    = XLColor.FromHtml("#ECFDF5"); // green-50
-            var cWarnRow  = XLColor.FromHtml("#FEF3C7"); // amber-100
-            var cBadRow   = XLColor.FromHtml("#FEE2E2"); // red-100
-            var cGrayRow  = XLColor.FromHtml("#F1F5F9"); // slate-100
+            var cOkRow    = XLColor.FromHtml("#ECFDF5");
+            var cWarnRow  = XLColor.FromHtml("#FEF3C7");
+            var cBadRow   = XLColor.FromHtml("#FEE2E2");
+            var cGrayRow  = XLColor.FromHtml("#F1F5F9");
 
             string NombreLookup(List<SimpleOption> list, int? id)
             {
@@ -1420,12 +1479,84 @@ namespace ManejoPresupuestos.Servicios
                 return list.FirstOrDefault(x => x.Id == id.Value)?.Nombre ?? id.Value.ToString();
             }
 
-            // ----------------
-            // Titulo
-            // ----------------
+            // ==========================
+            // RECALCULO LOCAL CORRECTO
+            // OJO: aqui x.MontoCotizacion YA VIENE CON IVA
+            // ==========================
+            var rowsCalc = vm.Rows
+                .Select(x =>
+                {
+                    var total = Redondear2(x.MontoCotizacion);
+                    var subtotal = total == 0m ? 0m : Redondear2(total / 1.16m);
+                    var iva = Redondear2(total - subtotal);
+                    var pagado = Redondear2(x.TotalPagado);
+                    var saldo = Redondear2(total - pagado);
+
+                    return new
+                    {
+                        x.CotizacionId,
+                        x.PedidoId,
+                        x.ClienteNombre,
+                        x.CotizacionEstatusNombre,
+                        x.Categoria,
+                        x.CotizacionFechaCreacion,
+                        Subtotal = subtotal,
+                        Iva = iva,
+                        Total = total,
+                        Pagado = pagado,
+                        Saldo = saldo,
+                        x.UltimoPagoFecha,
+                        x.UltimoPagoTipoNombre,
+                        x.UltimoPagoMetodo,
+                        x.Convertida,
+                        x.DiasAConversion
+                    };
+                })
+                .ToList();
+
+            var totalCotizaciones = rowsCalc.Count;
+            var totalConvertidas = rowsCalc.Count(x => x.Convertida);
+
+            var totalMonto = Redondear2(rowsCalc.Sum(x => x.Total));
+
+            var aceptadas = rowsCalc.Count(x => string.Equals(x.Categoria, "Aceptada", StringComparison.OrdinalIgnoreCase));
+            var pendientes = rowsCalc.Count(x => string.Equals(x.Categoria, "Pendiente", StringComparison.OrdinalIgnoreCase));
+            var rechazadas = rowsCalc.Count(x => string.Equals(x.Categoria, "Rechazada", StringComparison.OrdinalIgnoreCase));
+
+            var conversionPct = totalCotizaciones > 0
+                ? Math.Round((decimal)totalConvertidas / totalCotizaciones, 4, MidpointRounding.AwayFromZero)
+                : 0m;
+
+            var diasConv = rowsCalc
+                .Where(x => x.Convertida && x.DiasAConversion.HasValue)
+                .Select(x => (decimal)x.DiasAConversion!.Value)
+                .ToList();
+
+            var avgDiasConv = diasConv.Any()
+                ? Math.Round(diasConv.Average(), 2, MidpointRounding.AwayFromZero)
+                : 0m;
+
+            var resumenPorEstatus = rowsCalc
+                .GroupBy(x => x.CotizacionEstatusNombre ?? "-")
+                .Select(g => new
+                {
+                    Estatus = g.Key,
+                    Cotizaciones = g.Count(),
+                    Monto = Redondear2(g.Sum(x => x.Total)),
+                    Convertidas = g.Count(x => x.Convertida),
+                    ConversionPct = g.Any()
+                        ? Math.Round((decimal)g.Count(x => x.Convertida) / g.Count(), 4, MidpointRounding.AwayFromZero)
+                        : 0m
+                })
+                .OrderBy(x => x.Estatus)
+                .ToList();
+
+            // ==========================
+            // TITULO
+            // ==========================
             var title = ws.Range(r, 1, r, MAX_COL);
             title.Merge();
-            title.FirstCell().Value = "Cotizaciones — Conversión y seguimiento";
+            title.FirstCell().Value = "Cotizaciones — Conversión y seguimiento (IVA 16%)";
             title.Style.Font.Bold = true;
             title.Style.Font.FontSize = 16;
             title.Style.Font.FontColor = XLColor.White;
@@ -1443,9 +1574,9 @@ namespace ManejoPresupuestos.Servicios
             gen.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             r += 2;
 
-            // ----------------
-            // Filtros
-            // ----------------
+            // ==========================
+            // FILTROS
+            // ==========================
             r = EscribirTituloSeccion(ws, r, "Filtros", cSlate, MAX_COL);
 
             var fDesde = vm.Desde.ToString("yyyy-MM-dd");
@@ -1457,64 +1588,57 @@ namespace ManejoPresupuestos.Servicios
             var fMinMonto = vm.MinMonto?.ToString("0.##") ?? "-";
             var fQ = string.IsNullOrWhiteSpace(vm.Q) ? "-" : vm.Q.Trim();
 
-            // fila 1
-            EscribirKVInline(ws, r,  1, "Desde",   fDesde,   2, 2, cSoftGray); // 1..4
-            EscribirKVInline(ws, r,  5, "Hasta",   fHasta,   2, 2, cSoftGray); // 5..8
-            EscribirKVInline(ws, r,  9, "Cliente", fCliente, 2, 4, cSoftGray); // 9..14
-            EscribirKVInline(ws, r, 15, "Estatus", fEstatus, 2, 2, cSoftGray); // 15..18
+            EscribirKVInline(ws, r, 1,  "Desde", fDesde, 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 5,  "Hasta", fHasta, 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "Cliente", fCliente, 2, 4, cSoftGray);
+            EscribirKVInline(ws, r, 15, "Estatus", fEstatus, 2, 4, cSoftGray);
             r++;
 
-            // fila 2
-            EscribirKVInline(ws, r,  1, "Solo conv.",  fSoloConv,   2, 2, cSoftGray); // 1..4
-            EscribirKVInline(ws, r,  5, "Solo última", fSoloUltima, 2, 2, cSoftGray); // 5..8
-            EscribirKVInline(ws, r,  9, "Min monto",   fMinMonto,   2, 2, cSoftGray); // 9..12
-            EscribirKVInline(ws, r, 13, "Buscar",      fQ,          2, 4, cSoftGray); // 13..18
+            EscribirKVInline(ws, r, 1,  "Solo conv.", fSoloConv, 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 5,  "Solo última", fSoloUltima, 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 9,  "Min monto", fMinMonto, 2, 2, cSoftGray);
+            EscribirKVInline(ws, r, 13, "Buscar", fQ, 2, 6, cSoftGray);
             r += 2;
 
-            // ----------------
-            // KPIs (cards)
-            // ----------------
+            // ==========================
+            // KPIs
+            // ==========================
             r = EscribirTituloSeccion(ws, r, "KPIs", cTeal, MAX_COL);
 
-            // 1era fila (5 cards)
-            EscribirKpiCard(ws, r,  1,  3, "Cotizaciones", vm.Totales.Cotizaciones.ToString("N0"), cSoftGray);
-            EscribirKpiCard(ws, r,  4,  6, "Convertidas",  vm.Totales.Convertidas.ToString("N0"), cSoftGray);
-            EscribirKpiCard(ws, r,  7,  9, "Conversión %", $"{(vm.Totales.ConversionPct ?? 0):N2}%", cSoftGray);
-            EscribirKpiCard(ws, r, 10, 13, "Monto total",  $"{(vm.Totales.MontoTotal ?? 0):N2}", cSoftGray);
-            EscribirKpiCard(ws, r, 14, 18, "Avg días conv.", $"{(vm.Totales.AvgDiasAConversion ?? 0):N1}", cSoftGray);
+            EscribirKpiCard(ws, r,  1,  4, "Cotizaciones", totalCotizaciones.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  5,  8, "Convertidas", totalConvertidas.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  9, 12, "Conversión %", $"{conversionPct * 100m:N2}%", cSoftGray);
+            EscribirKpiCard(ws, r, 13, 16, "Monto total c/IVA", totalMonto.ToString("N2"), cSoftGray, isMoney: true);
+            EscribirKpiCard(ws, r, 17, 20, "Avg días conv.", $"{avgDiasConv:N1}", cSoftGray);
 
             r += 3;
 
-            // 2da fila (3 cards)
-            EscribirKpiCard(ws, r,  1,  6, "Aceptadas",  vm.Totales.Aceptadas.ToString("N0"), cSoftGray);
-            EscribirKpiCard(ws, r,  7, 12, "Pendientes", vm.Totales.Pendientes.ToString("N0"), cSoftGray);
-            EscribirKpiCard(ws, r, 13, 18, "Rechazadas", vm.Totales.Rechazadas.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  1,  6, "Aceptadas", aceptadas.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r,  7, 12, "Pendientes", pendientes.ToString("N0"), cSoftGray);
+            EscribirKpiCard(ws, r, 13, 20, "Rechazadas", rechazadas.ToString("N0"), cSoftGray);
 
             r += 3;
 
-            // ----------------
-            // Resumen por estatus
-            // ----------------
+            // ==========================
+            // RESUMEN POR ESTATUS
+            // ==========================
             r = EscribirTituloSeccion(ws, r, "Resumen por estatus", cPurple, MAX_COL);
 
             var dtResumen = new DataTable("ResumenEstatus");
             dtResumen.Columns.Add("Estatus");
             dtResumen.Columns.Add("Cotizaciones", typeof(int));
-            dtResumen.Columns.Add("Monto", typeof(decimal));
+            dtResumen.Columns.Add("Monto c/IVA", typeof(decimal));
             dtResumen.Columns.Add("Convertidas", typeof(int));
-            dtResumen.Columns.Add("Conversión %", typeof(decimal)); // ratio 0..1
+            dtResumen.Columns.Add("Conversión %", typeof(decimal));
 
-            foreach (var x in vm.PorEstatus.OrderBy(x => x.CotizacionEstatusNombre))
+            foreach (var x in resumenPorEstatus)
             {
-                var pctRaw = x.ConversionPct ?? 0m;
-                var pct = pctRaw > 1m ? pctRaw / 100m : pctRaw;
-
                 dtResumen.Rows.Add(
-                    x.CotizacionEstatusNombre,
+                    x.Estatus,
                     x.Cotizaciones,
-                    x.Monto ?? 0m,
+                    x.Monto,
                     x.Convertidas,
-                    pct
+                    x.ConversionPct
                 );
             }
 
@@ -1524,12 +1648,11 @@ namespace ManejoPresupuestos.Servicios
             {
                 AplicarFormatosTabla(tblResumen, new()
                 {
-                    ["Monto"] = "#,##0.00",
+                    ["Monto c/IVA"] = "#,##0.00",
                     ["Conversión %"] = "0.00%",
                 });
 
-                // alineación
-                foreach (var name in new[] { "Cotizaciones", "Monto", "Convertidas", "Conversión %" })
+                foreach (var name in new[] { "Cotizaciones", "Monto c/IVA", "Convertidas", "Conversión %" })
                 {
                     if (!TieneCampo(tblResumen, name)) continue;
                     var pos = ObtenerPosCampo1Based(tblResumen, name);
@@ -1538,9 +1661,9 @@ namespace ManejoPresupuestos.Servicios
                 }
             }
 
-            // ----------------
-            // Detalle
-            // ----------------
+            // ==========================
+            // DETALLE
+            // ==========================
             r = EscribirTituloSeccion(ws, r, "Detalle", cBlueGray, MAX_COL);
 
             var dtDet = new DataTable("DetalleCotizaciones");
@@ -1550,7 +1673,9 @@ namespace ManejoPresupuestos.Servicios
             dtDet.Columns.Add("Estatus");
             dtDet.Columns.Add("Categoría");
             dtDet.Columns.Add("Fecha", typeof(DateTime));
-            dtDet.Columns.Add("Monto", typeof(decimal));
+            dtDet.Columns.Add("Subtotal", typeof(decimal));
+            dtDet.Columns.Add("IVA 16%", typeof(decimal));
+            dtDet.Columns.Add("Monto c/IVA", typeof(decimal));
             dtDet.Columns.Add("Pagado", typeof(decimal));
             dtDet.Columns.Add("Saldo", typeof(decimal));
             dtDet.Columns.Add("Último pago", typeof(DateTime));
@@ -1558,7 +1683,7 @@ namespace ManejoPresupuestos.Servicios
             dtDet.Columns.Add("Conv");
             dtDet.Columns.Add("Días", typeof(int));
 
-            foreach (var x in vm.Rows
+            foreach (var x in rowsCalc
                 .OrderByDescending(x => x.CotizacionFechaCreacion)
                 .ThenByDescending(x => x.CotizacionId))
             {
@@ -1569,8 +1694,10 @@ namespace ManejoPresupuestos.Servicios
                     x.CotizacionEstatusNombre ?? "-",
                     x.Categoria ?? "-",
                     x.CotizacionFechaCreacion.Date,
-                    x.MontoCotizacion,
-                    x.TotalPagado,
+                    x.Subtotal,
+                    x.Iva,
+                    x.Total,
+                    x.Pagado,
                     x.Saldo,
                     x.UltimoPagoFecha.HasValue ? x.UltimoPagoFecha.Value.Date : DBNull.Value,
                     (x.UltimoPagoTipoNombre ?? x.UltimoPagoMetodo ?? "-"),
@@ -1579,28 +1706,28 @@ namespace ManejoPresupuestos.Servicios
                 );
             }
 
-            var lastRow = InsertarTablaAt(ws, r, 1, dtDet, "tblCotDetalle", cBlueGray, MAX_COL, cZebra, out var tblDet);
+            _ = InsertarTablaAt(ws, r, 1, dtDet, "tblCotDetalle", cBlueGray, MAX_COL, cZebra, out var tblDet);
 
             if (tblDet != null)
             {
                 AplicarFormatosTabla(tblDet, new()
                 {
-                    ["Monto"] = "#,##0.00",
+                    ["Fecha"] = "yyyy-mm-dd",
+                    ["Subtotal"] = "#,##0.00",
+                    ["IVA 16%"] = "#,##0.00",
+                    ["Monto c/IVA"] = "#,##0.00",
                     ["Pagado"] = "#,##0.00",
                     ["Saldo"] = "#,##0.00;[Red]-#,##0.00",
                 });
 
-                // fechas
-                foreach (var name in new[] { "Fecha", "Último pago" })
+                if (TieneCampo(tblDet, "Último pago"))
                 {
-                    if (!TieneCampo(tblDet, name)) continue;
-                    var pos = ObtenerPosCampo1Based(tblDet, name);
+                    var pos = ObtenerPosCampo1Based(tblDet, "Último pago");
                     var rng = ObtenerRangoDatosColumna(tblDet, pos);
                     rng.Style.DateFormat.Format = "yyyy-mm-dd";
                     rng.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // resaltar por categoría (fila completa)
                 if (tblDet.DataRange != null && TieneCampo(tblDet, "Categoría"))
                 {
                     var posCat = ObtenerPosCampo1Based(tblDet, "Categoría");
@@ -1621,39 +1748,33 @@ namespace ManejoPresupuestos.Servicios
                     }
                 }
 
-                // Conv = Sí en verde suave (columna)
                 if (TieneCampo(tblDet, "Conv") && tblDet.DataRange != null)
                 {
-                    var posConv = ObtenerPosCampo1Based(tblDet, "Conv");
-                    var rngConv = ObtenerRangoDatosColumna(tblDet, posConv);
-
+                    var rngConv = ObtenerRangoDatosColumna(tblDet, ObtenerPosCampo1Based(tblDet, "Conv"));
                     rngConv.AddConditionalFormat()
                         .WhenEquals("Sí")
                         .Fill.SetBackgroundColor(cOkRow);
                 }
 
-                // freeze hasta el header de detalle (para que queden filtros + KPIs)
                 ws.SheetView.FreezeRows(tblDet.RangeAddress.FirstAddress.RowNumber);
 
-                // anchos minimos útiles
-                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 26);  // Cliente
-                ws.Column(4).Width = Math.Max(ws.Column(4).Width, 16);  // Estatus
-                ws.Column(5).Width = Math.Max(ws.Column(5).Width, 12);  // Categoría
-                ws.Column(11).Width = Math.Max(ws.Column(11).Width, 18); // Método
+                ws.Column(3).Width = Math.Max(ws.Column(3).Width, 26);
+                ws.Column(4).Width = Math.Max(ws.Column(4).Width, 16);
+                ws.Column(5).Width = Math.Max(ws.Column(5).Width, 12);
+                ws.Column(13).Width = Math.Max(ws.Column(13).Width, 18);
             }
 
-            // Ajustes finales
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
             ws.PageSetup.FitToPages(1, 0);
             ws.PageSetup.CenterHorizontally = true;
 
-            ws.Columns(1, 13).AdjustToContents(1, 80);
+            ws.Columns(1, 15).AdjustToContents(1, 80);
 
             using var ms = new MemoryStream();
             wb.SaveAs(ms);
             return ms.ToArray();
         }
-
+        
         public byte[] GenerarExcelProduccionUtilizacion(ReporteProduccionUtilizacionViewModel vm)
         {
             using var wb = new XLWorkbook();
@@ -2740,6 +2861,22 @@ namespace ManejoPresupuestos.Servicios
             return ms.ToArray();
         }
 
+        private static decimal Redondear2(decimal valor)
+        {
+            return Math.Round(valor, 2, MidpointRounding.AwayFromZero);
+        }
+
+        private static decimal CalcularIva16(decimal subtotal)
+        {
+            return Redondear2(subtotal * 0.16m);
+        }
+
+        private static decimal CalcularTotalConIva16(decimal subtotal)
+        {
+            return Redondear2(subtotal + CalcularIva16(subtotal));
+        }
+
 
     }
+    
 }
